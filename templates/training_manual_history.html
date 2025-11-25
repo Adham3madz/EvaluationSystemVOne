@@ -1,0 +1,197 @@
+{% extends "layout.html" %}
+{% block title %}إضافة سجل تدريب سابق{% endblock %}
+
+{% block content %}
+<style>
+    /* === Modern Card Container === */
+    .history-card {
+        max-width: 750px;
+        margin: 40px auto;
+        background: #ffffff;
+        border-radius: 16px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+        overflow: hidden;
+        font-family: "Tajawal", "Cairo", sans-serif;
+    }
+
+    /* === Header (Updated to Blue Theme) === */
+    .history-header {
+        background: linear-gradient(135deg, #004d7a, #00608f); /* Blue Gradient */
+        padding: 30px;
+        text-align: center;
+        color: white;
+    }
+    .history-header h2 { margin: 0; font-weight: 800; letter-spacing: 0.5px; font-size: 24px; }
+    .history-header p { margin: 5px 0 0; opacity: 0.9; font-size: 14px; }
+
+    /* === Body === */
+    .form-body { padding: 40px; }
+
+    /* === Inputs === */
+    .form-label {
+        font-weight: 700;
+        color: #2c3e50;
+        margin-bottom: 8px;
+        display: block;
+        font-size: 14px;
+    }
+
+    .form-control, .form-select {
+        width: 100%;
+        padding: 12px 15px;
+        border-radius: 10px;
+        border: 1px solid #dee2e6;
+        background-color: #fdfdfd;
+        font-size: 15px;
+        transition: all 0.3s ease;
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: #004d7a;
+        box-shadow: 0 0 0 4px rgba(0, 77, 122, 0.1);
+        outline: none;
+        background-color: #fff;
+    }
+
+    /* === Buttons === */
+    .btn-save {
+        width: 100%;
+        padding: 14px;
+        border-radius: 50px;
+        background: linear-gradient(135deg, #2e7d32, #1b5e20); /* Green for Action */
+        color: white;
+        border: none;
+        font-weight: 800;
+        font-size: 16px;
+        margin-top: 20px;
+        box-shadow: 0 4px 15px rgba(46, 125, 50, 0.2);
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        cursor: pointer;
+    }
+    .btn-save:hover {
+        transform: translateY(-2px);
+        background: linear-gradient(135deg, #388e3c, #2e7d32);
+        box-shadow: 0 6px 20px rgba(46, 125, 50, 0.3);
+    }
+
+    .btn-back {
+        display: block;
+        text-align: center;
+        margin-top: 20px;
+        color: #7f8c8d;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 14px;
+        transition: color 0.2s;
+    }
+    .btn-back:hover { color: #333; }
+
+    /* === Grid === */
+    .row-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+    @media (max-width: 600px) { .row-grid { grid-template-columns: 1fr; } }
+</style>
+
+<div class="history-card">
+    <div class="history-header">
+        <h2><i class="fa-solid fa-clock-rotate-left"></i> أرشيف التدريب السابق</h2>
+        <p>تسجيل الدورات التدريبية القديمة للموظفين لتوثيقها في السجل</p>
+    </div>
+
+    <div class="form-body">
+        <form method="POST" onsubmit="return validateEmployee()">
+            
+            <div class="mb-4 position-relative">
+                <label class="form-label">اختر الموظف (بحث بالاسم)</label>
+                
+                <input type="text" id="emp_search" class="form-control" list="emp_list" 
+                       placeholder="اكتب اسم الموظف للبحث..." autocomplete="off" required>
+                
+                <input type="hidden" name="user_id" id="real_user_id">
+
+                <datalist id="emp_list">
+                    {% for emp in employees %}
+                    <option data-value="{{ emp.USERID }}" value="{{ emp.NAME }}"></option>
+                    {% endfor %}
+                </datalist>
+                <small class="text-muted" style="font-size:12px;">* اختر الموظف من القائمة المقترحة</small>
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label">الدورة التدريبية</label>
+                <select name="course_id" class="form-select" required>
+                    <option value="">-- اختر الدورة --</option>
+                    {% for c in courses %}
+                    <option value="{{ c.TrainingCourseID }}">{{ c.TrainingCourseText }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="row-grid">
+                <div>
+                    <label class="form-label">تاريخ الدورة (السابق)</label>
+                    <input type="date" name="date" class="form-control" required>
+                </div>
+                <div>
+                    <label class="form-label">الدرجة / النتيجة (اختياري)</label>
+                    <div class="input-group">
+                        <input type="number" name="grade" class="form-control" placeholder="%" min="0" max="100">
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label">ملاحظات / مكان التدريب</label>
+                <input type="text" name="feedback" class="form-control" placeholder="مثال: مركز تدريب خارجي - القاهرة">
+            </div>
+
+            <button type="submit" class="btn-save">
+                <i class="fa-solid fa-plus-circle"></i> إضافة للسجل التاريخي
+            </button>
+
+            <a href="{{ url_for('training_calendar') }}" class="btn-back">
+                <i class="fa-solid fa-arrow-right"></i> العودة للتقويم
+            </a>
+
+        </form>
+    </div>
+</div>
+
+<script>
+    // Logic to link the Search Input Name to the Hidden ID
+    document.getElementById('emp_search').addEventListener('input', function(e) {
+        var input = e.target;
+        var list = input.getAttribute('list');
+        var options = document.querySelectorAll('#' + list + ' option');
+        var hiddenInput = document.getElementById('real_user_id');
+        
+        hiddenInput.value = ""; // Reset ID
+
+        for(var i = 0; i < options.length; i++) {
+            var option = options[i];
+            if(option.value === input.value) {
+                hiddenInput.value = option.getAttribute('data-value');
+                break;
+            }
+        }
+    });
+
+    // Validation to ensure a valid employee was selected from the list
+    function validateEmployee() {
+        var hiddenInput = document.getElementById('real_user_id');
+        if(!hiddenInput.value) {
+            alert("يرجى اختيار موظف صحيح من القائمة المنسدلة.");
+            return false;
+        }
+        return true;
+    }
+</script>
+{% endblock %}

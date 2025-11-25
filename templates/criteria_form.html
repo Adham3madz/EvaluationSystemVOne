@@ -1,0 +1,246 @@
+{% extends "layout.html" %}
+{% block title %}{{ 'إضافة' if action == 'Add' else 'تعديل' }} معيار تقييم{% endblock %}
+
+{% block content %}
+<style>
+  /* === General Settings === */
+  body {
+    direction: rtl;
+    background-color: #f4f6f9;
+    font-family: "Cairo", sans-serif;
+  }
+
+  .container {
+    max-width: 800px;
+    margin: 40px auto;
+  }
+
+  /* === Header === */
+  .page-header {
+    background: linear-gradient(135deg, #004d7a, #00608f);
+    color: white;
+    padding: 20px;
+    border-radius: 12px;
+    text-align: center;
+    margin-bottom: 25px;
+    box-shadow: 0 4px 15px rgba(0, 77, 122, 0.2);
+  }
+  .page-header h2 { margin: 0; font-weight: 700; }
+
+  /* === Card === */
+  .form-card {
+    background: #fff;
+    padding: 30px;
+    border-radius: 16px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+    border: 1px solid #eef2f7;
+  }
+
+  /* === Labels & Inputs === */
+  label {
+    font-weight: 700;
+    color: #2c3e50;
+    margin-bottom: 8px;
+    display: block;
+    font-size: 14px;
+  }
+
+  input[type="text"],
+  input[type="number"],
+  select {
+    width: 100%;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+    font-size: 15px;
+    transition: all 0.3s ease;
+    background-color: #fdfdfd;
+  }
+
+  input:focus, select:focus {
+    border-color: #004d7a;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(0, 77, 122, 0.1);
+  }
+
+  /* === Custom Checkboxes (Badge Style) === */
+  .checkbox-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 5px;
+  }
+
+  .checkbox-option {
+    position: relative;
+  }
+
+  .checkbox-option input {
+    display: none; /* Hide default checkbox */
+  }
+
+  .checkbox-option label {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #f1f3f5;
+    border: 1px solid #e9ecef;
+    border-radius: 50px;
+    cursor: pointer;
+    font-weight: 600;
+    color: #495057;
+    transition: all 0.2s ease;
+    margin: 0;
+  }
+
+  .checkbox-option input:checked + label {
+    background-color: #004d7a;
+    color: white;
+    border-color: #004d7a;
+    box-shadow: 0 2px 5px rgba(0, 77, 122, 0.3);
+  }
+
+  /* === Buttons === */
+  .form-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+  }
+
+  .btn {
+    padding: 12px 25px;
+    border-radius: 8px;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+    border: none;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .btn-primary { background-color: #004d7a; color: white; }
+  .btn-primary:hover { background-color: #003a5c; transform: translateY(-1px); }
+
+  .btn-secondary { background-color: #e9ecef; color: #333; }
+  .btn-secondary:hover { background-color: #dde2e6; }
+
+  small.form-text {
+    display: block;
+    margin-top: 5px;
+    color: #8898aa;
+    font-size: 12px;
+  }
+
+  .row-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  
+  @media (max-width: 600px) {
+    .row-grid { grid-template-columns: 1fr; }
+    .form-actions { flex-direction: column-reverse; gap: 15px; }
+    .btn { width: 100%; justify-content: center; }
+  }
+</style>
+
+<div class="container">
+  
+  <div class="page-header">
+    <h2>{{ '✨ إضافة معيار تقييم جديد' if action == 'Add' else '🛠️ تعديل معيار التقييم' }}</h2>
+  </div>
+
+  <div class="form-card">
+    <form method="POST">
+      
+      <div class="mb-4">
+        <label for="name">اسم المعيار (Criterion Name):</label>
+        <input type="text" id="name" name="name" required 
+               value="{{ criterion.CriteriaName if criterion else '' }}"
+               placeholder="مثال: الالتزام بمواعيد العمل، جودة الأداء...">
+      </div>
+
+      <div class="row-grid mb-4">
+        <div>
+          <label for="weight">الوزن النسبي (Weight):</label>
+          <input type="number" step="0.01" min="0.01" max="1.00" id="weight" name="weight" required
+            value="{{ criterion.CriteriaWeight if criterion else '' }}" 
+            placeholder="مثال: 0.20 (يعني 20%)">
+          <small class="form-text">مجموع أوزان جميع المعايير يجب أن يساوي 1.00 (100%)</small>
+        </div>
+
+        <div>
+          <label for="max_score">الدرجة العظمى (Max Score):</label>
+          <input type="number" min="1" id="max_score" name="max_score" required
+            value="{{ criterion.MaxScore if criterion else 10 }}">
+           <small class="form-text">الدرجة القصوى لهذا البند (مثلاً 10)</small>
+        </div>
+      </div>  
+
+      <div class="mb-4">
+        <label>القسم المطبق عليه:</label>
+        <select name="dept_id">
+          <option value="">-- عام (يطبق على جميع الأقسام) --</option>
+          {% for dept in departments or [] %}
+          <option value="{{ dept.DEPTID }}" {% if criterion and criterion.AppliesToDeptID == dept.DEPTID %}selected{% endif %}>
+            {{ dept.DEPTNAME }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="mb-4">
+        <label>الفئات الوظيفية المستهدفة:</label>
+        <div class="checkbox-group">
+          
+          <div class="checkbox-option">
+            <input type="checkbox" id="level_a" name="employee_levels" value="A" 
+              {% if criterion and criterion.employee_class and 'A' in criterion.employee_class %}checked{% endif %}>
+            <label for="level_a">A - إداري</label>
+          </div>
+
+          <div class="checkbox-option">
+            <input type="checkbox" id="level_b" name="employee_levels" value="B" 
+              {% if criterion and criterion.employee_class and 'B' in criterion.employee_class %}checked{% endif %}>
+            <label for="level_b">B - فني</label>
+          </div>
+
+          <div class="checkbox-option">
+            <input type="checkbox" id="level_c" name="employee_levels" value="C" 
+              {% if criterion and criterion.employee_class and 'C' in criterion.employee_class %}checked{% endif %}>
+            <label for="level_c">C - فئة ج</label>
+          </div>
+
+          <div class="checkbox-option">
+            <input type="checkbox" id="level_supervisor" name="employee_levels" value="مشرف" 
+              {% if criterion and criterion.employee_class and 'مشرف' in criterion.employee_class %}checked{% endif %}>
+            <label for="level_supervisor">مشرف</label>
+          </div>
+
+          <div class="checkbox-option">
+            <input type="checkbox" id="level_manager" name="employee_levels" value="مدير" 
+              {% if criterion and criterion.employee_class and 'مدير' in criterion.employee_class %}checked{% endif %}>
+            <label for="level_manager">مدير</label>
+          </div>
+
+        </div>
+        <small class="form-text">حدد الفئات التي سيظهر لها هذا المعيار عند التقييم.</small>
+      </div>
+
+      <div class="form-actions">
+        <a href="{{ url_for('criteria_list') }}" class="btn btn-secondary">
+          إلغاء ورجوع
+        </a>
+        <button type="submit" class="btn btn-primary">
+          {{ 'حفظ المعيار الجديد' if action == 'Add' else 'حفظ التعديلات' }}
+        </button>
+      </div>
+
+    </form>
+  </div>
+</div>
+{% endblock %}

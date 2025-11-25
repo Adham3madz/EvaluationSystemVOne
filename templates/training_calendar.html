@@ -1,0 +1,241 @@
+{% extends "layout.html" %}
+{% block title %}تقويم التدريب{% endblock %}
+
+{% block content %}
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js'></script>
+
+<style>
+    /* === Header === */
+    .calendar-header {
+        background: linear-gradient(135deg, #004d7a, #00608f);
+        color: white;
+        padding: 35px;
+        border-radius: 20px;
+        box-shadow: 0 10px 25px rgba(0, 77, 122, 0.2);
+        margin-bottom: 35px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 20px;
+    }
+    .header-title h2 { font-weight: 800; margin: 0; font-size: 26px; letter-spacing: 0.5px; }
+    .header-title p { margin: 8px 0 0; opacity: 0.9; font-size: 15px; }
+
+    /* === Calendar Card === */
+    .calendar-card {
+        background: #ffffff;
+        border-radius: 20px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+        padding: 30px;
+        border: 1px solid #f0f2f5;
+        min-height: 700px;
+    }
+
+    /* === Legend === */
+    .legend-container {
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(5px);
+        padding: 12px 25px;
+        border-radius: 50px;
+        display: flex;
+        gap: 20px;
+        align-items: center;
+        border: 1px solid rgba(255,255,255,0.2);
+    }
+    .legend-item { font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 8px; color: white; }
+    .dot { width: 12px; height: 12px; border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.2); border: 2px solid rgba(255,255,255,0.5); }
+
+    /* === Add Button === */
+    .btn-add-event {
+        background: linear-gradient(135deg, #27ae60, #2ecc71);
+        color: white; border: none; padding: 12px 30px; border-radius: 50px;
+        font-weight: 800; font-size: 15px; box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);
+        transition: 0.3s; display: flex; align-items: center; gap: 10px;
+    }
+    .btn-add-event:hover { transform: translateY(-3px); color: white; background: linear-gradient(135deg, #219150, #27ae60); box-shadow: 0 8px 20px rgba(46, 204, 113, 0.4); }
+
+    /* === FullCalendar Overrides === */
+    .fc-header-toolbar { margin-bottom: 30px !important; }
+    .fc-button {
+        background-color: #f1f3f5 !important; border: none !important; color: #444 !important;
+        font-weight: 800 !important; border-radius: 10px !important; padding: 8px 16px !important;
+        transition: 0.2s !important;
+    }
+    .fc-button:hover, .fc-button-active { background-color: #004d7a !important; color: white !important; }
+    .fc-daygrid-day { transition: 0.2s; }
+    .fc-daygrid-day:hover { background-color: #f9fbfd; }
+    .fc-event { border-radius: 6px; padding: 4px 8px; font-weight: 600; font-size: 13px; border: none; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    
+    /* === Modal === */
+    .modal-content { border-radius: 20px; border: none; box-shadow: 0 15px 50px rgba(0,0,0,0.2); overflow: hidden; }
+    .modal-header { background: linear-gradient(135deg, #004d7a, #00608f); color: white; padding: 25px; }
+    .modal-body { padding: 35px; }
+    
+    .form-label { font-weight: 800; font-size: 13px; color: #2c3e50; margin-bottom: 8px; }
+    .form-control, .form-select {
+        border-radius: 10px; padding: 12px 15px; border: 1px solid #e0e0e0; font-size: 15px;
+        background-color: #fdfdfd; transition: 0.3s;
+    }
+    .form-control:focus, .form-select:focus { border-color: #004d7a; box-shadow: 0 0 0 4px rgba(0, 77, 122, 0.1); background-color: #fff; }
+
+    .trainer-toggle { background: #f8f9fa; padding: 20px; border-radius: 12px; border: 1px solid #e9ecef; margin-bottom: 20px; }
+    
+    .btn-save-modal {
+        width: 100%; padding: 14px; border-radius: 12px; font-weight: 800; font-size: 16px;
+        background: linear-gradient(135deg, #004d7a, #00608f); color: white; border: none; 
+        transition: 0.3s; box-shadow: 0 4px 15px rgba(0, 77, 122, 0.2);
+    }
+    .btn-save-modal:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0, 77, 122, 0.3); }
+</style>
+
+<div class="calendar-header">
+    <div class="header-title">
+        <h2>📅 تقويم التدريب (LMS)</h2>
+        <p>إدارة الجداول الزمنية للدورات وورش العمل</p>
+    </div>
+    
+    <div class="d-flex flex-column align-items-end gap-3">
+        <div class="legend-container">
+            <span class="legend-item"><span class="dot" style="background:#004d7a;"></span>داخلي</span>
+            <span class="legend-item"><span class="dot" style="background:#e67e22;"></span>خارجي</span>
+            <span class="legend-item"><span class="dot" style="background:#27ae60;"></span>دورة كاملة</span>
+        </div>
+        <button class="btn-add-event" data-bs-toggle="modal" data-bs-target="#addEventModal">
+            <i class="fa-solid fa-plus"></i> جدولة تدريب جديد
+        </button>
+    </div>
+</div>
+
+<div class="calendar-card">
+    <div id="calendar"></div>
+</div>
+
+<div class="modal fade" id="addEventModal" tabindex="-1">
+  <div class="modal-dialog">
+    <form class="modal-content" action="{{ url_for('training_add_event') }}" method="POST">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fa-regular fa-calendar-plus"></i> جدولة موعد جديد</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label">نوع الحدث</label>
+                <select name="event_type" class="form-select">
+                    <option value="Session">جلسة تدريبية (Session)</option>
+                    <option value="Course">دورة كاملة (Course)</option>
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">تاريخ البدء</label>
+                <input type="date" name="start_date" class="form-control" required>
+            </div>
+            
+            <div class="col-md-6">
+                <label class="form-label">تاريخ الانتهاء (اختياري)</label>
+                <input type="date" name="end_date" class="form-control">
+            </div>
+            <div class="col-md-6 d-flex align-items-end pb-2">
+                <small class="text-muted">* اتركه فارغاً لليوم الواحد</small>
+            </div>
+
+            <div class="col-12">
+                <label class="form-label">موضوع التدريب</label>
+                <select name="course_id" class="form-select" required>
+                    {% for c in courses %}<option value="{{ c.TrainingCourseID }}">{{ c.TrainingCourseText }}</option>{% endfor %}
+                </select>
+            </div>
+
+            <div class="col-12">
+                <div class="trainer-toggle">
+                    <label class="form-label mb-3">نوع المدرب:</label>
+                    <div class="d-flex gap-4">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="trainer_type" id="type_int" value="internal" checked onclick="toggleTrainer('internal')">
+                            <label class="form-check-label fw-bold" for="type_int">🏢 مدرب داخلي</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="trainer_type" id="type_ext" value="external" onclick="toggleTrainer('external')">
+                            <label class="form-check-label fw-bold" for="type_ext">👤 مدرب خارجي</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="internal_div" class="col-12">
+                <label class="form-label">اختر المدرب</label>
+                <select name="instructor_id" class="form-select">
+                    <option value="">-- اختر من القائمة --</option>
+                    {% for i in instructors %}<option value="{{ i.UserID }}">{{ i.Name }}</option>{% endfor %}
+                </select>
+            </div>
+
+            <div id="external_div" class="col-12" style="display:none;">
+                <div class="row g-3">
+                    <div class="col-6">
+                        <label class="form-label">اسم المدرب</label>
+                        <input type="text" name="ext_name" class="form-control" placeholder="الاسم...">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label">اسم الشركة</label>
+                        <input type="text" name="ext_company" class="form-control" placeholder="الجهة...">
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12">
+                <label class="form-label">المكان / القاعة</label>
+                <div style="position: relative;">
+                    <input type="text" name="location" class="form-control" placeholder="مثال: قاعة 1" style="padding-left: 40px;">
+                    <i class="fa-solid fa-location-dot" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #999;"></i>
+                </div>
+            </div>
+        </div>
+
+      </div>
+      <div class="modal-footer bg-white border-0 pb-4 px-4">
+        <button type="submit" class="btn-save-modal"><i class="fa-solid fa-check-circle"></i> حفظ وجدولة</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var calendarEl = document.getElementById('calendar');
+        var calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            direction: 'rtl',
+            locale: 'ar',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,listMonth'
+            },
+            events: '/api/training/events',
+            eventClick: function(info) {
+                if (info.event.url) {
+                    window.location.href = info.event.url;
+                    info.jsEvent.preventDefault();
+                }
+            },
+            buttonText: { today: 'اليوم', month: 'شهر', list: 'قائمة' }
+        });
+        calendar.render();
+    });
+
+    function toggleTrainer(type) {
+        const intDiv = document.getElementById('internal_div');
+        const extDiv = document.getElementById('external_div');
+        if(type === 'external') {
+            intDiv.style.display = 'none';
+            extDiv.style.display = 'block';
+        } else {
+            intDiv.style.display = 'block';
+            extDiv.style.display = 'none';
+        }
+    }
+</script>
+{% endblock %}

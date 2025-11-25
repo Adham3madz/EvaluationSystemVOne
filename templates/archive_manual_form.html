@@ -1,0 +1,228 @@
+{% extends "layout.html" %}
+{% block title %}إضافة أرشيف يدوياً{% endblock %}
+
+{% block content %}
+<style>
+    /* === Shared Modern Styles === */
+    .archive-container {
+        max-width: 700px;
+        margin: 40px auto;
+        padding: 40px;
+        background: #ffffff;
+        border-radius: 16px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        position: relative;
+        overflow: hidden;
+        border-top: 6px solid #004d7a;
+    }
+
+    .archive-header {
+        text-align: center;
+        margin-bottom: 35px;
+    }
+
+    .icon-wrapper {
+        width: 70px;
+        height: 70px;
+        background-color: #e3f2fd;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+    }
+
+    .icon-wrapper span {
+        font-size: 32px;
+        color: #004d7a;
+    }
+
+    .archive-header h2 {
+        color: #2c3e50;
+        font-weight: 800;
+        font-size: 24px;
+        margin-bottom: 10px;
+    }
+
+    .info-text {
+        font-size: 15px;
+        color: #666;
+        margin-bottom: 20px;
+    }
+
+    /* === Form Elements === */
+    .form-label {
+        font-weight: 700;
+        color: #2c3e50;
+        margin-bottom: 8px;
+        display: block;
+        font-size: 14px;
+    }
+
+    .form-control, .form-select {
+        width: 100%;
+        padding: 12px 15px;
+        border-radius: 10px;
+        border: 1px solid #dee2e6;
+        background-color: #fdfdfd;
+        font-size: 15px;
+        transition: all 0.3s ease;
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: #004d7a;
+        box-shadow: 0 0 0 4px rgba(0, 77, 122, 0.1);
+        outline: none;
+    }
+
+    /* === Buttons === */
+    .btn {
+        padding: 12px 24px;
+        border-radius: 10px;
+        font-weight: 700;
+        font-size: 15px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #004d7a 0%, #00608f 100%);
+        color: white;
+        box-shadow: 0 4px 15px rgba(0, 77, 122, 0.3);
+    }
+
+    .btn-primary:hover {
+        background: linear-gradient(135deg, #003a5c 0%, #004d7a 100%);
+        transform: translateY(-2px);
+    }
+
+    .btn-secondary {
+        background-color: #e9ecef;
+        color: #495057;
+    }
+
+    .btn-secondary:hover {
+        background-color: #dde2e6;
+        color: #212529;
+    }
+
+    .d-flex {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 30px;
+        padding-top: 20px;
+        border-top: 1px dashed #dee2e6;
+    }
+
+    .row-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+
+    @media (max-width: 600px) {
+        .row-grid { grid-template-columns: 1fr; }
+    }
+</style>
+
+<div class="archive-container">
+    <div class="archive-header">
+        <div class="icon-wrapper">
+            <span>📂</span>
+        </div>
+        <h2>إضافة سجل أرشيف يدوياً</h2>
+        <p class="info-text">
+            استخدم هذا النموذج لإضافة موظف سابق إلى الأرشيف مباشرة.
+        </p>
+    </div>
+    
+    <form method="POST">
+        
+        <div class="row-grid">
+            <div>
+                <label class="form-label">اسم الموظف:</label>
+                <input type="text" name="name" class="form-control" required placeholder="الاسم رباعي...">
+            </div>
+            <div>
+                <label class="form-label">الرقم القومي (SSN):</label>
+                <input type="text" name="ssn" class="form-control" placeholder="14 رقم...">
+            </div>
+        </div>
+
+        <div class="row-grid">
+            <div>
+                <label class="form-label">القسم:</label>
+                <select name="dept_id" class="form-select">
+                    <option value="">-- غير محدد --</option>
+                    {% for dept in depts %}
+                    <option value="{{ dept.DEPTID }}">{{ dept.DEPTNAME }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="form-label">الوظيفة:</label>
+                <select name="pos_id" class="form-select">
+                    <option value="">-- غير محدد --</option>
+                    {% for pos in positions %}
+                    <option value="{{ pos.PositionID }}">{{ pos.PositionName }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div class="row-grid">
+            <div>
+                <label class="form-label">تاريخ التعيين:</label>
+                <input type="date" name="hired_day" class="form-control">
+            </div>
+            <div>
+                <label class="form-label">تاريخ الإنهاء:</label>
+                <input type="date" name="end_day" class="form-control" required>
+            </div>
+        </div>
+
+        <div class="row-grid">
+            <div>
+                <label class="form-label">السبب العام:</label>
+                <select name="reason_id" class="form-select" required>
+                    <option value="">-- اختر السبب --</option>
+                    {% for r in reasons %}
+                    <option value="{{ r.ReasonID }}">{{ r.ReasonText }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <label class="form-label">السبب التفصيلي (Why):</label>
+                <select name="why_id" class="form-select">
+                    <option value="">-- اختر (اختياري) --</option>
+                    {% for w in whys %}
+                    <option value="{{ w.WhyID }}">{{ w.WhyText }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">ملاحظات:</label>
+            <textarea name="comment" class="form-control" rows="3" placeholder="أي تفاصيل إضافية..."></textarea>
+        </div>
+
+        <div class="d-flex">
+            <a href="{{ url_for('userinfo_archive_report') }}" class="btn btn-secondary">
+                ⬅️ إلغاء
+            </a>
+            <button type="submit" class="btn btn-primary">
+                💾 حفظ السجل في الأرشيف
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

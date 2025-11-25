@@ -1,0 +1,176 @@
+{% extends "layout.html" %}
+{% block title %}إدارة دورات التدريب{% endblock %}
+
+{% block content %}
+<style>
+    /* === Modern Container === */
+    .settings-card {
+        max-width: 950px;
+        margin: 40px auto;
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        overflow: hidden;
+        font-family: "Tajawal", "Cairo", sans-serif;
+    }
+    
+    /* === Header === */
+    .settings-header {
+        background: linear-gradient(135deg, #6c5ce7, #a29bfe); /* Purple theme */
+        padding: 25px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: white;
+    }
+    .settings-header h3 { margin: 0; font-weight: 800; letter-spacing: 0.5px; font-size: 22px; }
+
+    /* === Body === */
+    .settings-body { padding: 30px; }
+
+    /* === Add Button === */
+    .btn-add-header {
+        background: rgba(255,255,255,0.2);
+        border: 1px solid rgba(255,255,255,0.4);
+        color: white;
+        padding: 8px 20px;
+        border-radius: 50px;
+        font-weight: bold;
+        text-decoration: none;
+        transition: 0.3s;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+    }
+    .btn-add-header:hover {
+        background: white;
+        color: #6c5ce7;
+        transform: translateY(-2px);
+    }
+
+    /* === Modern Table === */
+    .modern-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    .modern-table th { 
+        background: #f8f9fa; 
+        padding: 15px; 
+        font-size: 13px; 
+        color: #636e72; 
+        font-weight: 700;
+        border-bottom: 2px solid #eee; 
+        text-align: center;
+    }
+    .modern-table td { 
+        padding: 15px; 
+        border-bottom: 1px solid #f1f1f1; 
+        vertical-align: middle; 
+        color: #2d3436; 
+        font-weight: 600;
+        font-size: 14px;
+        text-align: center;
+    }
+    .modern-table tr:last-child td { border-bottom: none; }
+    .modern-table tr:hover { background-color: #fdfdfd; }
+
+    /* Text Alignment Override for Course Name */
+    .text-start { text-align: right !important; }
+
+    /* Department Badge */
+    .dept-badge {
+        background-color: #e3f2fd;
+        color: #0984e3;
+        padding: 5px 10px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: bold;
+        display: inline-block;
+    }
+    .dept-general {
+        background-color: #f1f2f6;
+        color: #636e72;
+    }
+
+    /* Action Buttons */
+    .btn-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        border: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: 0.2s;
+        cursor: pointer;
+        text-decoration: none;
+        font-size: 14px;
+    }
+    .btn-edit { background-color: #fff4e5; color: #ff9f43; }
+    .btn-edit:hover { background-color: #ffeaa7; color: #e67e22; }
+    
+    .btn-delete { background-color: #ffecec; color: #ff7675; }
+    .btn-delete:hover { background-color: #fab1a0; color: #d63031; }
+
+</style>
+
+<div class="container">
+    <div class="settings-card">
+        <div class="settings-header">
+            <h3><i class="fa-solid fa-graduation-cap"></i> إدارة دورات التدريب</h3>
+            <a href="{{ url_for('training_courses_add') }}" class="btn-add-header">
+                <i class="fa-solid fa-plus"></i> إضافة دورة
+            </a>
+        </div>
+        
+        <div class="settings-body">
+            <div class="table-responsive">
+                <table class="modern-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 8%;">#</th>
+                            <th class="text-start" style="width: 50%;">اسم الدورة التدريبية</th>
+                            <th style="width: 25%;">القسم المستهدف</th>
+                            <th style="width: 17%;">إجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if courses %}
+                            {% for course in courses %}
+                            <tr>
+                                <td class="text-muted">{{ course.TrainingCourseID }}</td>
+                                <td class="text-start">{{ course.TrainingCourseText }}</td>
+                                <td>
+                                    {% if course.DEPTNAME %}
+                                        <span class="dept-badge">{{ course.DEPTNAME }}</span>
+                                    {% else %}
+                                        <span class="dept-badge dept-general">عام (الكل)</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div style="display:flex; justify-content:center; gap:8px;">
+                                        <a href="{{ url_for('training_courses_edit', tcid=course.TrainingCourseID) }}" class="btn-icon btn-edit" title="تعديل">
+                                            <i class="fa-solid fa-pen"></i>
+                                        </a>
+                                        <form action="{{ url_for('training_courses_delete', tcid=course.TrainingCourseID) }}" method="POST" style="margin:0;">
+                                            <button type="submit" class="btn-icon btn-delete" title="حذف" onclick="return confirm('هل أنت متأكد من الحذف؟')">
+                                                <i class="fa-solid fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="4" style="padding:40px; color:#999;">
+                                    <i class="fa-solid fa-folder-open" style="font-size:30px; margin-bottom:10px;"></i><br>
+                                    لا توجد دورات تدريبية معرفة حالياً.
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

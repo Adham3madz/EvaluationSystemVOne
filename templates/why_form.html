@@ -1,0 +1,35 @@
+{% extends "layout.html" %}
+{% block title %}{{ 'إضافة' if action == 'Add' else 'تعديل' }} سبب تفصيلي{% endblock %}
+
+{% block content %}
+<style>
+  body { direction: rtl; background-color: #f8fafc; font-family: "Cairo", sans-serif; }
+  .container { background: #fff; border-radius: 14px; padding: 30px; max-width: 600px; margin: 40px auto; box-shadow: 0 3px 10px rgba(0, 0, 0, 0.07); }
+  h2 { color: #0d47a1; text-align: center; margin-bottom: 30px; }
+  label { font-weight: 600; display: block; margin-bottom: 8px; }
+  input[type="text"] { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; }
+  .btn { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; color: white; text-decoration: none; }
+  .btn-primary { background-color: #1565c0; }
+  .btn-secondary { background-color: #757575; }
+  .actions { display: flex; justify-content: space-between; margin-top: 25px; }
+</style>
+
+<div class="container">
+  <h2>{{ 'إضافة سبب تفصيلي جديد' if action == 'Add' else 'تعديل السبب التفصيلي' }}</h2>
+
+  <form method="POST">
+      <div class="mb-3">
+          <label for="why_text">نص السبب (Why):</label>
+          <input type="text" name="why_text" id="why_text" required 
+                 value="{{ why.WhyText if why else '' }}" placeholder="مثال: ظروف عائلية، عرض عمل أفضل...">
+      </div>
+      
+      <div class="actions">
+          <a href="{{ url_for('whys_list') }}" class="btn btn-secondary">⬅️ رجوع للقائمة</a>
+          <button type="submit" class="btn btn-primary">
+              {{ '➕ إضافة' if action == 'Add' else '💾 حفظ' }}
+          </button>
+      </div>
+  </form>
+</div>
+{% endblock %}

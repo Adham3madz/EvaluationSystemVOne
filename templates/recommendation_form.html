@@ -1,0 +1,99 @@
+{% extends "layout.html" %}
+{% block title %}{{ 'إضافة' if action == 'Add' else 'تعديل' }} توصية{% endblock %}
+
+{% block content %}
+<style>
+/* Add all the styles from criteria_form.html here */
+body {
+    direction: rtl;
+    background-color: #f8fafc;
+    font-family: "Cairo", sans-serif;
+}
+.container {
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.07);
+    padding: 25px 35px;
+    max-width: 750px;
+    margin: 40px auto;
+}
+h2 {
+    color: #0d47a1;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 30px;
+}
+label {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 6px;
+    display: inline-block;
+}
+input, select, textarea {
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-size: 15px;
+}
+.btn {
+    padding: 10px 16px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 15px;
+    text-decoration: none;
+}
+.btn-primary { background-color: #1565c0; color: white; }
+.btn-secondary { background-color: #757575; color: white; }
+.card {
+    background: #fff;
+    padding: 25px;
+    border-radius: 12px;
+}
+.d-flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+}
+.mt-4 { margin-top: 25px; }
+.mb-3 { margin-bottom: 20px; }
+</style>
+
+<div class="container">
+  <h2>{{ 'إضافة' if action == 'Add' else 'تعديل' }} توصية</h2>
+
+  <div class="card">
+    <form method="POST">
+      <div class="mb-3">
+        <label for="text">نص التوصية:</label>
+        <textarea id="text" name="text" rows="5" required>{{ recommendation.RecommendationText if recommendation else '' }}</textarea>
+      </div>
+
+      <div class="mb-3">
+        <label class="filter-label">القسم:</label>
+        <select name="dept_id" class="filter-select">
+          <option value="">عام (كل الأقسام)</option>
+          {% for dept in departments or [] %}
+          <option value="{{ dept.DEPTID }}" {% if recommendation and recommendation.AppliesToDeptID == dept.DEPTID %}selected{% endif %}>
+            {{ dept.DEPTNAME }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      <hr>
+
+      <div class="d-flex mt-4">
+        <button type="submit" class="btn btn-primary">
+          ✅ {{ 'إضافة التوصية' if action == 'Add' else 'حفظ التعديلات' }}
+        </button>
+        <a href="{{ url_for('recommendations_list') }}" class="btn btn-secondary">
+          ⬅️ رجوع للقائمة
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

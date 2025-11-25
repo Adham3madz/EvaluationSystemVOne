@@ -1,0 +1,284 @@
+{% extends "layout.html" %}
+{% block title %}أرشفة موظف{% endblock %}
+
+{% block content %}
+<style>
+    /* === General Settings === */
+    body {
+        background-color: #f8f9fa;
+        font-family: "Tajawal", "Cairo", sans-serif;
+    }
+
+    /* === Card Container === */
+    .archive-container {
+        max-width: 650px;
+        margin: 50px auto;
+        padding: 40px;
+        background: #ffffff;
+        border-radius: 16px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        position: relative;
+        overflow: hidden;
+        border-top: 6px solid #dc3545;
+    }
+
+    /* === Header === */
+    .archive-header {
+        text-align: center;
+        margin-bottom: 35px;
+    }
+
+    .icon-wrapper {
+        width: 70px;
+        height: 70px;
+        background-color: #fde8e8;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+    }
+
+    .icon-wrapper span {
+        font-size: 32px;
+        color: #dc3545;
+    }
+
+    .archive-header h2 {
+        color: #2c3e50;
+        font-weight: 800;
+        font-size: 24px;
+        margin-bottom: 15px;
+    }
+
+    .warning-text {
+        font-size: 15px;
+        color: #555;
+        line-height: 1.6;
+        margin-bottom: 10px;
+    }
+
+    .employee-badge {
+        background-color: #dc3545;
+        color: #fff;
+        padding: 5px 15px;
+        border-radius: 50px;
+        font-weight: bold;
+        font-size: 1.1rem;
+        display: inline-block;
+        margin: 0 5px;
+    }
+
+    .soft-delete-note {
+        background-color: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeeba;
+        padding: 10px 15px;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        display: inline-block;
+        margin-top: 10px;
+    }
+
+    /* === Form Elements === */
+    .form-label {
+        font-weight: 700;
+        color: #2c3e50;
+        margin-bottom: 8px;
+        display: block;
+        font-size: 14px;
+    }
+
+    .form-select, .form-control {
+        width: 100%;
+        padding: 12px 15px;
+        border-radius: 10px;
+        border: 1px solid #dee2e6;
+        background-color: #fdfdfd;
+        font-size: 15px;
+        transition: all 0.3s ease;
+    }
+
+    .form-select:focus, .form-control:focus {
+        border-color: #dc3545;
+        box-shadow: 0 0 0 4px rgba(220, 53, 69, 0.1);
+        outline: none;
+    }
+
+    /* === Date Options Styling === */
+    .date-options {
+        background-color: #f8f9fa;
+        padding: 15px;
+        border-radius: 10px;
+        border: 1px solid #e9ecef;
+        margin-bottom: 20px;
+    }
+    .radio-group {
+        display: flex;
+        gap: 20px;
+        margin-bottom: 10px;
+    }
+    .radio-item {
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+        color: #444;
+    }
+    .radio-item input {
+        margin-left: 8px;
+        transform: scale(1.2);
+        accent-color: #dc3545;
+        cursor: pointer;
+    }
+    .manual-date-input {
+        display: none; /* Hidden by default */
+        margin-top: 10px;
+        animation: fadeIn 0.3s ease-in-out;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-5px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* === Buttons === */
+    .btn {
+        padding: 12px 24px;
+        border-radius: 10px;
+        font-weight: 700;
+        font-size: 15px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+    }
+
+    .btn-danger {
+        background: linear-gradient(135deg, #dc3545 0%, #b02a37 100%);
+        color: white;
+        box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
+    }
+    .btn-danger:hover {
+        background: linear-gradient(135deg, #bb2d3b 0%, #a02632 100%);
+        transform: translateY(-2px);
+    }
+
+    .btn-secondary {
+        background-color: #e9ecef;
+        color: #495057;
+    }
+    .btn-secondary:hover {
+        background-color: #dde2e6;
+        color: #212529;
+    }
+
+    .d-flex {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 30px;
+        padding-top: 20px;
+        border-top: 1px dashed #dee2e6;
+    }
+</style>
+
+<div class="archive-container">
+    <div class="archive-header">
+        <div class="icon-wrapper">
+            <span>🗑️</span>
+        </div>
+        <h2>تأكيد الأرشفة والحذف</h2>
+        
+        <p class="warning-text">
+            أنت على وشك أرشفة ملف الموظف: 
+            <span class="employee-badge">{{ user.NAME }}</span>
+        </p>
+        
+        <div class="soft-delete-note">
+            ⚠️ سيتم نقل السجل للأرشيف وحذف الرقم القومي والوظيفي لإتاحتها لموظفين جدد.
+        </div>
+    </div>
+
+    <form method="POST">
+        <div class="row" style="display: flex; gap: 20px; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 250px; margin-bottom: 20px;">
+                <label for="reason_id" class="form-label">نوع الإنهاء (الرئيسي):</label>
+                <select id="reason_id" name="reason_id" class="form-select" required>
+                    <option value="" disabled selected>-- اختر النوع --</option>
+                    {% for reason in reasons %}
+                    <option value="{{ reason.ReasonID }}">{{ reason.ReasonText }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div style="flex: 1; min-width: 250px; margin-bottom: 20px;">
+                <label for="why_id" class="form-label">السبب التفصيلي (Why):</label>
+                <select id="why_id" name="why_id" class="form-select" required>
+                    <option value="" disabled selected>-- اختر السبب التفصيلي --</option>
+                    {% for why in whys %}
+                    <option value="{{ why.WhyID }}">{{ why.WhyText }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">تاريخ إنهاء الخدمة:</label>
+            <div class="date-options">
+                <div class="radio-group">
+                    <label class="radio-item">
+                        <input type="radio" name="date_mode" value="auto" checked onclick="toggleDateInput(false)">
+                        <span>تلقائي (تاريخ اليوم)</span>
+                    </label>
+                    <label class="radio-item">
+                        <input type="radio" name="date_mode" value="manual" onclick="toggleDateInput(true)">
+                        <span>يدوي (تحديد تاريخ سابق)</span>
+                    </label>
+                </div>
+                
+                <div class="manual-date-input" id="manualDateDiv">
+                    <input type="date" name="manual_date" class="form-control">
+                    <small style="color:#666; margin-top:5px; display:block;">
+                        <i class="fa-regular fa-calendar"></i> يرجى تحديد التاريخ الفعلي لانتهاء الخدمة.
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-3" style="margin-bottom: 20px;">
+            <label for="comment" class="form-label">ملاحظات إدارية (إجباري):</label>
+            <textarea id="comment" name="comment" class="form-control" rows="4" required
+                      placeholder="يرجى كتابة تفاصيل إضافية حول سبب الإنهاء..."></textarea>
+        </div>
+        
+        <div class="d-flex">
+            <a href="{{ url_for('userinfo_list') }}" class="btn btn-secondary">
+                ⬅️ تراجع وإلغاء
+            </a>
+            <button type="submit" class="btn btn-danger">
+                تأكيد الأرشفة والحذف 🗑️
+            </button>
+        </div>
+    </form> 
+</div>
+
+<script>
+    function toggleDateInput(show) {
+        const div = document.getElementById('manualDateDiv');
+        const input = div.querySelector('input');
+        if (show) {
+            div.style.display = 'block';
+            input.required = true;
+        } else {
+            div.style.display = 'none';
+            input.required = false;
+            input.value = ''; 
+        }
+    }
+</script>
+{% endblock %}

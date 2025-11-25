@@ -1,0 +1,163 @@
+{% extends "layout.html" %}
+{% block title %}{{ 'إضافة' if action == 'Add' else 'تعديل' }} دورة تدريب{% endblock %}
+
+{% block content %}
+<style>
+    /* === Modern Container === */
+    .form-container {
+        max-width: 700px;
+        margin: 40px auto;
+        background: #ffffff;
+        border-radius: 16px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+        overflow: hidden;
+        font-family: "Tajawal", "Cairo", sans-serif;
+    }
+
+    /* === Header === */
+    .form-header {
+        background: linear-gradient(135deg, #004d7a, #00608f);
+        padding: 25px;
+        text-align: center;
+        color: white;
+    }
+    .form-header h3 { 
+        margin: 0; 
+        font-weight: 800; 
+        font-size: 22px; 
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+    }
+
+    /* === Body === */
+    .form-body { padding: 35px; }
+
+    /* === Inputs === */
+    .form-label {
+        font-weight: 700;
+        color: #2c3e50;
+        margin-bottom: 8px;
+        display: block;
+        font-size: 14px;
+    }
+
+    .form-control, .form-select {
+        width: 100%;
+        padding: 12px 15px;
+        border-radius: 10px;
+        border: 1px solid #dee2e6;
+        background-color: #fdfdfd;
+        font-size: 15px;
+        transition: all 0.3s ease;
+        font-family: inherit;
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: #004d7a;
+        box-shadow: 0 0 0 4px rgba(0, 77, 122, 0.1);
+        outline: none;
+        background-color: #fff;
+    }
+
+    textarea.form-control {
+        resize: vertical;
+        min-height: 120px;
+    }
+
+    /* === Footer Buttons === */
+    .form-footer {
+        margin-top: 30px;
+        padding-top: 20px;
+        border-top: 1px dashed #ddd;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .btn {
+        padding: 12px 25px;
+        border-radius: 50px;
+        font-weight: 700;
+        font-size: 15px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: none;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #004d7a 0%, #00608f 100%);
+        color: white;
+        box-shadow: 0 4px 15px rgba(0, 77, 122, 0.2);
+    }
+    .btn-primary:hover {
+        background: linear-gradient(135deg, #003a5c 0%, #004d7a 100%);
+        transform: translateY(-2px);
+    }
+
+    .btn-secondary {
+        background-color: #f1f3f5;
+        color: #636e72;
+    }
+    .btn-secondary:hover {
+        background-color: #e9ecef;
+        color: #2d3436;
+    }
+    
+    .help-text {
+        font-size: 12px;
+        color: #888;
+        margin-top: 5px;
+        display: block;
+    }
+</style>
+
+<div class="form-container">
+    
+    <div class="form-header">
+        <h3>
+            <i class="fa-solid fa-graduation-cap"></i> 
+            {{ 'إضافة دورة تدريبية' if action == 'Add' else 'تعديل بيانات الدورة' }}
+        </h3>
+    </div>
+    
+    <div class="form-body">
+        <form method="POST">
+            
+            <div class="mb-4">
+                <label class="form-label" for="text">اسم الدورة التدريبية:</label>
+                <textarea id="text" name="text" class="form-control" rows="4" required 
+                          placeholder="اكتب اسم الدورة ووصفها هنا...">{{ course.TrainingCourseText if course else '' }}</textarea>
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label">القسم المستهدف (اختياري):</label>
+                <select name="dept_id" class="form-select">
+                    <option value="">-- عام (متاح لكل الأقسام) --</option>
+                    {% for dept in departments or [] %}
+                    <option value="{{ dept.DEPTID }}" {% if course and course.AppliesToDeptID == dept.DEPTID %}selected{% endif %}>
+                        {{ dept.DEPTNAME }}
+                    </option>
+                    {% endfor %}
+                </select>
+                <span class="help-text">إذا اخترت قسماً محدداً، ستظهر هذه الدورة فقط لموظفي ذلك القسم.</span>
+            </div>
+
+            <div class="form-footer">
+                <a href="{{ url_for('training_courses_list') }}" class="btn btn-secondary">
+                    <i class="fa-solid fa-arrow-right"></i> تراجع
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fa-solid fa-check"></i> {{ 'حفظ الدورة' if action == 'Add' else 'حفظ التعديلات' }}
+                </button>
+            </div>
+            
+        </form>
+    </div>
+</div>
+{% endblock %}

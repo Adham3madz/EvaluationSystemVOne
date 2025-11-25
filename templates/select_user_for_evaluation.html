@@ -1,0 +1,236 @@
+{% extends "layout.html" %}
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<style>
+  /* ===== إعداد عام ===== */
+  body {
+      direction: rtl;
+      font-family: "Tajawal", "Segoe UI", sans-serif;
+      background-color: #f5f7fa;
+      color: #222;
+      margin: 0;
+      padding: 0;
+  }
+
+  /* ===== رأس الصفحة ===== */
+  .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      background-color: #e9f0fb;
+      border-radius: 10px;
+      padding: 15px 20px;
+      margin-bottom: 25px;
+      border-right: 5px solid #004d99;
+  }
+
+  .page-header h3 {
+      color: #004d99;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 1.3rem;
+  }
+
+  /* --- NEW: Search Bar Styles --- */
+  .search-section {
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+  }
+  .search-form {
+      display: flex;
+      gap: 15px;
+  }
+  .search-input {
+      flex: 1;
+      padding: 10px 14px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 15px;
+  }
+  .btn-search {
+      background-color: #004d7a;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+  }
+  .btn-clear {
+      background-color: #6c757d;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+  }
+  /* --- End Search Bar Styles --- */
+
+  /* ===== حاوية الجدول ===== */
+  .table-container {
+      background-color: #fff;
+      border-radius: 12px;
+      box-shadow: 0 3px 15px rgba(0, 0, 0, 0.08);
+      overflow-x: auto;
+  }
+
+  /* ===== تنسيق الجدول ===== */
+  table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: center;
+      font-size: 0.95rem;
+  }
+
+  thead {
+      background-color: #004d99;
+      color: #fff;
+  }
+
+  th, td {
+      padding: 10px 8px;
+      border-bottom: 1px solid #dee2e6;
+  }
+
+  tbody tr:nth-child(even) {
+      background-color: #f8f9fc;
+  }
+
+  tbody tr:hover {
+      background-color: #eef4ff;
+  }
+
+  /* ===== الأزرار ===== */
+  .btn {
+      border: none;
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.3s;
+      text-decoration: none;
+      display: inline-block;
+  }
+
+  .btn-success {
+      background-color: #007b3e;
+      color: #fff;
+  }
+
+  .btn-success:hover {
+      background-color: #005f2e;
+  }
+
+  /* ===== الصف الفارغ ===== */
+  .empty-row {
+      text-align: center;
+      color: #888;
+      font-style: italic;
+  }
+
+  /* ===== الهواتف ===== */
+  @media (max-width: 768px) {
+      .page-header {
+          flex-direction: column;
+          gap: 10px;
+          text-align: center;
+      }
+      .search-form {
+          flex-direction: column;
+      }
+      table {
+          font-size: 0.85rem;
+      }
+      th, td {
+          padding: 8px 5px;
+      }
+      .btn {
+          padding: 5px 10px;
+          font-size: 0.8rem;
+      }
+  }
+</style>
+
+<div class="page-header">
+  <h3>🧾 {{ page_title }}</h3>
+</div>
+
+<div class="search-section">
+    <form id="searchForm" method="GET" action="{{ url_for('select_user_for_evaluation') }}" class="search-form">
+        <input type="text" 
+               name="search" 
+               id="search" 
+               class="search-input" 
+               placeholder="ابحث بالاسم، المسمى الوظيفي، القسم..." 
+               value="{{ filters.get('search', '') }}">
+        
+        <button type="submit" class="btn btn-search">بحث</button>
+        <button type="button" onclick="clearSearch()" class="btn btn-clear">مسح</button>
+    </form>
+</div>
+<div class="table-container">
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>👤 الاسم</th>
+        <th>💼 المسمى الوظيفي / الدور</th>
+        <th>🏢 القسم</th>
+        <th>⚙️ إجراء</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for u in users %}
+      <tr>
+        <td>{{ u.USERID }}</td>
+        <td>{{ u.NAME }}</td>
+        <td>{{ u.TITLE or u.PositionName or 'غير محدد' }}</td>
+        <td>{{ u.DEPTNAME or 'غير محدد' }}</td>
+        <td>
+          {% if role_id == 2 and u.IsManager %}
+            <a href="{{ url_for('new_evaluation', employee_id=u.USERID, is_manager='true') }}" class="btn btn-success">
+              ✏️ بدء التقييم
+            </a>
+          {% elif role_id == 3 %}
+            <a href="{{ url_for('new_evaluation', employee_id=u.USERID) }}" class="btn btn-success">
+              ✏️ بدء التقييم
+            </a>
+          {% endif %}
+        </td>
+      </tr>
+      {% else %}
+      <tr>
+        <td colspan="5" class="empty-row">
+          {% if filters.get('search') %}
+            لا توجد نتائج مطابقة للبحث.
+          {% elif role_id == 3 %}
+            لا يوجد موظفين في قسمك لتقييمهم.
+          {% elif role_id == 2 %}
+            لا يوجد مديرين لتقييمهم.
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<script>
+    function clearSearch() {
+        document.getElementById('search').value = '';
+        document.getElementById('searchForm').submit();
+    }
+</script>
+
+{% endblock %}

@@ -1,0 +1,334 @@
+{% extends "layout.html" %}
+{% block title %}ملف الموظف - {{ user.NAME }}{% endblock %}
+
+{% block content %}
+<style>
+    /* Profile Specific Styles (RTL) */
+    .profile-container {
+        max-width: 900px;
+        margin: 30px auto;
+        padding: 20px;
+    }
+    .profile-card {
+        background: #fff;
+        border-radius: 15px;
+        box-shadow: 0 5px 25px rgba(0,0,0,0.08);
+        padding: 30px;
+        border-top: 5px solid #004d7a; /* Updated to match theme */
+    }
+    .profile-header {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+    .profile-header h2 {
+        color: #004d7a;
+        font-weight: 800;
+        margin-top: 15px;
+        margin-bottom: 5px;
+    }
+    .profile-img {
+        width: 140px;
+        height: 140px;
+        border-radius: 50%; /* Or 15px for rounded square */
+        object-fit: cover;
+        border: 4px solid #004d7a;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    }
+    
+    /* Info Grid */
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        margin-top: 20px;
+    }
+    .info-item {
+        background-color: #f8f9fa;
+        padding: 15px;
+        border-radius: 10px;
+        font-size: 14px;
+        border: 1px solid #e9ecef;
+        transition: transform 0.2s;
+    }
+    .info-item:hover {
+        transform: translateY(-2px);
+        background-color: #eef2f5;
+    }
+    .info-item strong {
+        display: block;
+        color: #004d7a;
+        margin-bottom: 5px;
+        font-weight: 700;
+        font-size: 12px;
+        text-transform: uppercase;
+        opacity: 0.8;
+    }
+    
+    /* Stats */
+    .section-title {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: #333;
+        margin-top: 40px;
+        margin-bottom: 20px;
+        padding-right: 10px;
+        border-right: 4px solid #004d7a;
+    }
+    .stats-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+    }
+    .stat-card {
+        background: #fff;
+        border: 1px solid #e0e0e0;
+        padding: 20px;
+        border-radius: 12px;
+        text-align: center;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+    }
+    .stat-card h5 {
+        font-weight: 600;
+        color: #555;
+        margin-bottom: 5px;
+        font-size: 14px;
+    }
+    .stat-number {
+        font-size: 2.2rem;
+        font-weight: 800;
+        color: #004d7a;
+        margin: 0;
+    }
+
+    /* History Table */
+    .table-responsive {
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    .history-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.9rem;
+        background-color: #fff;
+    }
+    .history-table thead {
+        background-color: #004d7a;
+        color: #fff;
+    }
+    .history-table th, .history-table td {
+        padding: 12px 15px;
+        border-bottom: 1px solid #eee;
+        text-align: center;
+    }
+    .history-table tbody tr:hover {
+        background-color: #f1f5f9;
+    }
+
+    /* Badges & Buttons */
+    .btn-sm {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        background-color: #004d7a;
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        padding: 6px 12px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: 0.3s;
+    }
+    .btn-sm:hover { background-color: #003859; }
+
+    .rating-badge {
+        display: inline-block;
+        padding: 5px 12px;
+        border-radius: 50px;
+        font-weight: 700;
+        font-size: 12px;
+        color: #fff;
+    }
+    .rating-excellent { background-color: #27ae60; }
+    .rating-very-good { background-color: #2980b9; }
+    .rating-good { background-color: #f39c12; }
+    .rating-acceptable { background-color: #d35400; }
+    .rating-weak { background-color: #c0392b; }
+    .rating-default { background-color: #95a5a6; }
+
+    .action-bar {
+        margin-top: 40px;
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+    }
+    .btn-action {
+        padding: 10px 25px;
+        border-radius: 8px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: 0.3s;
+    }
+    .btn-secondary { background-color: #6c757d; color: white; }
+    .btn-edit { background-color: #f1c40f; color: #333; }
+    .btn-edit:hover { background-color: #f39c12; }
+</style>
+
+<div class="profile-container">
+    <div class="profile-card">
+        
+        <div class="profile-header">
+            <img src="{{ url_for('user_pic', user_id=user.USERID) }}" 
+                 alt="صورة الموظف" 
+                 class="profile-img"
+                 onerror="this.src='https://placehold.co/150x150/004d7a/white?text=No+Image'; this.onerror=null;">
+            <h2>{{ user.NAME }}</h2>
+            <p class="text-muted">{{ user.TITLE or user.PositionName or 'غير محدد' }}</p>
+        </div>
+
+        <div class="info-grid">
+            <div class="info-item">
+                <strong>الرقم الوظيفي</strong>
+                {{ user.BADGENUMBER or '-' }}
+            </div>
+            <div class="info-item">
+                <strong>الرقم القومي</strong>
+                {{ user.SSN or '-' }}
+            </div>
+            <div class="info-item">
+                <strong>تاريخ التعيين</strong>
+                {{ user.HIREDDAY.strftime('%Y-%m-%d') if user.HIREDDAY else '-' }}
+            </div>
+            <div class="info-item">
+                <strong>القسم</strong>
+                {{ user.DEPTNAME or 'غير محدد' }}
+            </div>
+            <div class="info-item">
+                <strong>المسمى الوظيفي</strong>
+                {{ user.PositionName or user.TITLE or '-' }}
+            </div>
+            <div class="info-item">
+                <strong>فئة الموظف</strong>
+                {{ user.employee_class or 'غير محدد' }}
+            </div>
+            <div class="info-item">
+                <strong>النوع</strong>
+                {{ 'ذكر' if user.GENDER == 'M' else 'أنثى' if user.GENDER == 'F' else '-' }}
+            </div>
+        </div>
+
+        <h3 class="section-title">ملخص التقييمات</h3>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h5>عدد التقييمات</h5>
+                <p class="stat-number">{{ avg_stats.eval_count or 0 }}</p>
+            </div>
+            <div class="stat-card">
+                <h5>متوسط الأداء</h5>
+                <p class="stat-number">{{ "%.1f"|format(avg_stats.avg_score) if avg_stats.avg_score is not none else 'N/A' }}%</p>
+            </div>
+        </div>
+
+        <h3 class="section-title">سجل التقييمات</h3>
+        <div class="table-responsive">
+
+            
+            <table class="history-table">
+                <thead>
+                    <tr>
+                        <th>تاريخ التقييم</th>
+                        <th>نوع التقييم</th> <th>النتيجة</th>
+                        <th>التقدير</th>
+                        <th>المقيّم</th>
+                        <th>الإجراء</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in history %}
+                    <tr>
+                        <td>{{ item.EvaluationDate.strftime('%Y-%m-%d') if item.EvaluationDate else '-' }}</td>
+                        
+                        <td>
+                            <span style="background:#eef; padding:4px 8px; border-radius:4px; font-size:0.85rem;">
+                                {{ item.EvaluationType or '-' }}
+                            </span>
+                        </td>
+
+                        <td style="font-weight:bold;">{{ "%.1f"|format(item.OverallScore) }}%</td>
+                        
+                        {% set r_class = 'default' %}
+                        {% if item.OverallRating == 'ممتاز' %}{% set r_class = 'excellent' %}
+                        {% elif item.OverallRating == 'جيد جدا' %}{% set r_class = 'very-good' %}
+                        {% elif item.OverallRating == 'جيد' %}{% set r_class = 'good' %}
+                        {% elif item.OverallRating == 'مقبول' %}{% set r_class = 'acceptable' %}
+                        {% elif item.OverallRating == 'ضعيف' %}{% set r_class = 'weak' %}
+                        {% endif %}
+                        <td>
+                          <span class="rating-badge rating-{{ r_class }}">
+                            {{ item.OverallRating or '--' }}
+                          </span>
+                        </td>
+
+                        <td>{{ item.EvaluatorName or '-' }}</td>
+                        <td>
+                            <a href="{{ url_for('evaluation_details', evaluation_id=item.EvaluationID) }}" class="btn-sm">
+                                عرض 👁️
+                            </a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted" style="padding: 20px;">لا يوجد سجل تقييمات لهذا الموظف.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <table class="history-table">
+    <thead>
+        <tr>
+            <th>الدورة</th>
+            <th>التاريخ</th>
+            <th>المدرب / الجهة</th>
+            <th>الدرجة</th>
+            <th>الحالة</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for t in training_history %}
+        <tr>
+            <td>{{ t.TrainingCourseText }}</td>
+            <td>{{ t.SessionDate.strftime('%Y-%m-%d') }}</td>
+            <td>
+                {% if t.IsExternal %}
+                    {{ t.ExternalTrainerName }} ({{ t.ExternalCompany }}) <span class="badge bg-warning text-dark">External</span>
+                {% else %}
+                    {{ t.IntTrainer }} <span class="badge bg-info">Internal</span>
+                {% endif %}
+            </td>
+            <td>{{ t.Grade or '-' }}%</td>
+            <td>
+                {% if t.PassStatus == 'Passed' %}<span class="badge bg-success">ناجح</span>
+                {% elif t.PassStatus == 'Failed' %}<span class="badge bg-danger">راسب</span>
+                {% else %}<span>-</span>{% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+        </div>
+
+        <div class="action-bar">
+            <a href="{{ url_for('userinfo_list') }}" class="btn btn-secondary btn-action">
+                رجوع للقائمة
+            </a>
+            {% if is_admin %}
+                <a href="{{ url_for('userinfo_edit', uid=user.USERID) }}" class="btn btn-edit btn-action">
+                    تعديل الملف
+                </a>
+            {% endif %}
+        </div>
+
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}نظام إدارة الموارد البشرية{% endblock %}</title>
+    
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+    
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/fontawesome.css') }}">
+    
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/cairo.css') }}">
+
+    <script src="{{ url_for('static', filename='js/chart.min.js') }}"></script>
+
+    <style>
+        /* ... (Keep your existing CSS styles exactly as they are) ... */
+        body { font-family: "Cairo", sans-serif; background-color: #f4f6f9; }
+        .navbar { background: linear-gradient(135deg, #004d7a, #00608f); color: #fff; padding: 15px 25px; display: flex; justify-content: space-between; box-shadow: 0 2px 8px rgba(0,0,0,0.15); position: sticky; top: 0; z-index: 1000;}
+        .navbar-brand { font-weight: 800; font-size: 20px; display: flex; align-items: center; gap: 10px; }
+        .btn-logout { background-color: #dc3545; color: #fff; padding: 8px 15px; text-decoration: none; border-radius: 6px; font-size: 13px; font-weight: bold; transition: background 0.3s; }
+        .btn-logout:hover { background-color: #bb2d3b; }
+        .main-container { display: flex; flex-direction: row-reverse; min-height: calc(100vh - 65px); }
+        .sidebar { width: 260px; background-color: #033e5b; color: #fff; padding: 20px 10px; display: flex; flex-direction: column; flex-shrink: 0; box-shadow: -2px 0 10px rgba(0,0,0,0.1); }
+        .menu-header { font-size: 11px; text-transform: uppercase; color: #81d4fa; margin: 25px 15px 8px; font-weight: bold; border-bottom: 1px solid #04537a; padding-bottom: 5px; }
+        .sidebar-menu { list-style: none; padding: 0; margin-bottom: 5px; }
+        .sidebar-menu li { margin: 4px 0; }
+        .sidebar-menu a { display: flex; align-items: center; gap: 12px; padding: 11px 15px; border-radius: 8px; color: #ecf0f1; text-decoration: none; transition: all 0.2s ease; font-size: 14px; }
+        .sidebar-menu a i { width: 24px; text-align: center; font-size: 17px; }
+        .sidebar-menu a:hover { background-color: #055a82; color: #fff; transform: translateX(-3px); }
+        .content { flex: 1; padding: 30px; background-color: #f8f9fa; border-top-left-radius: 25px; width: 100%; overflow-y: auto;}
+        .alert { padding: 15px 20px; margin-bottom: 25px; border-radius: 10px; font-size: 15px; font-weight: 600; text-align: right; display: flex; align-items: center; gap: 10px; box-shadow: 0 3px 6px rgba(0,0,0,0.05); }
+        .alert.success { background-color: #d1e7dd; color: #0f5132; border-right: 5px solid #198754; }
+        .alert.danger { background-color: #f8d7da; color: #842029; border-right: 5px solid #dc3545; }
+        .alert.warning { background-color: #fff3cd; color: #664d03; border-right: 5px solid #ffc107; }
+        .alert.info { background-color: #cff4fc; color: #055160; border-right: 5px solid #0dcaf0; }
+        
+        @media (max-width: 768px) {
+            .main-container { flex-direction: column; }
+            .sidebar { width: 100%; flex-direction: row; overflow-x: auto; border-bottom: 3px solid #004d7a; }
+            .menu-header { display: none; }
+            .sidebar-menu { display: flex; gap: 5px; margin: 0; }
+            .sidebar-menu a { white-space: nowrap; padding: 8px 12px; font-size: 13px; background: #044e72; }
+            .content { border-radius: 0; padding: 15px; }
+        }
+    </style>
+</head>
+<body>
+    <script src="{{ url_for('static', filename='js/chart.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/fontawesome.css') }}">
+
+    <header class="navbar">
+        <div class="navbar-brand">
+            <i class="fa-solid fa-building-shield" style="margin-left: 10px; color: #ffc107;"></i>
+            نظام إدارة الموارد البشرية🧑‍💼
+        </div>
+        <div class="navbar-right">
+            {% if session.get('user_id') %}
+            <a href="{{ url_for('logout') }}" class="btn-logout">
+                <i class="fa-solid fa-right-from-bracket"></i> خروج
+            </a>
+            {% endif %}
+        </div>
+    </header>
+
+    <div class="main-container">
+        
+        {% if session.get('user_id') %}
+
+        <aside class="sidebar">
+            
+            <div class="menu-header">الرئيسية</div>
+            <ul class="sidebar-menu">
+                {% if session.get('role_id') == 6 %}
+                    <li>
+                        <a href="{{ url_for('recruitment_dashboard') }}">
+                            <i class="fa-solid fa-chart-pie" style="color: #ffda79;"></i> لوحة توظيف📈
+                        </a>
+                    </li>
+                {% else %}
+                <li>
+                        <a href="{{ url_for('dashboard') }}">
+                            <i class="fa-solid fa-chart-pie" style="color: #ffda79;"></i> لوحة التحكم📊📉
+                        </a>
+                    </li>
+                {% endif %}
+                
+                {% if session.get('role_id') != 6 %}
+                <li>
+                    <a href="{{ url_for('userinfo_list') }}">
+                        <i class="fa-solid fa-users-viewfinder" style="color: #4bcffa;"></i> الموظفين👨‍💼 
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+
+            {% if session.get('role_id') == 6 or is_admin %}
+            <div class="menu-header">إدارة التوظيف</div>
+            <ul class="sidebar-menu">
+                <li>
+                    <a href="{{ url_for('recruitment_dashboard') }}">
+                        <i class="fa-solid fa-chart-line" style="color: #0be881;"></i> تحليل التوظيف📈
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('recruitment_analytics') }}">
+                        <i class="fa-solid fa-chart-column" style="color: #00d2d3;"></i> التحليلات والرؤية🕵️‍♂️
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('recruitment_list') }}">
+                        <i class="fa-solid fa-list-check" style="color: #4bcffa;"></i> ليست المرشحين📢
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('job_list') }}">
+                        <i class="fa-solid fa-list-check" style="color: #4bcffa;"></i> سجل المرشحين📢
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('recruitment_add') }}">
+                        <i class="fa-solid fa-user-plus" style="color: #ff3f34;"></i> إضافة مرشح📥
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('recruitment_statuses') }}">
+                        <i class="fa-solid fa-tags" style="color: #a29bfe;"></i> أنواع الحالات🔠
+                    </a>
+                </li>
+                <li><a href="{{ url_for('recruitment_stage', status_name='New') }}"><i class="fa-solid fa-star" style="color: #0d6efd;"></i> طلبات جديدة🆕 </a></li>
+                <li><a href="{{ url_for('recruitment_stage', status_name='Interview 1') }}"><i class="fa-solid fa-comments" style="color: #ffc107;"></i>  مقابلة أولى</a></li>
+                <li><a href="{{ url_for('recruitment_stage', status_name='Interview 2') }}"><i class="fa-solid fa-user-check" style="color: #fd7e14;"></i> مقابلة ثانية</a></li>
+                <li><a href="{{ url_for('recruitment_stage', status_name='Offer') }}"><i class="fa-solid fa-file-contract" style="color: #198754;"></i> عروض العمل</a></li>
+            </ul>
+            {% endif %}
+
+            {% if session.get('role_id') == 1 or session.get('role_id') == 6 %}
+            <div class="menu-header">إدارة التدريب (LMS)</div>
+            <ul class="sidebar-menu">
+                <li>
+                    <a href="{{ url_for('training_calendar') }}">
+                        <i class="fa-solid fa-calendar-days" style="color: #e17055;"></i> تقويم التدريب
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('training_manual_history') }}">
+                        <i class="fa-solid fa-clock-rotate-left" style="color: #8e44ad;"></i> أرشيف سابق
+                    </a>
+                </li>
+            </ul>
+            {% endif %}
+
+            {% if is_admin or session.get('role_id') in [2, 3] %}
+            <div class="menu-header">نظام التقييم</div>
+            <ul class="sidebar-menu">
+                <li>
+                    <a href="{{ url_for('evaluation_reports') }}">
+                        <i class="fa-solid fa-file-signature" style="color: #0be881;"></i> تقارير الأداء
+                    </a>
+                </li>
+                {% if session.get('role_id') in [2, 3] %}
+                <li>
+                    <a href="{{ url_for('select_user_for_evaluation') }}">
+                        <i class="fa-solid fa-star-half-stroke" style="color: #ff3f34;"></i> تقييم جديد
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+            {% endif %}
+
+            {% if is_admin %}
+            <div class="menu-header">الهيكل التنظيمي</div>
+            <ul class="sidebar-menu">
+                <li><a href="{{ url_for('departments_manage') }}"><i class="fa-solid fa-sitemap" style="color: #ffa801;"></i> الإدارات</a></li>
+                <li><a href="{{ url_for('positions') }}"><i class="fa-solid fa-briefcase" style="color: #0fbcf9;"></i> الوظائف</a></li>
+                <li><a href="{{ url_for('users') }}"><i class="fa-solid fa-user-lock" style="color: #ef5777;"></i> المستخدمين</a></li>
+                <li><a href="{{ url_for('roles') }}"><i class="fa-solid fa-id-badge" style="color: #808e9b;"></i> الصلاحيات</a></li>
+            </ul>
+
+            <div class="menu-header">الإعدادات والمعايير</div>
+            <ul class="sidebar-menu">
+                <li><a href="{{ url_for('criteria_list') }}"><i class="fa-solid fa-list-check" style="color: #34e7e4;"></i> معايير التقييم</a></li>
+                <li><a href="{{ url_for('evaluation_types_list') }}"><i class="fa-solid fa-layer-group" style="color: #ffdd59;"></i> أنواع التقييم</a></li>
+                <li><a href="{{ url_for('evaluation_cycles_list') }}"><i class="fa-solid fa-arrows-spin" style="color: #05c46b;"></i> الدورات الزمنية</a></li>
+                <li><a href="{{ url_for('recommendations_list') }}"><i class="fa-solid fa-lightbulb" style="color: #f1c40f;"></i> التوصيات</a></li>
+                <li><a href="{{ url_for('training_courses_list') }}"><i class="fa-solid fa-graduation-cap" style="color: #575fcf;"></i> الدورات التدريبية</a></li>
+            </ul>
+
+            <div class="menu-header">الأرشيف وإنهاء الخدمة</div>
+            <ul class="sidebar-menu">
+                <li><a href="{{ url_for('userinfo_archive_report') }}"><i class="fa-solid fa-box-archive" style="color: #ff5e57;"></i> دوران العماله</a></li>
+                <li><a href="{{ url_for('archive_reasons_list') }}"><i class="fa-solid fa-door-open" style="color: #d2dae2;"></i> أسباب المغادرة</a></li>
+                <li><a href="{{ url_for('whys_list') }}"><i class="fa-solid fa-circle-question" style="color: #ffc048;"></i> الأسباب التفصيلية</a></li>
+            </ul>
+            {% endif %}
+
+        </aside>
+
+        <main class="content">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, msg in messages %}
+                        <div class="alert {{ category }}">
+                            {% if category == 'success' %} <i class="fa-solid fa-circle-check fa-lg" style="color: #198754;"></i>
+                            {% elif category == 'danger' %} <i class="fa-solid fa-circle-exclamation fa-lg" style="color: #dc3545;"></i>
+                            {% elif category == 'warning' %} <i class="fa-solid fa-triangle-exclamation fa-lg" style="color: #ffc107;"></i>
+                            {% else %} <i class="fa-solid fa-circle-info fa-lg" style="color: #0dcaf0;"></i>
+                            {% endif %}
+                            <span style="margin-right: 10px;">{{ msg }}</span>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            {% block content %}{% endblock %}
+        </main>
+        
+        {% endif %} 
+    </div> 
+</body>
+</html>

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ action }} وظيفة</title>
+    <style>
+        body {
+            font-family: 'Tahoma', sans-serif;
+            background-color: #eef1f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            background: white;
+            margin: 50px auto;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h2 {
+            text-align: center;
+            color: #0d6efd;
+            margin-bottom: 25px;
+        }
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: bold;
+            color: #333;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 15px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            font-size: 15px;
+        }
+        .actions {
+            display: flex;
+            justify-content: space-between;
+        }
+        .btn {
+            border: none;
+            border-radius: 6px;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-size: 15px;
+        }
+        .btn-save { background-color: #0d6efd; color: white; }
+        .btn-back { background-color: #6c757d; color: white; text-decoration: none; text-align: center; line-height: 33px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>{{ action }} وظيفة</h2>
+
+    <form method="POST">
+        <label for="positionname">اسم الوظيفة:</label>
+        <input type="text" id="positionname" name="positionname" required
+               value="{{ pos.PositionName if pos else '' }}">
+
+        <label for="deptid">القسم:</label>
+        <select id="deptid" name="deptid">
+            <option value="">اختر القسم...</option>
+            {% for d in depts %}
+                <option value="{{ d.DEPTID }}" {% if pos and pos.DeptID == d.DEPTID %}selected{% endif %}>
+                    {{ d.DEPTNAME }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <div class="actions">
+            <a href="{{ url_for('positions') }}" class="btn btn-back">رجوع</a>
+            <button type="submit" class="btn btn-save">{{ action }}</button>
+        </div>
+    </form>
+</div>
+</body>
+</html>

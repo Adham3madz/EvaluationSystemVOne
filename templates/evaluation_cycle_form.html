@@ -1,0 +1,127 @@
+{% extends "layout.html" %}
+{% block title %}{{ 'إنشاء' if action == 'Add' else 'تعديل' }} دورة تقييم{% endblock %}
+
+{% block content %}
+<style>
+/* Add styles from criteria_form.html */
+.container {
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.07);
+    padding: 25px 35px;
+    max-width: 950px;
+    margin: 40px auto;
+}
+h2 {
+    color: #0d47a1;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 30px;
+}
+label {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 6px;
+    display: block;
+}
+input[type="text"], input[type="date"], select {
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-size: 15px;
+}
+.btn {
+    padding: 10px 16px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    text-decoration: none;
+}
+.btn-primary { background-color: #1565c0; color: white; }
+.btn-secondary { background-color: #757575; color: white; }
+.form-check {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.d-flex { display: flex; justify-content: space-between; gap: 10px; }
+.mt-4 { margin-top: 25px; }
+.mb-3 { margin-bottom: 20px; }
+.dept-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px;
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #ccc;
+    padding: 10px;
+    border-radius: 8px;
+}
+</style>
+
+<div class="container">
+  <h2>{{ 'إنشاء' if action == 'Add' else 'تعديل' }} دورة تقييم</h2>
+
+  <form method="POST">
+    <div class="mb-3">
+      <label for="cycle_name">اسم الدورة:</label>
+      <input type="text" id="cycle_name" name="cycle_name" required value="{{ cycle.CycleName if cycle else '' }}"
+             placeholder="مثال: تقييمات الربع الرابع 2025">
+    </div>
+
+    <div class="mb-3">
+      <label for="type_id">نوع التقييم:</label>
+      <select id="type_id" name="type_id" required>
+        <option value="">-- اختر نوع التقييم --</option>
+        {% for t in all_types %}
+        <option value="{{ t.EvaluationTypeID }}" {% if cycle and cycle.EvaluationTypeID == t.EvaluationTypeID %}selected{% endif %}>
+          {{ t.DisplayName }}
+        </option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="d-flex">
+        <div class="mb-3" style="flex:1;">
+          <label for="start_date">تاريخ البدء:</label>
+          <input type="date" id="start_date" name="start_date" required 
+                 value="{{ cycle.StartDate.strftime('%Y-%m-%d') if cycle else '' }}">
+        </div>
+        <div class="mb-3" style="flex:1;">
+            <label for="end_date">تاريخ الانتهاء:</label>
+            <input type="date" id="end_date" name="end_date" required
+                   value="{{ cycle.EndDate.strftime('%Y-%m-%d') if cycle else '' }}">
+        </div>
+    </div>
+    
+    <div class="mb-3">
+        <label>الأقسام المشمولة (اتركها فارغة لتشمل جميع الأقسام):</label>
+        <div class="dept-grid">
+            {% for dept in all_depts %}
+            <div class="form-check">
+                <input type="checkbox" name="dept_ids" value="{{ dept.DEPTID }}" id="dept_{{ dept.DEPTID }}"
+                       {% if dept.DEPTID in cycle_depts %}checked{% endif %}>
+                <label for="dept_{{ dept.DEPTID }}">{{ dept.DEPTNAME }}</label>
+            </div>
+            {% endfor %}
+        </div>
+        <small>إذا لم تختر أي قسم، ستكون الدورة متاحة للجميع.</small>
+    </div>
+
+    <div class="mb-3 form-check">
+      <input type="checkbox" id="is_enabled" name="is_enabled" value="1" 
+             {% if cycle and cycle.IsEnabled %}checked{% endif %}
+             {% if action == 'Add' %}checked{% endif %}>
+      <label for="is_enabled">تفعيل الدورة فوراً؟</label>
+    </div>
+    
+    <hr>
+    <div class="d-flex mt-4">
+      <a href="{{ url_for('evaluation_cycles_list') }}" class="btn btn-secondary">⬅️ رجوع</a>
+      <button type="submit" class="btn btn-primary">✅ {{ 'إنشاء' if action == 'Add' else 'حفظ' }}</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

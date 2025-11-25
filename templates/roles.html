@@ -1,0 +1,146 @@
+{% extends "layout.html" %}
+{% block title %}إدارة الأدوار{% endblock %}
+
+{% block content %}
+<style>
+/* ====== Global Styling ====== */
+body {
+    direction: rtl;
+    font-family: "Tajawal", "Segoe UI", sans-serif;
+    background-color: #f9fafb;
+    color: #222;
+    margin: 0;
+    padding: 0;
+}
+.page-header {
+    text-align: center;
+    margin: 30px 0 10px;
+}
+.page-header h2 {
+    color: #004d7a;
+    font-weight: 700;
+    margin-bottom: 5px;
+}
+.page-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin: 15px 40px 25px;
+}
+.page-actions .btn {
+    background-color: #0b9444;
+    color: #fff;
+    padding: 8px 15px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 14px;
+    transition: background 0.3s;
+}
+.page-actions .btn:hover {
+    background-color: #087938;
+}
+
+/* ====== Table Styling ====== */
+table {
+    width: 70%;
+    margin: 0 auto 40px;
+    border-collapse: collapse;
+    background: #fff;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 0 8px rgba(0,0,0,0.08);
+}
+thead {
+    background-color: #004d7a;
+    color: #fff;
+}
+thead th {
+    padding: 12px;
+    font-size: 15px;
+    font-weight: 600;
+}
+tbody td {
+    padding: 10px;
+    border-top: 1px solid #e0e0e0;
+    text-align: center;
+    font-size: 14px;
+    color: #333;
+}
+tbody tr:hover {
+    background-color: #f3f7fa;
+}
+
+/* ====== Buttons ====== */
+.btn-sm {
+    padding: 5px 10px;
+    font-size: 13px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: 0.3s;
+}
+.btn-warning {
+    background-color: #ffc107;
+    color: #212529;
+}
+.btn-warning:hover {
+    background-color: #e0a800;
+}
+.btn-danger {
+    background-color: #dc3545;
+    color: #fff;
+}
+.btn-danger:hover {
+    background-color: #bb2d3b;
+}
+
+/* ====== Footer ====== */
+.footer-note {
+    text-align: center;
+    color: #666;
+    font-size: 13px;
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+</style>
+
+<div class="page-header">
+    <h2>إدارة الأدوار</h2>
+</div>
+
+<div class="page-actions">
+    <a href="{{ url_for('roles_add') }}" class="btn">+ إضافة دور جديد</a>
+</div>
+
+<table>
+    <thead>
+        <tr>
+            <th>رقم الدور</th>
+            <th>اسم الدور</th>
+            <th>الإجراءات</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for r in roles %}
+        <tr>
+            <td>{{ r.RoleID }}</td>
+            <td>{{ r.RoleName }}</td>
+            <td>
+                <a href="{{ url_for('roles_edit', rid=r.RoleID) }}" class="btn-sm btn-warning">تعديل</a>
+                <form method="POST" action="{{ url_for('roles_delete', rid=r.RoleID) }}"
+                      onsubmit="return confirm('هل أنت متأكد من حذف هذا الدور؟');"
+                      style="display:inline;">
+                    <button type="submit" class="btn-sm btn-danger">حذف</button>
+                </form>
+            </td>
+        </tr>
+        {% else %}
+        <tr>
+            <td colspan="3" style="color:#666;">لا توجد أدوار حاليًا</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<p class="footer-note">© 2025 نظام إدارة الموارد البشرية - يعمل بدون اتصال بالإنترنت</p>
+{% endblock %}

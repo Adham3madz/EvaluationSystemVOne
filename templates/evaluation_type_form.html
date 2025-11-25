@@ -1,0 +1,101 @@
+{% extends "layout.html" %}
+{% block title %}{{ 'إضافة' if action == 'Add' else 'تعديل' }} نوع تقييم{% endblock %}
+
+{% block content %}
+<style>
+/* Add styles from criteria_form.html */
+.container {
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.07);
+    padding: 25px 35px;
+    max-width: 750px;
+    margin: 40px auto;
+}
+h2 {
+    color: #0d47a1;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 30px;
+}
+label {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 6px;
+    display: block;
+}
+input, select, textarea {
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-size: 15px;
+}
+.btn {
+    padding: 10px 16px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    text-decoration: none;
+}
+.btn-primary { background-color: #1565c0; color: white; }
+.btn-secondary { background-color: #757575; color: white; }
+.form-check {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.d-flex { display: flex; justify-content: space-between; gap: 10px; }
+.mt-4 { margin-top: 25px; }
+.mb-3 { margin-bottom: 20px; }
+</style>
+
+<div class="container">
+  <h2>{{ 'إضافة' if action == 'Add' else 'تعديل' }} نوع تقييم</h2>
+
+  <form method="POST">
+    <div class="mb-3">
+      <label for="display_name">الاسم الظاهر (بالعربي):</label>
+      <input type="text" id="display_name" name="display_name" required value="{{ eval_type.DisplayName if eval_type else '' }}">
+    </div>
+
+    <div class="mb-3">
+      <label for="type_name">الاسم البرمجي (ل الربط):</label>
+      <input type="text" id="type_name" name="type_name" required value="{{ eval_type.TypeName if eval_type else '' }}"
+             placeholder="مثل: 15-day أو annual">
+    </div>
+
+    <div class="mb-3">
+      <label for="prerequisite_id">المتطلب السابق (اختياري):</label>
+      <select id="prerequisite_id" name="prerequisite_id">
+        <option value="">-- لا يوجد متطلب --</option>
+        {% for t in all_types %}
+        <option value="{{ t.EvaluationTypeID }}" {% if eval_type and eval_type.PrerequisiteTypeID == t.EvaluationTypeID %}selected{% endif %}>
+          {{ t.DisplayName }}
+        </option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="d-flex">
+      <div class="mb-3" style="flex:1;">
+        <label for="sort_order">ترتيب الظهور:</label>
+        <input type="number" id="sort_order" name="sort_order" value="{{ eval_type.SortOrder if eval_type else 100 }}">
+      </div>
+      
+      <div class="mb-3 form-check" style="flex:1; margin-top: 30px;">
+        <input type="checkbox" id="is_repeatable" name="is_repeatable" value="1" 
+               {% if eval_type and eval_type.IsRepeatable %}checked{% endif %}>
+        <label for="is_repeatable">قابل للتكرار؟</label>
+      </div>
+    </div>
+    
+    <hr>
+    <div class="d-flex mt-4">
+      <a href="{{ url_for('evaluation_types_list') }}" class="btn btn-secondary">⬅️ رجوع</a>
+      <button type="submit" class="btn btn-primary">✅ {{ 'إضافة' if action == 'Add' else 'حفظ' }}</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

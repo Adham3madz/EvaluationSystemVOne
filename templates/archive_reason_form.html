@@ -1,0 +1,132 @@
+{% extends "layout.html" %}
+{% block title %}{{ 'إضافة' if action == 'Add' else 'تعديل' }} سبب{% endblock %}
+
+{% block content %}
+<style>
+  /* === Base Styling (from criteria_form.html) === */
+  body {
+    direction: rtl;
+    background-color: #f8fafc;
+    font-family: "Cairo", sans-serif;
+    color: #222;
+  }
+
+  /* === Container (from criteria_form.html) === */
+  .container {
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.07);
+    padding: 25px 35px;
+    max-width: 750px;
+    margin: 40px auto;
+  }
+
+  /* === Title (from criteria_form.html) === */
+  h2 {
+    color: #0d47a1;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 30px;
+  }
+
+  /* === Labels & Inputs (from criteria_form.html) === */
+  label {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 6px;
+    display: block;
+  }
+
+  input[type="text"] {
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-size: 15px;
+    transition: 0.3s ease;
+  }
+
+  input[type="text"]:focus {
+    border-color: #1976d2;
+    outline: none;
+    box-shadow: 0 0 4px rgba(25, 118, 210, 0.3);
+  }
+
+  /* === Buttons (from criteria_form.html) === */
+  .btn {
+    padding: 10px 16px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 15px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+  }
+
+  .btn:hover {
+    transform: translateY(-1px);
+  }
+
+  .btn-primary {
+    background-color: #1565c0;
+    color: white;
+  }
+  .btn-primary:hover {
+    background-color: #0d47a1;
+  }
+
+  .btn-secondary {
+    background-color: #757575;
+    color: white;
+  }
+  .btn-secondary:hover {
+    background-color: #616161;
+  }
+
+  /* === Card-style Inner Form === */
+  .card {
+    background: #fff;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  }
+
+  /* === Layout Utilities === */
+  .d-flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+  }
+  .mt-4 { margin-top: 25px; }
+  .mb-3 { margin-bottom: 20px; }
+
+</style>
+
+<div class="container">
+  <h2>🏷️ {{ 'إضافة سبب جديد' if action == 'Add' else 'تعديل السبب' }}</h2>
+
+  <div class="card">
+    <form method="POST">
+        <div class="mb-3">
+            <label class="form-label" for="reason_text">نص السبب:</label>
+            
+            <input type="text" name="reason_text" id="reason_text" class="form-control" 
+                   value="{{ reason.ReasonText if reason else '' }}" required>
+        </div>
+        
+        <hr>
+
+        <div class="d-flex mt-4">
+            <a href="{{ url_for('archive_reasons_list') }}" class="btn btn-secondary">
+              ⬅️ رجوع للقائمة
+            </a>
+            <button type="submit" class="btn btn-primary">
+                {{ '➕ إضافة السبب' if action == 'Add' else '💾 حفظ التعديلات' }}
+            </button>
+        </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

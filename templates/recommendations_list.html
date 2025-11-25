@@ -1,0 +1,109 @@
+{% extends "layout.html" %}
+{% block title %}إدارة التوصيات{% endblock %}
+
+{% block content %}
+<style>
+/* Add all the styles from criteria_list.html or another list page here if not in layout */
+body {
+    direction: rtl;
+    background-color: #f8fafc;
+    font-family: "Cairo", sans-serif;
+}
+.page-header {
+    text-align: center;
+    margin-bottom: 25px;
+}
+.page-header h2 {
+    color: #1a237e;
+    font-weight: 700;
+}
+.action-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 0 auto 15px auto;
+    max-width: 950px;
+}
+.action-bar h3 {
+    color: #0d47a1;
+    font-weight: 700;
+}
+.card {
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.07);
+    padding: 20px;
+    max-width: 950px;
+    margin: 0 auto;
+}
+table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: right;
+}
+th, td {
+    padding: 12px 10px;
+    border-bottom: 1px solid #ddd;
+}
+th {
+    background: #1565c0;
+    color: #fff;
+    font-weight: 600;
+}
+.btn {
+    padding: 8px 14px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+.btn-success { background: #2e7d32; color: white; }
+.btn-primary { background: #1565c0; color: white; }
+.btn-danger { background: #c62828; color: white; }
+</style>
+
+<div class="page-header">
+    <h2>💡 إدارة التوصيات</h2>
+</div>
+
+<div class="action-bar">
+  <h3>قائمة التوصيات</h3>
+  <a href="{{ url_for('recommendations_add') }}" class="btn btn-success">➕ إضافة توصية</a>
+</div>
+
+<div class="card">
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>نص التوصية</th>
+        <th>القسم المطبق عليه</th>
+        <th>الإجراءات</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% if recommendations %}
+        {% for r in recommendations %}
+        <tr>
+          <td>{{ r.RecommendationID }}</td>
+          <td style="white-space: pre-wrap;">{{ r.RecommendationText }}</td>
+          <td>{{ r.DEPTNAME or 'عام (كل الأقسام)' }}</td>
+          <td style="display: flex; gap: 5px;">
+            <a href="{{ url_for('recommendations_edit', rid=r.RecommendationID) }}" class="btn btn-primary btn-sm">تعديل</a>
+            <form action="{{ url_for('recommendations_delete', rid=r.RecommendationID) }}" method="POST" style="margin:0;">
+              <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('هل أنت متأكد من الحذف؟')">حذف</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      {% else %}
+        <tr>
+          <td colspan="4" style="color:#777; text-align: center;">لا توجد توصيات معرفة حالياً.</td>
+        </tr>
+      {% endif %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

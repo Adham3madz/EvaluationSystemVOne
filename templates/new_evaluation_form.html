@@ -1,0 +1,339 @@
+{% extends "layout.html" %}
+{% block title %}تقييم جديد{% endblock %}
+
+{% block content %}
+<style>
+  body {
+      direction: rtl;
+      font-family: "Cairo", "Tahoma", sans-serif;
+      background-color: #f7f9fb;
+  }
+
+  .container {
+      max-width: 900px;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+      padding: 25px 30px;
+      margin-top: 40px;
+  }
+
+  h2 {
+      color: #004b8d;
+      text-align: center;
+      font-weight: 800;
+      margin-bottom: 25px;
+  }
+
+  .section-title {
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: #004b8d;
+      border-right: 4px solid #004b8d;
+      padding-right: 8px;
+      margin-bottom: 12px;
+  }
+
+  .employee-info {
+      background: #f1f4f9;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 20px;
+  }
+
+  .employee-info div {
+      margin-bottom: 8px;
+      font-size: 0.95rem;
+  }
+
+  /* --- NEW: Style for the live percentage display --- */
+  .percentage-display {
+      text-align: center;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #004b8d;
+      margin-bottom: 20px;
+      background: #f1f4f9;
+      padding: 10px;
+      border-radius: 8px;
+  }
+  .percentage-display span {
+      color: #007b5e;
+      font-size: 1.75rem;
+  }
+  /* --- End New Style --- */
+
+  label {
+      font-weight: 600;
+      margin-bottom: 5px;
+      color: #333;
+  }
+
+  select, textarea, input[type="number"] {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 0.95rem;
+  }
+  
+  /* Style for disabled options */
+  select option[disabled] {
+      background: #eee;
+      color: #999;
+  }
+
+  table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+      font-size: 0.95rem;
+  }
+
+  th, td {
+      border: 1px solid #e0e0e0;
+      padding: 10px;
+      text-align: center;
+  }
+
+  thead {
+      background: #004b8d;
+      color: #fff;
+  }
+
+  tbody tr:nth-child(even) {
+      background: #f9fbfd;
+  }
+
+  tbody tr:hover {
+      background: #eef3f9;
+  }
+
+  .btn {
+      border: none;
+      border-radius: 8px;
+      padding: 8px 16px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.95rem;
+      transition: all 0.3s ease;
+  }
+
+  .btn-success {
+      background-color: #007b5e;
+      color: #fff;
+  }
+
+  .btn-success:hover {
+      background-color: #00684f;
+  }
+
+  .btn-secondary {
+      background-color: #adb5bd;
+      color: #fff;
+  }
+
+  .btn-secondary:hover {
+      background-color: #868e96;
+  }
+
+  .invalid-feedback {
+      color: #d93025;
+      font-size: 0.85rem;
+  }
+  
+  /* Style for invalid input */
+    input.is-invalid {
+        border-color: #d93025;
+        background-color: #fbebee; /* <-- This is the fix */
+    }
+
+  @media (max-width: 768px) {
+      .container {
+          padding: 20px;
+      }
+
+      table th, table td {
+          font-size: 0.85rem;
+          padding: 6px;
+      }
+  }
+</style>
+
+<div class="container">
+  <h2>📋 نموذج تقييم أداء</h2>
+
+  <div class="employee-info">
+    <div><strong>👤 الاسم:</strong> {{ employee.NAME }}</div>
+    <div><strong>🏢 القسم:</strong> {{ employee.DEPTNAME or 'غير محدد' }}</div>
+    <div><strong>💼 المسمى الوظيفي:</strong> {{ employee.TITLE or 'غير محدد' }}</div>
+  </div>
+
+  <div class="percentage-display">
+    النتيجة الحالية: <span id="live_percentage">0.00%</span>
+  </div>
+
+  <form method="POST" id="evaluationForm">
+    <div class="form-section">
+      <div class="mb-3">
+        <label for="evaluation_type_id" class="fw-bold">🔹 نوع التقييم:</label>
+        
+        <select name="evaluation_type_id" id="evaluation_type_id" required>
+          <option value="">-- اختر نوع التقييم --</option>
+          
+          {% for eval in available_evals %}
+          <option value="{{ eval.id }}" {% if eval.disabled %}disabled{% endif %}>
+            {{ eval.name }} {{ eval.note }}
+          </option>
+          {% endfor %}
+          
+        </select>
+        </div>
+
+      <div class="section-title">بنود التقييم</div>
+      <table>
+        <thead>
+          <tr>
+            <th>البند</th>
+            <th>الوزن النسبي</th>
+            <th>الدرجة (من {{ criteria[0].MaxScore if criteria else '' }})</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in criteria %}
+          <tr>
+            <td>{{ c.CriteriaName }}</td>
+            <td>{{ "%.0f%%"|format(c.CriteriaWeight * 100) }}</td>
+            <td>
+              <input type="number" name="score_{{ c.CriteriaID }}" class="score-input"
+                     min="0" max="{{ c.MaxScore }}" required
+                     data-max="{{ c.MaxScore }}"
+                     data-weight="{{ c.CriteriaWeight }}"
+                     placeholder="0 - {{ c.MaxScore }}">
+              <div class="invalid-feedback"></div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <div class="mb-3 mt-3">
+        <label for="recommendation_id">💡 التوصية (اختياري):</label>
+        <select name="recommendation_id" id="recommendation_id">
+          <option value="">-- لا يوجد توصية --</option>
+          {% for r in recommendations %}
+          <option value="{{ r.RecommendationID }}">{{ r.RecommendationText }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="mb-3 mt-3">
+        <label for="training_course_id">🎓 الدورة التدريبية (اختياري):</label>
+        <select name="training_course_id" id="training_course_id" class="form-select">
+          <option value="">-- لا يوجد دورة --</option>
+          {% for course in training_courses %}
+          <option value="{{ course.TrainingCourseID }}">{{ course.TrainingCourseText }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="mb-3 mt-3">
+        <label for="comments">📝 ملاحظات إضافية:</label>
+        <textarea name="comments" id="comments" rows="4" placeholder="أضف ملاحظاتك هنا..."></textarea>
+      </div>
+
+      <div class="d-flex justify-content-between" style="margin-top: 25px;">
+        <a href="{{ url_for('select_user_for_evaluation') }}" class="btn btn-secondary">🔙 رجوع للاختيار</a>
+        <button type="submit" class="btn btn-success">✅ إرسال التقييم</button>
+      </div>
+    </div>
+  </form>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('evaluationForm');
+    const scoreInputs = form.querySelectorAll('.score-input');
+    const percentageDisplay = document.getElementById('live_percentage');
+
+    // --- 1. Function to Calculate Live Percentage ---
+    function calculateLivePercentage() {
+        let totalWeightedScore = 0.0;
+        let totalMaxWeight = 0.0;
+
+        scoreInputs.forEach(input => {
+            const weight = parseFloat(input.dataset.weight);
+            const maxScore = parseInt(input.dataset.max);
+            let scoreGiven = parseInt(input.value);
+            
+            // If score is invalid or empty, treat it as 0
+            if (isNaN(scoreGiven) || scoreGiven < 0) {
+                scoreGiven = 0;
+            }
+            // If score is higher than max, cap it at max
+            if (scoreGiven > maxScore) {
+                scoreGiven = maxScore;
+            }
+
+            if (!isNaN(weight) && !isNaN(maxScore) && maxScore > 0) {
+                totalMaxWeight += weight;
+                totalWeightedScore += (scoreGiven / maxScore) * weight;
+            }
+        });
+
+        let finalPercentage = 0.0;
+        if (totalMaxWeight > 0) {
+            // This calculation mirrors the logic in app.py
+            finalPercentage = (totalWeightedScore / totalMaxWeight) * 100;
+        }
+
+        percentageDisplay.textContent = finalPercentage.toFixed(2) + '%';
+    }
+
+    // --- 2. Add 'input' event listener to every score input ---
+    // This runs the calculation every time you type a number
+    scoreInputs.forEach(input => {
+        input.addEventListener('input', calculateLivePercentage);
+    });
+
+    // --- 3. Validation Logic (from your original file) ---
+    // This runs only when you click "Submit"
+    form.addEventListener('submit', function(event) {
+        let valid = true;
+
+        // Check evaluation type
+        const evalTypeSelect = document.getElementById('evaluation_type_id');
+        if (!evalTypeSelect.value) {
+            valid = false;
+            evalTypeSelect.style.borderColor = '#d93025';
+            alert('يرجى اختيار نوع التقييم.');
+            event.preventDefault();
+            return;
+        } else {
+            evalTypeSelect.style.borderColor = '#ccc';
+        }
+
+        scoreInputs.forEach(input => {
+            const val = parseInt(input.value);
+            const max = parseInt(input.dataset.max);
+            const feedback = input.nextElementSibling;
+            input.classList.remove('is-invalid');
+            feedback.textContent = '';
+
+            if (isNaN(val) || val < 0 || val > max) {
+                valid = false;
+                input.classList.add('is-invalid');
+                feedback.textContent = `الدرجة يجب أن تكون بين 0 و ${max}.`;
+            }
+        });
+        if (!valid) {
+            event.preventDefault();
+            alert('يرجى تصحيح الأخطاء في الدرجات.');
+        }
+    });
+
+    // --- 4. Initial calculation on page load ---
+    // This sets the percentage to 0.00% when the page first loads
+    calculateLivePercentage();
+});
+</script>
+{% endblock %}

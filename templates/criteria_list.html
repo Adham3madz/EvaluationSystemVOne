@@ -1,0 +1,172 @@
+{% extends "layout.html" %}
+{% block title %}معايير التقييم{% endblock %}
+
+{% block content %}
+<style>
+/* === Base & RTL Setup === */
+body {
+    direction: rtl;
+    background-color: #f8fafc;
+    font-family: "Cairo", sans-serif;
+    color: #222;
+}
+
+/* === Header === */
+.page-header {
+    text-align: center;
+    margin-bottom: 25px;
+}
+.page-header h2 {
+    color: #1a237e;
+    font-weight: 700;
+    font-size: 28px;
+}
+.page-header .subtitle {
+    color: #555;
+    font-size: 15px;
+}
+
+/* === Action Bar === */
+.action-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 0 auto 15px auto;
+    max-width: 950px;
+    padding: 0 10px;
+}
+.action-bar h3 {
+    color: #0d47a1;
+    font-size: 22px;
+    font-weight: 700;
+}
+
+/* === Buttons === */
+.btn {
+    padding: 8px 14px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+.btn:hover {
+    transform: translateY(-1px);
+}
+
+.btn-success {
+    background: #2e7d32;
+    color: white;
+}
+.btn-success:hover { background: #1b5e20; }
+
+.btn-primary {
+    background: #1565c0;
+    color: white;
+}
+.btn-primary:hover { background: #0d47a1; }
+
+.btn-danger {
+    background: #c62828;
+    color: white;
+}
+.btn-danger:hover { background: #b71c1c; }
+
+/* === Card Container === */
+.card {
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.07);
+    padding: 20px;
+    max-width: 950px;
+    margin: 0 auto;
+    transition: all 0.3s ease;
+}
+.card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 15px rgba(0,0,0,0.12);
+}
+
+/* === Table Styling === */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: center;
+    margin-top: 10px;
+}
+
+th, td {
+    padding: 12px 10px;
+    border-bottom: 1px solid #ddd;
+}
+
+th {
+    background: #1565c0;
+    color: #fff;
+    font-weight: 600;
+}
+
+tr:hover td {
+    background: #f1f8e9;
+}
+
+/* === Footer === */
+.footer-note {
+    text-align: center;
+    margin-top: 25px;
+    color: #555;
+    font-size: 13px;
+}
+</style>
+
+<div class="page-header">
+    <h2>معايير التقييم</h2>
+    <p class="subtitle">عرض وإدارة المعايير الخاصة بتقييم الأداء</p>
+</div>
+
+<div class="action-bar">
+  <h3>قائمة معايير التقييم</h3>
+  <a href="{{ url_for('criteria_add') }}" class="btn btn-success">➕ إضافة معيار</a>
+</div>
+
+<div class="card">
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>اسم المعيار</th>
+        <th>الوزن النسبي</th>
+        <th>أقصى درجة</th>
+        <th>القسم المطبق عليه</th>
+        <th>فئة الموظف</th>  <th>الإجراءات</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% if criteria %}
+        {% for c in criteria %}
+        <tr>
+          <td>{{ c.CriteriaID }}</td>
+          <td>{{ c.CriteriaName }}</td>
+          <td>{{ "%.0f%%"|format(c.CriteriaWeight * 100) }}</td>
+          <td>{{ c.MaxScore }}</td>
+          <td>{{ c.DEPTNAME or 'عام (كل الأقسام)' }}</td>
+          <td>{{ c.employee_class or 'N/A' }}</td>
+          <td style="display: flex; justify-content: center; align-items: center; gap: 5px; border-bottom: 1px solid #ddd; padding: 12px 10px;">
+        <a href="{{ url_for('criteria_edit', cid=c.CriteriaID) }}" class="btn btn-primary btn-sm">تعديل</a>
+        <form action="{{ url_for('criteria_delete', cid=c.CriteriaID) }}" method="POST" style="margin: 0;">
+          <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('هل أنت متأكد من الحذف؟ لا يمكن حذف معيار مستخدم في تقييمات سابقة.')">حذف</button>
+        </form>
+      </td>
+        </tr>
+        {% endfor %}
+      {% else %}
+        <tr>
+          <td colspan="7" style="color:#777;">لا توجد معايير معرفة حالياً.</td> </tr>
+      {% endif %}
+    </tbody>
+  </table>
+</div>
+
+<p class="footer-note">© 2025 نظام إدارة الموارد البشرية - يعمل بدون اتصال بالإنترنت</p>
+{% endblock %}
