@@ -1,5 +1,5 @@
 {% extends "layout.html" %}
-{% block title %}تحليل التوظيف{% endblock %}
+{% block title %}📊 تحليل التوظيف{% endblock %}
 
 {% block content %}
 <style>
@@ -25,21 +25,23 @@
         background: #fff;
         border-radius: 12px;
         padding: 20px;
-        border-left: 5px solid #ddd;
+        border-right: 6px solid #ddd; /* تغيير للـ RTL */
         box-shadow: 0 3px 10px rgba(0,0,0,0.05);
         display: flex;
         align-items: center;
         justify-content: space-between;
+        text-align: right;
     }
     .kpi-info h5 { color: #7f8c8d; margin: 0; font-size: 14px; }
     .kpi-info p { font-size: 28px; font-weight: bold; margin: 5px 0 0; color: #2c3e50; }
-    .kpi-icon { font-size: 30px; opacity: 0.2; }
+    .kpi-icon { font-size: 50px; opacity: 0.2; }
 
     /* Chart Cards */
     .chart-container {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 25px;
+        margin-bottom: 30px;
     }
     .chart-box {
         background: #fff;
@@ -62,49 +64,51 @@
 
 <div class="dash-header">
     <h2>📊 لوحة معلومات التوظيف</h2>
-    <p style="opacity: 0.8; margin-top: 5px;">تحليل شامل لعملية التوظيف والمتقدمين</p>
+    <p style="opacity: 0.8; margin-top: 10px;">تحليل شامل لعملية التوظيف والمتقدمين حتى اليوم</p>
 </div>
 
 <div class="kpi-grid">
-    <div class="kpi-card" style="border-left-color: #3498db;">
+    <div class="kpi-card" style="border-right-color: #3498db;">
         <div class="kpi-info">
             <h5>إجمالي المتقدمين</h5>
             <p>{{ total_candidates }}</p>
         </div>
-        <div class="kpi-icon" style="color: #3498db;"><i class="fa-solid fa-users"></i></div>
+        <div class="kpi-icon" style="color: #3498db;">👥</div>
     </div>
-    <div class="kpi-card" style="border-left-color: #2ecc71;">
+    <div class="kpi-card" style="border-right-color: #2ecc71;">
         <div class="kpi-info">
             <h5>تم التعيين</h5>
-            <p>-</p> 
+            <p>{{ hired_count }}</p>
         </div>
-        <div class="kpi-icon" style="color: #2ecc71;"><i class="fa-solid fa-user-check"></i></div>
+        <div class="kpi-icon" style="color: #2ecc71;">✅</div>
     </div>
-    <div class="kpi-card" style="border-left-color: #f1c40f;">
+
+    <div class="kpi-card" style="border-right-color: #f1c40f;">
         <div class="kpi-info">
             <h5>قيد الإجراء</h5>
-            <p>-</p>
+            <p>{{ in_process_count }}</p>
         </div>
-        <div class="kpi-icon" style="color: #f1c40f;"><i class="fa-solid fa-spinner"></i></div>
+        <div class="kpi-icon" style="color: #f1c40f;">⏳</div>
     </div>
-    <div class="kpi-card" style="border-left-color: #e74c3c;">
+
+    <div class="kpi-card" style="border-right-color: #e74c3c;">
         <div class="kpi-info">
             <h5>مرفوضين</h5>
-            <p>-</p>
+            <p>{{ rejected_count }}</p>
         </div>
-        <div class="kpi-icon" style="color: #e74c3c;"><i class="fa-solid fa-user-xmark"></i></div>
+        <div class="kpi-icon" style="color: #e74c3c;">❌</div>
     </div>
 </div>
 
 <div class="chart-container">
     <div class="chart-box">
-        <h5><i class="fa-solid fa-filter-circle-dollar"></i> مراحل التوظيف (Funnel)</h5>
+        <h5>🔽 مراحل التوظيف (Funnel)</h5>
         <div style="height: 300px;">
             <canvas id="statusChart"></canvas>
         </div>
     </div>
     <div class="chart-box">
-        <h5><i class="fa-solid fa-building-user"></i> التوزيع حسب القسم</h5>
+        <h5>🏢 التوزيع حسب القسم</h5>
         <div style="height: 300px;">
             <canvas id="deptChart"></canvas>
         </div>
@@ -112,8 +116,8 @@
 </div>
 
 <div style="text-align: center; margin-top: 30px;">
-    <a href="{{ url_for('recruitment_list') }}" class="btn btn-secondary">
-        <i class="fa-solid fa-arrow-right"></i> العودة للقائمة
+    <a href="{{ url_for('recruitment_list') }}" class="btn btn-primary btn-lg">
+        📋 عرض قائمة المتقدمين الكاملة
     </a>
 </div>
 
@@ -121,40 +125,63 @@
 document.addEventListener('DOMContentLoaded', function() {
     const data = JSON.parse('{{ chart_data|safe }}');
 
-    // 1. Status Chart
+    // حسابات إضافية للـ KPIs (من status_data)
+    const statusMap = {};
+    data.status_labels.forEach((label, i) => {
+        statusMap[label] = data.status_data[i];
+    });
+
+    const hired = statusMap['Hired'] || 0;
+    const rejected = statusMap['Rejected'] || 0;
+    const inProcess = data.status_data.reduce((sum, val, i) => {
+        const label = data.status_labels[i];
+        return (label !== 'Hired' && label !== 'Rejected') ? sum + val : sum;
+    }, 0);
+
+    // تحديث الـ KPIs ديناميكيًا (لو عايز، لكن في Flask أفضل تمريرها من الـ route)
+    // هنا بنعرضها من البيانات المتاحة
+
+    // 1. مراحل التوظيف (Doughnut Chart)
     new Chart(document.getElementById('statusChart'), {
         type: 'doughnut',
         data: {
             labels: data.status_labels,
             datasets: [{
                 data: data.status_data,
-                backgroundColor: ['#3498db', '#f1c40f', '#2ecc71', '#e74c3c', '#95a5a6', '#9b59b6'],
-                borderWidth: 0
+                backgroundColor: ['#3498db', '#f1c40f', '#fd7e14', '#2ecc71', '#95a5a6', '#e74c3c'],
+                borderWidth: 2,
+                borderColor: '#fff'
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: { legend: { position: 'bottom' } }
+            plugins: {
+                legend: { position: 'bottom' },
+                tooltip: { rtl: true }
+            }
         }
     });
 
-    // 2. Dept Chart
+    // 2. التوزيع حسب القسم (Bar Chart)
     new Chart(document.getElementById('deptChart'), {
         type: 'bar',
         data: {
             labels: data.dept_labels,
             datasets: [{
-                label: 'المتقدمين',
+                label: 'عدد المتقدمين',
                 data: data.dept_data,
-                backgroundColor: '#34495e',
-                borderRadius: 4
+                backgroundColor: '#182848',
+                borderRadius: 6
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            scales: { y: { beginAtZero: true } }
+            scales: {
+                y: { beginAtZero: true, ticks: { stepSize: 1 } }
+            },
+            plugins: { legend: { display: false } }
         }
     });
 });

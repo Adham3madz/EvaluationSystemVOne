@@ -1,0 +1,71 @@
+{% extends "layout.html" %}
+{% block title %}الدورات التدريبية{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+
+    <h4 class="fw-bold mb-4">📘 {{ action }} دورة تدريبية</h4>
+
+    <div class="card shadow-sm p-4">
+
+        <form method="POST">
+
+            <div class="mb-3">
+                <label class="form-label">اسم الدورة</label>
+                <input type="text" name="title" class="form-control" required
+                       value="{{ course.TrainingCourseText if course else '' }}">
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">الوصف</label>
+                <textarea class="form-control" name="description" rows="3">{{ course.Description if course else '' }}</textarea>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">القسم (الإدارة)</label>
+                <div class="form-text text-muted mb-1">
+                    * إذا اخترت قسماً، ستظهر هذه الدورة فقط لموظفي هذا القسم.
+                </div>
+                <select class="form-select" name="department">
+                    <option value="">— عام (لجميع الأقسام) —</option>
+                    {% for d in depts %}
+                        <option value="{{ d.DEPTID }}"
+                            {% if course and course.AppliesToDeptID == d.DEPTID %}selected{% endif %}>
+                            {{ d.DEPTNAME }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">المدة بالساعات</label>
+                    <input type="number" class="form-control" name="duration"
+                           value="{{ course.DurationHours if course else '' }}">
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">المستوى</label>
+                    <select name="difficulty" class="form-select">
+                        <option value="">— اختر —</option>
+                        <option value="مبتدئ" {% if course and course.Difficulty=='مبتدئ' %}selected{% endif %}>مبتدئ</option>
+                        <option value="متوسط" {% if course and course.Difficulty=='متوسط' %}selected{% endif %}>متوسط</option>
+                        <option value="متقدم" {% if course and course.Difficulty=='متقدم' %}selected{% endif %}>متقدم</option>
+                    </select>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">الحالة</label><br>
+                    <input type="checkbox" name="is_active" {% if not course or course.IsActive %}checked{% endif %}>
+                    <label>نشط</label>
+                </div>
+            </div>
+
+            <button class="btn btn-success">💾 حفظ</button>
+            <a href="{{ url_for('training_courses') }}" class="btn btn-secondary">رجوع</a>
+
+        </form>
+
+    </div>
+</div>
+{% endblock %}

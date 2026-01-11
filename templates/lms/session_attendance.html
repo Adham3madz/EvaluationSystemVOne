@@ -1,0 +1,52 @@
+{% extends "layout.html" %}
+{% block title %}Session Attendance{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h4 class="mb-0">📋 تسجيل الحضور: {{ session.CourseName }}</h4>
+            <a href="{{ url_for('lms_attendance_export', sid=session.SessionID) }}" class="btn btn-light btn-sm">📤 تصدير CSV</a>
+        </div>
+        <div class="card-body">
+            <form method="POST">
+                <table class="table table-bordered table-striped">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>الرقم الوظيفي</th>
+                            <th>الاسم</th>
+                            <th>القسم</th>
+                            <th>الحالة (Status)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for s in students %}
+                        <tr>
+                            <td>{{ s.BADGENUMBER }}</td>
+                            <td>{{ s.Name }}</td>
+                            <td>{{ s.DEPTNAME }}</td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <input type="radio" class="btn-check" name="status_{{ s.EmployeeID }}" id="p_{{s.EmployeeID}}" value="Present" {{ 'checked' if s.CurrentStatus == 'Present' }}>
+                                    <label class="btn btn-outline-success" for="p_{{s.EmployeeID}}">Present</label>
+
+                                    <input type="radio" class="btn-check" name="status_{{ s.EmployeeID }}" id="a_{{s.EmployeeID}}" value="Absent" {{ 'checked' if s.CurrentStatus == 'Absent' }}>
+                                    <label class="btn btn-outline-danger" for="a_{{s.EmployeeID}}">Absent</label>
+
+                                    <input type="radio" class="btn-check" name="status_{{ s.EmployeeID }}" id="l_{{s.EmployeeID}}" value="Late" {{ 'checked' if s.CurrentStatus == 'Late' }}>
+                                    <label class="btn btn-outline-warning" for="l_{{s.EmployeeID}}">Late</label>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary btn-lg">💾 حفظ الحضور (Save)</button>
+                    <a href="{{ url_for('lms_session_details', sid=session.SessionID) }}" class="btn btn-secondary">عودة</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

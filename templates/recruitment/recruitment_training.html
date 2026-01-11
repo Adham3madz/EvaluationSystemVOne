@@ -1,0 +1,311 @@
+{% extends "layout.html" %}
+{% block title %}مركز التدريب{% endblock %}
+
+{% block content %}
+<script src="{{ url_for('static', filename='js/chart.min.js') }}"></script>
+
+<style>
+    /* === Glass Panel === */
+    .glass-panel {
+        background: rgba(255, 255, 255, 0.75);
+        backdrop-filter: blur(15px);
+        border: 1px solid rgba(255, 255, 255, 0.6);
+        border-radius: 16px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+
+    /* === KPI Cards (Blue Theme for Training) === */
+    .kpi-card {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(207, 226, 255, 0.4));
+        border: 1px solid rgba(13, 110, 253, 0.2);
+        border-radius: 16px;
+        padding: 15px;
+        text-align: center;
+        transition: transform 0.2s;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+    .kpi-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(13, 110, 253, 0.15);
+    }
+    .kpi-icon { font-size: 2.5rem; margin-bottom: 10px; }
+    .kpi-value { font-size: 1.8rem; font-weight: 800; color: #0d6efd; }
+    .kpi-label { font-size: 0.9rem; font-weight: 600; color: #666; }
+
+    /* === Trainee Card === */
+    .trainee-card {
+        border: none;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+        background: white;
+    }
+    .trainee-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    }
+    .progress-thin { height: 8px; border-radius: 4px; }
+</style>
+
+<div class="container-fluid py-4" style="background-color: #f4f6f9; min-height: 100vh;">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-dark mb-1">🎓 مركز التدريب والتأهيل</h2>
+            <p class="text-muted">متابعة المتدربين وتحليل التقدم.</p>
+        </div>
+        <a href="{{ url_for('recruitment_jobs') }}" class="btn btn-outline-primary shadow-sm rounded-pill px-4">
+            ⬅️ العودة للوظائف
+        </a>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="kpi-card">
+                <div class="kpi-icon">👨‍🎓</div>
+                <div class="kpi-value" id="totalTrainees">0</div>
+                <div class="kpi-label">متدرب نشط</div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="kpi-card">
+                <div class="kpi-icon">🏁</div>
+                <div class="kpi-value text-success" id="finishingSoon">0</div>
+                <div class="kpi-label">على وشك التخرج (>80%)</div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="glass-panel p-2 d-flex flex-column align-items-center justify-content-center h-100 mb-0">
+                <h6 class="fw-bold small mb-2 text-muted">توزيع مراحل التقدم</h6>
+                <div style="height: 100px; width: 100%;">
+                    <canvas id="progressChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="glass-panel p-2 d-flex flex-column align-items-center justify-content-center h-100 mb-0">
+                <h6 class="fw-bold small mb-2 text-muted">توزيع المتدربين على المدربين</h6>
+                <div style="height: 100px; width: 100px;">
+                    <canvas id="trainerChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        {% for t in trainees %}
+        <div class="col-md-6 col-xl-4">
+            <div class="card trainee-card shadow-sm h-100 trainee-data-item"
+                 data-progress="{{ t.percent }}"
+                 data-trainer="{{ t.trainer or 'غير معين' }}">
+                
+                <div class="card-header bg-white border-0 pt-4 pb-0 d-flex justify-content-between">
+                    <h5 class="fw-bold text-primary mb-0">{{ t.name }}</h5>
+                    <span class="badge bg-light text-dark border">{{ t.job }}</span>
+                </div>
+                
+                <div class="card-body">
+                    <p class="text-muted small mb-3">📞 {{ t.phone }}</p>
+
+                    <div class="bg-light p-2 rounded mb-3 d-flex justify-content-between align-items-center">
+                        <small class="text-muted fw-bold">👨‍🏫 المدرب:</small>
+                        {% if t.trainer %}
+                            <span class="fw-bold text-dark">{{ t.trainer }}</span>
+                        {% else %}
+                            <button class="btn btn-sm btn-outline-secondary py-0" onclick="openTrainerModal('{{ t.id }}', '{{ t.name }}')">
+                                + تعيين مدرب
+                            </button>
+                        {% endif %}
+                    </div>
+
+                    <label class="small fw-bold text-muted mb-1 d-flex justify-content-between">
+                        <span>التقدم ({{ t.percent }}%)</span>
+                        <span>باقي {{ t.days_left }} يوم</span>
+                    </label>
+                    <div class="progress progress-thin">
+                        <div class="progress-bar bg-{{ t.color }} progress-bar-striped progress-bar-animated" 
+                             role="progressbar" 
+                             style="width: {{ t.percent }}%">
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between mt-2 small text-muted">
+                        <span>البدء: {{ t.start_date }}</span>
+                        <span class="fw-bold text-danger">النهاية: {{ t.end_date }}</span>
+                    </div>
+
+                    <hr>
+
+                    <div class="d-grid gap-2">
+                        <button onclick="openMoveModal('{{ t.id }}', '{{ t.name }}', 'Offer')" 
+                                class="btn btn-success btn-sm">
+                            ✅ اجتاز التدريب
+                        </button>
+                        <button onclick="openMoveModal('{{ t.id }}', '{{ t.name }}', 'Rejected')" 
+                                class="btn btn-outline-danger btn-sm">
+                            ❌ لم يجتز
+                        </button>
+                        <form action="{{ url_for('archive_candidate') }}" method="POST" onsubmit="return confirm('أرشفة هذا المتدرب؟');">
+                            <input type="hidden" name="candidate_id" value="{{ t.id }}">
+                            <button type="submit" class="btn btn-outline-secondary btn-sm w-100 mt-2">
+                                📦 أرشفة مؤقتة
+                            </button>
+                        </form>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-12 text-center py-5">
+            <div class="fs-1 text-muted opacity-50 mb-3">🎓</div>
+            <h4>لا يوجد متدربين حالياً</h4>
+            <p class="text-muted">قم بنقل المرشحين إلى مرحلة "التدريب" لتظهر بياناتهم هنا.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="modal fade" id="trainerModal" tabindex="-1">
+    <div class="modal-dialog">
+        <form class="modal-content" method="POST" action="{{ url_for('assign_trainer') }}">
+            <div class="modal-header">
+                <h5 class="modal-title">👨‍🏫 تعيين مدرب</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" name="candidate_id" id="trainerCandidateId">
+                <p>تعيين مدرب للمرشح: <strong id="trainerCandidateName"></strong></p>
+                <div class="mb-3">
+                    <label class="fw-bold">اسم المدرب</label>
+                    <input type="text" name="trainer_name" class="form-control" required>
+                </div>
+            </div>
+            <div class="modal-footer"><button type="submit" class="btn btn-primary">حفظ</button></div>
+        </form>
+    </div>
+</div>
+
+<div class="modal fade" id="moveModal" tabindex="-1">
+    <div class="modal-dialog">
+        <form class="modal-content" method="POST" action="{{ url_for('move_candidate_with_eval') }}">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">📝 تقييم نهاية التدريب</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" name="candidate_id" id="moveCandidateId">
+                <input type="hidden" name="new_stage" id="moveNewStage">
+                <p class="text-center lead">القرار النهائي لـ: <strong id="moveCandidateName"></strong></p>
+                <div class="mb-3">
+                    <label class="fw-bold">⭐ التقييم (1-10)</label>
+                    <input type="range" name="score" class="form-range" min="1" max="10" value="5" oninput="document.getElementById('scoreVal').innerText = this.value">
+                    <div class="text-center fw-bold fs-4 text-primary" id="scoreVal">5</div>
+                </div>
+                <div class="mb-3">
+                    <label class="fw-bold">📝 تقرير التدريب</label>
+                    <textarea name="note" class="form-control" rows="4" required></textarea>
+                </div>
+            </div>
+            <div class="modal-footer"><button type="submit" class="btn btn-success">تأكيد</button></div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // --- 1. Collect Data from DOM (Safe Offline Method) ---
+        const cards = document.querySelectorAll('.trainee-data-item');
+        
+        let total = 0;
+        let finishing = 0;
+        const trainerCounts = {};
+        const progressGroups = { 'جديد (0-30%)': 0, 'منتصف (31-79%)': 0, 'إنهاء (80%+)': 0 };
+
+        cards.forEach(card => {
+            total++;
+            const progress = parseInt(card.getAttribute('data-progress')) || 0;
+            const trainer = card.getAttribute('data-trainer');
+
+            // Finishing Soon Logic
+            if (progress >= 80) finishing++;
+
+            // Trainer Count
+            trainerCounts[trainer] = (trainerCounts[trainer] || 0) + 1;
+
+            // Progress Distribution
+            if (progress < 30) progressGroups['جديد (0-30%)']++;
+            else if (progress < 80) progressGroups['منتصف (31-79%)']++;
+            else progressGroups['إنهاء (80%+)']++;
+        });
+
+        // Update Text KPIs
+        document.getElementById('totalTrainees').innerText = total;
+        document.getElementById('finishingSoon').innerText = finishing;
+
+        if (total === 0) return; // Don't render charts if empty
+
+        // --- 2. Render Progress Chart (Bar) ---
+        new Chart(document.getElementById('progressChart'), {
+            type: 'bar',
+            data: {
+                labels: Object.keys(progressGroups),
+                datasets: [{
+                    label: 'عدد المتدربين',
+                    data: Object.values(progressGroups),
+                    backgroundColor: ['#0dcaf0', '#ffc107', '#198754'],
+                    borderRadius: 4,
+                    barThickness: 20
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { x: { display: false }, y: { display: false } }
+            }
+        });
+
+        // --- 3. Render Trainer Chart (Doughnut) ---
+        new Chart(document.getElementById('trainerChart'), {
+            type: 'doughnut',
+            data: {
+                labels: Object.keys(trainerCounts),
+                datasets: [{
+                    data: Object.values(trainerCounts),
+                    backgroundColor: ['#0d6efd', '#6610f2', '#6c757d', '#20c997'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                cutout: '65%'
+            }
+        });
+    });
+
+    // Modal Functions
+    function openTrainerModal(id, name) {
+        document.getElementById('trainerCandidateId').value = id;
+        document.getElementById('trainerCandidateName').innerText = name;
+        new bootstrap.Modal(document.getElementById('trainerModal')).show();
+    }
+
+    function openMoveModal(id, name, stage) {
+        document.getElementById('moveCandidateId').value = id;
+        document.getElementById('moveCandidateName').innerText = name;
+        document.getElementById('moveNewStage').value = stage;
+        new bootstrap.Modal(document.getElementById('moveModal')).show();
+    }
+</script>
+{% endblock %}

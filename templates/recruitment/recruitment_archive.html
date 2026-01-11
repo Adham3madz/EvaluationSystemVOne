@@ -1,0 +1,303 @@
+{% extends "layout.html" %}
+{% block title %}أرشيف المرشحين{% endblock %}
+
+{% block content %}
+<style>
+    /* === Glass Panel Theme === */
+    .glass-panel {
+        background: rgba(40, 44, 52, 0.95); /* Dark Grey/Blue for better contrast */
+        backdrop-filter: blur(15px);
+        -webkit-backdrop-filter: blur(15px);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 16px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        padding: 25px;
+        margin-bottom: 20px;
+        color: white;
+    }
+
+    /* === Dashboard Cards === */
+    .stat-card {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        padding: 15px;
+        transition: transform 0.2s;
+    }
+    .stat-card:hover {
+        background: rgba(255, 255, 255, 0.1);
+        transform: translateY(-2px);
+    }
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 800;
+        margin-bottom: 0;
+    }
+    .stat-label {
+        font-size: 0.9rem;
+        opacity: 0.8;
+    }
+
+    /* === Table Styling === */
+    .table-glass {
+        color: white !important; /* Force white text */
+        margin-bottom: 0;
+        vertical-align: middle;
+        border-color: rgba(255, 255, 255, 0.1);
+    }
+    .table-glass thead th {
+        background: rgba(0, 0, 0, 0.6);
+        color: #ffc107 !important; /* Gold for headers */
+        border: none;
+        padding: 15px;
+        font-weight: 800;
+        font-size: 1rem;
+    }
+    .table-glass tbody td {
+        background: transparent;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        padding: 15px;
+        color: white !important; /* Force white text */
+    }
+    .table-glass tbody tr:hover td {
+        background: rgba(255, 255, 255, 0.1);
+    }
+    
+    /* === Inputs & Selects === */
+    .search-glass, .select-glass {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: white !important; /* Force white text in inputs */
+        border-radius: 12px;
+        padding: 12px 20px;
+    }
+    .search-glass::placeholder { color: rgba(255, 255, 255, 0.5); }
+    
+    .select-glass option {
+        background: #333; /* Dark background for dropdown options */
+        color: white;
+    }
+
+    .search-glass:focus, .select-glass:focus {
+        background: rgba(255, 255, 255, 0.2);
+        box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
+        border-color: #ffc107;
+        outline: none;
+        color: white !important;
+    }
+
+    /* === Buttons === */
+    .btn-restore {
+        background: linear-gradient(135deg, #198754, #146c43);
+        color: white;
+        border: 1px solid rgba(255,255,255,0.2);
+        box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        transition: 0.3s;
+    }
+    .btn-restore:hover { 
+        background: #198754; 
+        transform: translateY(-2px); 
+        box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+        color: white;
+    }
+</style>
+
+<div class="container-fluid py-4" style="min-height: 100vh;">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-white mb-1" style="text-shadow: 0 2px 4px rgba(0,0,0,0.5);">📦 أرشيف المرشحين</h2>
+            <p class="text-white-50">قائمة المرشحين المحفوظين وتحليل البيانات.</p>
+        </div>
+        <a href="{{ url_for('recruitment_jobs') }}" class="btn btn-outline-light rounded-pill px-4 shadow-sm fw-bold">
+            ⬅️ العودة للوظائف
+        </a>
+    </div>
+
+    <div class="glass-panel mb-4">
+        <h5 class="fw-bold mb-3 text-warning">📊 تحليل الأرشيف (HR Insights)</h5>
+        <div class="row g-3">
+            <div class="col-md-4">
+                <div class="stat-card text-center">
+                    <div class="fs-1 mb-1">📂</div>
+                    <div class="stat-value text-white" id="statTotal">0</div>
+                    <div class="stat-label text-white-50">إجمالي المؤرشفين</div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="stat-card text-center">
+                    <div class="fs-1 mb-1">🏢</div>
+                    <div class="stat-value text-warning" id="statTopDept">-</div>
+                    <div class="stat-label text-white-50">القسم الأكثر أرشفة (تنبيه)</div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="stat-card text-center">
+                    <div class="fs-1 mb-1">🆔</div>
+                    <div class="stat-value text-danger" id="statNoID">0</div>
+                    <div class="stat-label text-white-50">ناقصي الرقم القومي</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="glass-panel py-3 mb-4">
+        <div class="row g-3 align-items-center">
+            <div class="col-md-8">
+                <input type="text" id="archiveSearch" class="form-control search-glass" placeholder="🔍 ابحث بالاسم، الرقم القومي، أو الهاتف...">
+            </div>
+            <div class="col-md-4">
+                <select id="deptFilter" class="form-select select-glass">
+                    <option value="">🏢 كل الأقسام</option>
+                    {% set depts = [] %}
+                    {% for c in candidates %}
+                        {% if c.DEPTNAME and c.DEPTNAME not in depts %}
+                            {% set _ = depts.append(c.DEPTNAME) %}
+                        {% endif %}
+                    {% endfor %}
+                    {% for d in depts %}
+                        <option value="{{ d }}">{{ d }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div class="glass-panel p-0 overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-glass text-center">
+                <thead>
+                    <tr>
+                        <th>الاسم</th>
+                        <th>🆔 الرقم القومي</th>
+                        <th>الوظيفة / القسم</th>
+                        <th>بيانات الاتصال</th>
+                        <th>تاريخ التقديم</th>
+                        <th>آخر ملاحظة</th>
+                        <th>إجراءات</th>
+                    </tr>
+                </thead>
+                <tbody id="archiveTableBody">
+                    {% for c in candidates %}
+                    <tr data-dept="{{ c.DEPTNAME or '' }}" data-has-id="{{ 'yes' if c.NationalID else 'no' }}">
+                        <td class="fw-bold fs-6 text-white text-start align-middle">
+                            👤 {{ c.FullName }}
+                        </td>
+
+                        <td class="align-middle">
+                            {% if c.NationalID %}
+                                <span class="badge bg-light text-dark font-monospace fs-6 shadow-sm">{{ c.NationalID }}</span>
+                            {% else %}
+                                <span class="badge bg-danger bg-opacity-75 text-white">غير مسجل ⚠️</span>
+                            {% endif %}
+                        </td>
+                        
+                        <td class="align-middle">
+                            <div class="fw-bold text-warning">{{ c.JobTitle }}</div>
+                            <small class="text-white-50">{{ c.DEPTNAME or 'عام' }}</small>
+                        </td>
+                        
+                        <td class="text-start align-middle">
+                            <div class="small">📞 {{ c.Phone }}</div>
+                            {% if c.Email %}<div class="small text-white-50">📧 {{ c.Email }}</div>{% endif %}
+                        </td>
+                        
+                        <td class="text-white-50 align-middle">{{ c.ApplicationDate.strftime('%Y-%m-%d') }}</td>
+                        
+                        <td class="text-white-50 fst-italic small align-middle" style="max-width: 200px;">
+                            "{{ c.LastNote or 'لا يوجد' }}"
+                        </td>
+                        
+                        <td class="align-middle">
+                            <form action="{{ url_for('restore_candidate') }}" method="POST" class="d-inline" onsubmit="return confirm('هل أنت متأكد من استعادة هذا المرشح؟');">
+                                <input type="hidden" name="candidate_id" value="{{ c.CandidateID }}">
+                                <button type="submit" class="btn btn-sm btn-restore rounded-pill px-3 fw-bold" title="استعادة إلى قائمة الطلبات الجديدة">
+                                    ♻️ استعادة
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="py-5 text-white-50">
+                            <div class="fs-1 mb-2">📭</div>
+                            الأرشيف فارغ حالياً.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    // === 1. Stats Calculation (Offline Analysis) ===
+    document.addEventListener('DOMContentLoaded', function() {
+        const rows = document.querySelectorAll('#archiveTableBody tr');
+        let total = 0;
+        let missingID = 0;
+        let deptCounts = {};
+
+        // Loop only through valid data rows (ignore 'empty' message row)
+        rows.forEach(row => {
+            if(row.querySelector('td').innerText.includes('الأرشيف فارغ')) return;
+
+            total++;
+            
+            // Check ID
+            if(row.getAttribute('data-has-id') === 'no') missingID++;
+            
+            // Count Depts
+            let dept = row.getAttribute('data-dept') || 'غير محدد';
+            deptCounts[dept] = (deptCounts[dept] || 0) + 1;
+        });
+
+        // Find Top Dept
+        let topDept = '-';
+        let maxCount = 0;
+        for (const [dept, count] of Object.entries(deptCounts)) {
+            if (count > maxCount) {
+                maxCount = count;
+                topDept = dept;
+            }
+        }
+
+        // Update Dashboard
+        document.getElementById('statTotal').innerText = total;
+        document.getElementById('statNoID').innerText = missingID;
+        document.getElementById('statTopDept').innerText = topDept + ` (${maxCount})`;
+    });
+
+    // === 2. Combined Search & Filter Script ===
+    const searchInput = document.getElementById('archiveSearch');
+    const deptFilter = document.getElementById('deptFilter');
+    const tableRows = document.querySelectorAll('#archiveTableBody tr');
+
+    function filterData() {
+        const searchValue = searchInput.value.toLowerCase();
+        const deptValue = deptFilter.value;
+
+        tableRows.forEach(row => {
+            if(row.innerText.includes('الأرشيف فارغ')) return;
+
+            const rowText = row.innerText.toLowerCase();
+            const rowDept = row.getAttribute('data-dept');
+
+            const matchesSearch = rowText.includes(searchValue);
+            const matchesDept = (deptValue === "") || (rowDept === deptValue);
+
+            if (matchesSearch && matchesDept) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+
+    searchInput.addEventListener('keyup', filterData);
+    deptFilter.addEventListener('change', filterData);
+</script>
+{% endblock %}

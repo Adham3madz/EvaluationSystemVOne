@@ -3,117 +3,156 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>تسجيل الدخول | نظام إدارة الموارد البشرية</title>\
+  <title>تسجيل الدخول | نظام إدارة الموارد البشرية</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
-    
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/fontawesome.css') }}">
-    
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/cairo.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/fontawesome.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/cairo.css') }}">
 
-    <script src="{{ url_for('static', filename='js/chart.min.js') }}"></script>
-    
-    <style>
+  <style>
     /* === Base Styling === */
     body {
-      background: linear-gradient(135deg, #1565c0, #6a737b);
+      background-color: #1a1a1a;
       height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
       font-family: "Cairo", sans-serif;
-      color: #222;
+      color: #fff;
       margin: 0;
       padding: 0;
+      overflow: hidden;
+    }
+
+    /* 1. Background Animation Layer */
+    .bg-animation {
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%; z-index: -2;
+        background-image: url("{{ url_for('static', filename='images/dar el diafa.jpg') }}");
+        background-size: cover;
+        background-position: center;
+        animation: zoomEffect 20s infinite alternate;
+    }
+
+    /* 2. Dark Overlay Layer */
+    .bg-overlay {
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background-color: rgba(0, 0, 0, 0.65); 
+        z-index: -1;
+    }
+
+    @keyframes zoomEffect {
+        0% { transform: scale(1); }
+        100% { transform: scale(1.15); }
     }
 
     /* === Login Card === */
     .login-card {
-      background: #fff;
-      border-radius: 18px;
-      box-shadow: 0 6px 25px rgba(0,0,0,0.2);
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 20px;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.5);
       padding: 2.5rem;
       width: 100%;
       max-width: 420px;
       text-align: right;
       transition: 0.3s ease;
-    }
-    .login-card:hover {
-      box-shadow: 0 8px 35px rgba(0,0,0,0.25);
-      transform: translateY(-3px);
-    }
-
-    /* === Headings === */
-    h2 {
-      font-weight: 700;
-      color: #0d47a1;
-      text-align: center;
-      margin-bottom: 1.5rem;
+      position: relative;
+      z-index: 10;
+      color: #ffffff;
     }
 
-    /* === Input Fields === */
-    .form-label {
-      font-weight: 600;
-      color: #333;
-      margin-bottom: 6px;
+    .login-logo {
+        display: block; width: 110px; height: auto; margin: 0 auto 15px auto;
+        border-radius: 50%; border: 3px solid rgba(255, 255, 255, 0.3);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
     }
+
+    h2 { font-weight: 700; color: #ffffff; text-align: center; margin-bottom: 1.5rem; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+    .form-label { font-weight: 600; color: #eee; margin-bottom: 6px; }
+    
     .form-control {
-      border-radius: 10px;
-      padding: 10px;
-      font-size: 15px;
-      transition: 0.3s ease;
-      text-align: right;
+      background: rgba(255, 255, 255, 0.9); border: none; border-radius: 10px;
+      padding: 10px; font-size: 15px; transition: 0.3s ease; text-align: right; color: #333;
     }
-    .form-control:focus {
-      border-color: #1976d2;
-      box-shadow: 0 0 5px rgba(25,118,210,0.3);
-    }
+    .form-control:focus { background: #ffffff; box-shadow: 0 0 10px rgba(255, 255, 255, 0.5); }
 
-    /* === Button === */
     .btn-primary {
-      background-color: #1565c0;
-      border: none;
-      border-radius: 10px;
-      width: 100%;
-      padding: 0.75rem;
-      font-weight: 700;
-      font-size: 16px;
-      transition: 0.3s ease;
+      background-color: #0d6efd; border: none; border-radius: 10px; width: 100%;
+      padding: 0.75rem; font-weight: 700; font-size: 16px; transition: 0.3s ease;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
     }
-    .btn-primary:hover {
-      background-color: #0d47a1;
-      transform: translateY(-1px);
+    .btn-primary:hover { background-color: #0b5ed7; transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,0,0,0.4); }
+
+    .alert { background: rgba(255, 255, 255, 0.9); border: none; color: #333; border-radius: 10px; text-align: center; }
+    .footer { text-align: center; font-size: 0.85rem; color: rgba(255, 255, 255, 0.7); margin-top: 1.2rem; }
+
+    /* === CREDENTIALS BUTTON === */
+    .credits-btn {
+        position: fixed;
+        bottom: 20px;
+        left: 20px; /* Arabic layout usually puts secondary actions on left */
+        width: 50px;
+        height: 50px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        backdrop-filter: blur(10px);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        cursor: pointer;
+        z-index: 100;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        text-decoration: none;
+    }
+    .credits-btn:hover {
+        background: rgba(255, 255, 255, 0.25);
+        transform: scale(1.1) rotate(10deg);
+        box-shadow: 0 0 20px rgba(255, 255, 255, 0.4);
     }
 
-    /* === Flash Messages === */
-    .alert {
-      border-radius: 10px;
-      font-size: 14px;
-      margin-bottom: 1rem;
-      text-align: center;
-      padding: 0.6rem;
+    /* === CREDENTIALS MODAL === */
+    .glass-modal {
+        background: rgba(30, 30, 35, 0.85);
+        backdrop-filter: blur(25px);
+        -webkit-backdrop-filter: blur(25px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        color: white;
+        text-align: center;
     }
+    .glass-modal .modal-header { border-bottom: 1px solid rgba(255, 255, 255, 0.1); justify-content: center; }
+    .glass-modal .modal-footer { border-top: none; justify-content: center; }
+    .credits-link {
+        display: flex; align-items: center; gap: 10px;
+        background: rgba(255,255,255,0.05); padding: 12px;
+        border-radius: 12px; margin-bottom: 10px;
+        text-decoration: none; color: white; transition: 0.3s;
+        border: 1px solid transparent;
+    }
+    .credits-link:hover {
+        background: rgba(255,255,255,0.15);
+        border-color: rgba(255,255,255,0.3);
+        transform: translateX(-5px);
+        color: #ffc107;
+    }
+    .credits-icon { width: 30px; text-align: center; font-size: 1.2rem; }
 
-    /* === Footer === */
-    .footer {
-      text-align: center;
-      font-size: 0.85rem;
-      color: #666;
-      margin-top: 1.2rem;
-    }
-
-    /* === Responsive === */
-    @media (max-width: 480px) {
-      .login-card {
-        padding: 2rem 1.5rem;
-      }
-    }
+    @media (max-width: 480px) { .login-card { padding: 2rem 1.5rem; } }
   </style>
 </head>
 <body>
 
-  <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+  <div class="bg-animation"></div>
+  <div class="bg-overlay"></div>
 
   <div class="login-card">
+    <img src="{{ url_for('static', filename='images/Sugar RR (1).png') }}" alt="Logo" class="login-logo">
     <h2>تسجيل الدخول</h2>
 
     {% with messages = get_flashed_messages(with_categories=true) %}
@@ -129,23 +168,63 @@
     <form method="POST" action="/">
       <div class="mb-3">
         <label for="username" class="form-label">اسم المستخدم</label>
-        <input type="text" class="form-control" id="username" name="username"
-               placeholder="أدخل اسم المستخدم" required>
+        <input type="text" class="form-control" id="username" name="username" placeholder="أدخل اسم المستخدم" required>
       </div>
 
       <div class="mb-4">
         <label for="password" class="form-label">كلمة المرور</label>
-        <input type="password" class="form-control" id="password" name="password"
-               placeholder="أدخل كلمة المرور" required>
+        <input type="password" class="form-control" id="password" name="password" placeholder="أدخل كلمة المرور" required>
       </div>
 
       <button type="submit" class="btn btn-primary">تسجيل الدخول</button>
     </form>
 
-    <div class="footer mt-4">
-      © 2025 نظام إدارة الموارد البشرية
+    <div class="footer mt-4">© 2025 نظام إدارة الموارد البشرية</div>
+  </div>
+
+  <div class="credits-btn" data-bs-toggle="modal" data-bs-target="#creditsModal" title="Developed by">
+      👨‍💻
+  </div>
+
+  <div class="modal fade" id="creditsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content glass-modal">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold">🚀 Developed By</h5>
+            </div>
+            <div class="modal-body p-4">
+                <div class="mb-3">
+                    <img src="https://ui-avatars.com/api/?name=Adham+Emad&background=0D8ABC&color=fff&size=100&rounded=true" alt="Adham" class="rounded-circle shadow mb-3">
+                    <h4 class="fw-bold">Adham Emad</h4>
+                    <p class="text-white-50 small">Full Stack Developer</p>
+                </div>
+
+                <div class="d-flex flex-column gap-2 text-start">
+                    <a href="tel:+201091116712" class="credits-link">
+                        <span class="credits-icon">📞</span>
+                        <span dir="ltr">0109 111 6712</span>
+                    </a>
+                    <a href="mailto:adhamius2@gmail.com" class="credits-link">
+                        <span class="credits-icon">📧</span>
+                        <span>adhamius2@gmail.com</span>
+                    </a>
+                    <a href="https://www.linkedin.com/in/adham-emad-elrefaie-685766243/" target="_blank" class="credits-link">
+                        <span class="credits-icon">👔</span>
+                        <span>LinkedIn Profile</span>
+                    </a>
+                    <a href="https://github.com/Adham3madz" target="_blank" class="credits-link">
+                        <span class="credits-icon">🐙</span>
+                        <span>GitHub Profile</span>
+                    </a>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-sm btn-light rounded-pill px-4" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
     </div>
   </div>
 
+  <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
 </body>
 </html>

@@ -2,360 +2,411 @@
 {% block title %}تقارير التقييم{% endblock %}
 
 {% block content %}
+<script src="{{ url_for('static', filename='js/chart.min.js') }}"></script>
+
 <style>
-    /* --- Styles from your original file --- */
-    body {
-        direction: rtl;
-        font-family: "Tajawal", "Segoe UI", sans-serif;
-        background-color: #f5f7fa;
-        color: #222;
-        margin: 0;
-        padding: 0;
-    }
-    .page-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex-wrap: wrap;
-        background-color: #e9f0fb;
-        border-radius: 10px;
-        padding: 15px 20px;
-        margin-bottom: 20px;
-        border-right: 5px solid #004d99;
-    }
-    .page-header h2 {
-        font-size: 1.4rem;
-        color: #004d99;
-        margin: 0;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-weight: 700;
-    }
-    .page-header .btn {
-        background-color: #007b3e;
-        color: #fff;
-        border: none;
-        border-radius: 8px;
-        padding: 8px 14px;
-        font-size: 0.95rem;
-        font-weight: 600;
-        cursor: pointer;
-        transition: background 0.3s;
-    }
-    .page-header .btn:hover { background-color: #005e2f; }
-    .card {
-        background-color: #fff;
-        border-radius: 12px;
-        box-shadow: 0 3px 15px rgba(0, 0, 0, 0.08);
+    /* === Glass Panel Theme === */
+    .glass-panel {
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(15px);
+        -webkit-backdrop-filter: blur(15px);
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        border-radius: 16px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
         padding: 20px;
-        overflow-x: auto;
-    }
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        text-align: center;
-        font-size: 0.95rem;
-        min-width: 1000px; /* Ensure table is wide enough */
-    }
-    thead { background-color: #004d99; color: #fff; }
-    th, td {
-        padding: 10px 8px;
-        border-bottom: 1px solid #dee2e6;
-        vertical-align: middle;
-    }
-    tbody tr:nth-child(even) { background-color: #f8f9fc; }
-    tbody tr:hover { background-color: #eef4ff; }
-    
-    .btn-sm {
-        display: inline-flex;  
-        align-items: center;   
-        justify-content: center;
-        gap: 5px;              
-        background-color: #007bff;
-        color: #fff;
-        border: none;
-        border-radius: 6px;
-        padding: 6px 12px;     
-        font-size: 0.85rem;
-        font-weight: 600;
-        cursor: pointer;
-        transition: background 0.3s;
-        text-decoration: none; 
-    }
-    .btn-sm:hover { background-color: #005dc1; }
-    .empty-row {
-        color: #888;
-        font-style: italic;
-        text-align: center;
+        margin-bottom: 20px;
     }
 
-    /* --- Styles for Filter Section --- */
-    .filters-section {
-        background: #fff;
-        padding: 20px;
-        border-radius: 10px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        margin-bottom: 20px;
-    }
-    .filters-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 15px;
-    }
-    .filter-group {
+    /* === KPI Cards === */
+    .kpi-card {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(230, 240, 255, 0.6));
+        border: 1px solid rgba(13, 110, 253, 0.2);
+        border-radius: 16px;
+        padding: 15px;
+        text-align: center;
+        transition: transform 0.2s;
+        height: 100%;
         display: flex;
         flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
     }
-    .filter-label {
-        font-weight: 600;
-        margin-bottom: 5px;
+    .kpi-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(13, 110, 253, 0.15);
+    }
+    .kpi-icon { font-size: 2rem; margin-bottom: 8px; }
+    .kpi-value { font-size: 1.8rem; font-weight: 800; color: #004d99; }
+    .kpi-label { font-size: 0.85rem; font-weight: 700; color: #666; }
+
+    /* === Form Elements === */
+    .form-label { font-weight: 700; color: #444; font-size: 0.9rem; margin-bottom: 5px; }
+    .form-control, .form-select {
+        background: rgba(255, 255, 255, 0.6);
+        border: 1px solid rgba(0,0,0,0.1);
+        border-radius: 8px;
         color: #333;
-        font-size: 14px;
     }
-    .filter-select, .filter-input {
-        padding: 8px 12px;
-        border: 1px solid #ddd;
-        border-radius: 6px;
-        font-size: 14px;
+    .form-control:focus, .form-select:focus {
         background: #fff;
-    }
-    .filter-actions {
-        display: flex;
-        gap: 10px;
-        justify-content: flex-end;
-        margin-top: 15px;
-    }
-    .btn-primary {
-        background-color: #004d7a;
-        color: white;
-        border: none;
-        padding: 10px 16px;
-        border-radius: 6px;
-        font-size: 14px;
-        font-weight: bold;
-        cursor: pointer;
-    }
-    .btn-clear {
-        background-color: #6c757d;
-        color: white;
-        border: none;
-        padding: 10px 16px;
-        border-radius: 6px;
-        font-size: 14px;
-        font-weight: bold;
-        cursor: pointer;
+        box-shadow: 0 0 0 3px rgba(11, 102, 178, 0.2);
+        border-color: #0b66b2;
     }
 
-    /* --- RATING BADGE STYLES --- */
+    /* === Buttons === */
+    .btn-glass-primary {
+        background: linear-gradient(135deg, #004d7a, #0b66b2);
+        color: white; border: none;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2); font-weight: bold;
+        padding: 8px 20px; border-radius: 8px;
+    }
+    .btn-glass-primary:hover { background: #003d6a; color: white; transform: translateY(-2px); }
+
+    .btn-glass-secondary {
+        background: rgba(108, 117, 125, 0.8); color: white;
+        border: 1px solid rgba(255,255,255,0.2); backdrop-filter: blur(4px);
+        padding: 8px 20px; border-radius: 8px;
+    }
+    .btn-glass-secondary:hover { background: rgba(108, 117, 125, 1); color: white; }
+
+    /* === Table === */
+    .table-custom { width: 100%; border-collapse: separate; border-spacing: 0; margin-bottom: 0; }
+    .table-custom thead th {
+        background: linear-gradient(135deg, #004d7a, #0b66b2);
+        color: #fff; padding: 15px; border: none; font-weight: 600; text-align: center;
+    }
+    .table-custom thead th:first-child { border-top-right-radius: 10px; }
+    .table-custom thead th:last-child { border-top-left-radius: 10px; }
+    .table-custom tbody td {
+        background-color: transparent; padding: 12px;
+        border-bottom: 1px solid rgba(0,0,0,0.05); color: #333; vertical-align: middle;
+    }
+    .table-custom tbody tr:hover td { background-color: rgba(11, 102, 178, 0.08); }
+
+    /* === Badges & Bars === */
     .rating-badge {
-        display: inline-block;
-        padding: 4px 10px;
-        border-radius: 15px;
-        font-weight: 600;
-        font-size: 13px;
-        color: #fff;
-        min-width: 60px;
+        display: inline-block; padding: 4px 12px; border-radius: 20px;
+        font-weight: 600; font-size: 12px; color: #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
-    .rating-excellent { background-color: #0275d8; } /* ممتاز */
-    .rating-very-good { background-color: #5cb85c; } /* جيد جدا */
-    .rating-good { background-color: #f0ad4e; } /* جيد */
-    .rating-acceptable { background-color: #d9534f; } /* مقبول */
-    .rating-weak { background-color: #c62828; } /* ضعيف */
-    .rating-default { background-color: #777; } /* Default */
+    .rating-excellent { background-color: #198754; } /* Green */
+    .rating-very-good { background-color: #20c997; } /* Teal */
+    .rating-good { background-color: #ffc107; color: #000; } /* Yellow */
+    .rating-acceptable { background-color: #fd7e14; } /* Orange */
+    .rating-weak { background-color: #dc3545; } /* Red */
+    .rating-default { background-color: #6c757d; }
 
-    /* --- SCORE BAR STYLES --- */
     .score-bar-container {
-        width: 100%;
-        min-width: 100px;
-        background-color: #e9ecef;
-        border-radius: 15px;
-        overflow: hidden;
+        width: 100%; height: 8px; background-color: #e9ecef; border-radius: 10px; overflow: hidden; margin-top: 5px;
     }
-    .score-bar {
-        height: 20px;
-        line-height: 20px;
-        font-size: 12px;
-        font-weight: 600;
-        color: white;
-        text-align: center;
-        background-color: #007bff;
-        border-radius: 15px;
-        transition: width 0.5s ease-in-out;
-    }
-    .score-bar.low { background-color: #c62828; } /* 0-59 */
-    .score-bar.medium { background-color: #f0ad4e; } /* 60-79 */
-    .score-bar.high { background-color: #5cb85c; } /* 80-100 */
+    .score-bar { height: 100%; border-radius: 10px; }
+    .score-bar.high { background-color: #198754; }
+    .score-bar.medium { background-color: #ffc107; }
+    .score-bar.low { background-color: #dc3545; }
 
+    /* === Print === */
+    @media print {
+        body { background: white !important; }
+        .glass-panel { box-shadow: none; border: none; padding: 0; }
+        .btn, form { display: none !important; }
+        .kpi-card { border: 1px solid #ddd; }
+    }
 </style>
 
-<div class="page-header">
-    <h2>📊 عرض تقارير التقييم</h2>
-    {% if session.get('role_id') in [2, 3] %}
-      <a href="{{ url_for('select_user_for_evaluation') }}" class="btn">➕ إنشاء تقييم جديد</a>
-    {% endif %}
-</div>
+<div class="container-fluid py-4">
 
-<div class="filters-section">
-    <form id="filtersForm" method="GET" action="{{ url_for('evaluation_reports') }}">
-        <div class="filters-grid">
-            
-            <!-- Employee Search (Moved outside admin block) -->
-            <div class="filter-group">
-                <label class="filter-label" for="search_employee">اسم الموظف:</label>
-                <input type="text" name="search_employee" id="search_employee" class="filter-input" 
-                       placeholder="ابحث عن اسم الموظف..." value="{{ filters.get('search_employee', '') }}">
-            </div>
-            
-            <!-- Evaluator Search (Shows for Admin, or for Manager to search self) -->
-            {% if is_admin or role_id != 5 %}
-            <div class="filter-group">
-                <label class="filter-label" for="search_evaluator">اسم مقدم التقييم:</label>
-                <input type="text" name="search_evaluator" id="search_evaluator" class="filter-input" 
-                       placeholder="ابحث عن اسم المقيم..." value="{{ filters.get('search_evaluator', '') }}">
-            </div>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-white mb-1" style="text-shadow: 0 2px 4px rgba(0,0,0,0.3);">📊 سجلات تقييم الأداء</h2>
+            <p class="text-white-50">عرض وتحليل تقارير أداء الموظفين.</p>
+        </div>
+        
+        <div class="d-flex gap-2">
+            {% if session.get('role_id') in [2, 3] %}
+                <a href="{{ url_for('select_user_for_evaluation') }}" class="btn btn-glass-primary">➕ تقييم جديد</a>
             {% endif %}
+            <button onclick="window.print()" class="btn btn-glass-secondary">🖨️ طباعة</button>
+        </div>
+    </div>
 
-            <!-- Recommendation Filter -->
-            <div class="filter-group">
-                <label class="filter-label" for="recommendation_id">التوصية:</label>
-                <select name="recommendation_id" id="recommendation_id" class="filter-select">
-                    <option value="">الكل</option>
-                    {% for rec in all_recommendations %}
-                    <option value="{{ rec.RecommendationID }}" {% if filters.get('recommendation_id') == rec.RecommendationID|string %}selected{% endif %}>
-                        {{ rec.RecommendationText | truncate(50) }}
-                    </option>
-                    {% endfor %}
-                </select>
-            </div>
-
-            <!-- Training Course Filter -->
-            <div class="filter-group">
-                <label class="filter-label" for="training_course_id">الدورة التدريبية:</label>
-                <select name="training_course_id" id="training_course_id" class="filter-select">
-                    <option value="">الكل</option>
-                    {% for course in all_training_courses %}
-                    <option value="{{ course.TrainingCourseID }}" {% if filters.get('training_course_id') == course.TrainingCourseID|string %}selected{% endif %}>
-                        {{ course.TrainingCourseText | truncate(50) }}
-                    </option>
-                    {% endfor %}
-                </select>
-            </div>
-
-            <div class="filter-group">
-                <label class="filter-label" for="eval_type_id">نوع التقييم:</label>
-                <select name="eval_type_id" id="eval_type_id" class="filter-select">
-                    <option value="">الكل</option>
-                    {% for etype in all_evaluation_types %}
-                    <option value="{{ etype.EvaluationTypeID }}" {% if filters.get('eval_type_id') == etype.EvaluationTypeID|string %}selected{% endif %}>
-                        {{ etype.DisplayName }}
-                    </option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="filter-group">
-                <label class="filter-label" for="date_from">التاريخ من:</label>
-                <input type="date" name="date_from" id="date_from" class="filter-input" 
-                       value="{{ filters.get('date_from', '') }}">
-            </div>
-            <div class="filter-group">
-                <label class="filter-label" for="date_to">التاريخ إلى:</label>
-                <input type="date" name="date_to" id="date_to" class="filter-input" 
-                       value="{{ filters.get('date_to', '') }}">
+    {% if reports %}
+    <div class="row g-4 mb-4">
+        <div class="col-md-2">
+            <div class="kpi-card">
+                <div class="kpi-icon">📑</div>
+                <div class="kpi-value" id="statTotal">0</div>
+                <div class="kpi-label">إجمالي التقارير</div>
             </div>
         </div>
 
-        <div class="filter-actions">
-            <button type="submit" class="btn btn-primary">تطبيق الفلاتر</button>
-            <button type="button" onclick="clearFilters()" class="btn btn-clear">مسح الكل</button>
-        </div>
-    </form>
-</div>
-
-<div class="card">
-  <table>
-    <thead>
-      <tr>
-        <th>#</th>
-        <th>👥 الموظف / المدير</th>
-        <th>🧑‍💼 مقدم التقييم</th>
-        <th>🏷️ فئة الموظف</th>
-        <th>📅 تاريخ التقييم</th>
-        <th>📂 نوع التقييم</th>
-        <th>📈 النتيجة (%)</th>
-        <th>🏅 التقدير</th>
-        <th>📝 الملاحظات</th>
-        <th>💡 التوصية</th>
-        <th>🎓 الدورة المقترحة</th>
-        <th>🔍 إجراء</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for report in reports %}
-      <tr>
-        <td>{{ report.EvaluationID }}</td>
-        <td>{{ report.EmployeeName or '--' }}</td>
-        <td>{{ report.EvaluatorName or '--' }}</td>
-        <td>{{ report.employee_class or '--' }}</td>
-        <td>{{ report.EvaluationDate.strftime('%Y-%m-%d %H:%M') if report.EvaluationDate else '--' }}</td>
-        <td>{{ report.EvaluationType or '--' }}</td>
-        
-        <!-- VISUAL SCORE BAR -->
-        {% set score_val = report.OverallScore|float or 0 %}
-        <td>
-          <div class="score-bar-container" title="{{ "%.2f"|format(score_val) }}%">
-            <div class="score-bar 
-              {% if score_val < 60 %}low{% elif score_val < 80 %}medium{% else %}high{% endif %}" 
-              style="width: {{ score_val }}%;">
-              {{ "%.1f"|format(score_val) }}%
+        <div class="col-md-2">
+            <div class="kpi-card" style="border-color: rgba(255, 193, 7, 0.3);">
+                <div class="kpi-icon">⭐</div>
+                <div class="kpi-value text-warning" id="statAvgScore">0</div>
+                <div class="kpi-label">متوسط الأداء</div>
             </div>
-          </div>
-        </td>
-        
-        <!-- VISUAL RATING BADGE -->
-        {% set r_class = 'default' %}
-        {% if report.OverallRating == 'ممتاز' %}{% set r_class = 'excellent' %}
-        {% elif report.OverallRating == 'جيد جدا' %}{% set r_class = 'very-good' %}
-        {% elif report.OverallRating == 'جيد' %}{% set r_class = 'good' %}
-        {% elif report.OverallRating == 'مقبول' %}{% set r_class = 'acceptable' %}
-        {% elif report.OverallRating == 'ضعيف' %}{% set r_class = 'weak' %}
-        {% endif %}
-        <td>
-          <span class="rating-badge rating-{{ r_class }}">
-            {{ report.OverallRating or '--' }}
-          </span>
-        </td>
+        </div>
 
-        <td>{{ report.ManagerComments or '--' }}</td>
-        <td>{{ report.RecommendationText or '--' }}</td>
-        <td>{{ report.TrainingCourseText or '--' }}</td>
-        <td>
-          <a href="{{ url_for('evaluation_details', evaluation_id=report.EvaluationID) }}" class="btn-sm">
-            🖨️ تفاصيل
-          </a>
-        </td>
-      </tr>
-      {% else %}
-      <tr>
-        <td colspan="12" class="empty-row">لا توجد تقارير مطابقة للبحث.</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+        <div class="col-md-2">
+            <div class="kpi-card" style="border-color: rgba(25, 135, 84, 0.3);">
+                <div class="kpi-icon">🏆</div>
+                <div class="kpi-value text-success" id="statExcellent">0%</div>
+                <div class="kpi-label">نسبة الامتياز</div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="glass-panel p-2 d-flex flex-column align-items-center justify-content-center h-100 mb-0">
+                <h6 class="fw-bold small mb-2 text-muted">توزيع التقديرات</h6>
+                <div style="height: 100px; width: 100px;">
+                    <canvas id="ratingChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="glass-panel p-2 d-flex flex-column align-items-center justify-content-center h-100 mb-0">
+                <h6 class="fw-bold small mb-2 text-muted">أبرز التوصيات</h6>
+                <div style="height: 100px; width: 100%;">
+                    <canvas id="recChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="glass-panel">
+        <form id="filtersForm" method="GET" action="{{ url_for('evaluation_reports') }}">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">الموظف</label>
+                    <input type="text" name="search_employee" class="form-control" placeholder="اسم الموظف..." value="{{ filters.get('search_employee', '') }}">
+                </div>
+                
+                {% if is_admin or role_id != 5 %}
+                <div class="col-md-3">
+                    <label class="form-label">المقيم</label>
+                    <input type="text" name="search_evaluator" class="form-control" placeholder="اسم المقيم..." value="{{ filters.get('search_evaluator', '') }}">
+                </div>
+                {% endif %}
+
+                <div class="col-md-3">
+                    <label class="form-label">التوصية</label>
+                    <select name="recommendation_id" class="form-select">
+                        <option value="">-- الكل --</option>
+                        {% for rec in all_recommendations %}
+                        <option value="{{ rec.RecommendationID }}" {% if filters.get('recommendation_id') == rec.RecommendationID|string %}selected{% endif %}>
+                            {{ rec.RecommendationText | truncate(30) }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label">نوع التقييم</label>
+                    <select name="eval_type_id" class="form-select">
+                        <option value="">-- الكل --</option>
+                        {% for etype in all_evaluation_types %}
+                        <option value="{{ etype.EvaluationTypeID }}" {% if filters.get('eval_type_id') == etype.EvaluationTypeID|string %}selected{% endif %}>
+                            {{ etype.DisplayName }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-2">
+                    <label class="form-label">من تاريخ</label>
+                    <input type="date" name="date_from" class="form-control" value="{{ filters.get('date_from', '') }}">
+                </div>
+                
+                <div class="col-md-2">
+                    <label class="form-label">إلى تاريخ</label>
+                    <input type="date" name="date_to" class="form-control" value="{{ filters.get('date_to', '') }}">
+                </div>
+
+                <div class="col-md-4 d-flex align-items-end gap-2">
+                    <button type="submit" class="btn btn-glass-primary flex-grow-1">🔍 بحث</button>
+                    <button type="button" onclick="clearFilters()" class="btn btn-glass-secondary">❌ مسح</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="glass-panel p-0 overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-custom text-center mb-0">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>👥 الموظف / المدير</th>
+                        <th>📂 النوع</th>
+                        <th>📅 التاريخ</th>
+                        <th>📈 النتيجة</th>
+                        <th>🏅 التقدير</th>
+                        <th>💡 التوصية</th>
+                        <th style="min-width: 150px;">📝 الملاحظات</th>
+                        <th>إجراء</th>
+                    </tr>
+                </thead>
+                <tbody id="reportsTableBody">
+                    {% for report in reports %}
+                    <tr class="report-row"
+                        data-score="{{ report.OverallScore }}"
+                        data-rating="{{ report.OverallRating or 'غير محدد' }}"
+                        data-rec="{{ report.RecommendationText or 'لا يوجد' }}">
+                        
+                        <td>{{ report.EvaluationID }}</td>
+                        
+                        <td class="text-start">
+                            <div class="fw-bold text-primary">{{ report.EmployeeName or '--' }}</div>
+                            <small class="text-muted">بواسطة: {{ report.EvaluatorName or '--' }}</small>
+                        </td>
+
+                        <td><span class="badge bg-light text-dark border">{{ report.EvaluationType or '--' }}</span></td>
+                        
+                        <td class="small">{{ report.EvaluationDate.strftime('%Y-%m-%d') if report.EvaluationDate else '--' }}</td>
+
+                        <td style="width: 120px;">
+                            <div class="fw-bold">{{ "%.1f"|format(report.OverallScore|float) }}%</div>
+                            <div class="score-bar-container">
+                                <div class="score-bar {% if report.OverallScore|float < 60 %}low{% elif report.OverallScore|float < 80 %}medium{% else %}high{% endif %}" 
+                                     style="width: {{ report.OverallScore|float }}%;"></div>
+                            </div>
+                        </td>
+
+                        <td>
+                            {% set r_class = 'default' %}
+                            {% if report.OverallRating == 'ممتاز' %}{% set r_class = 'excellent' %}
+                            {% elif report.OverallRating == 'جيد جدا' %}{% set r_class = 'very-good' %}
+                            {% elif report.OverallRating == 'جيد' %}{% set r_class = 'good' %}
+                            {% elif report.OverallRating == 'مقبول' %}{% set r_class = 'acceptable' %}
+                            {% elif report.OverallRating == 'ضعيف' %}{% set r_class = 'weak' %}
+                            {% endif %}
+                            <span class="rating-badge rating-{{ r_class }}">
+                                {{ report.OverallRating or '--' }}
+                            </span>
+                        </td>
+
+                        <td>{{ report.RecommendationText or '--' }}</td>
+                        
+                        <td class="text-start small text-truncate" style="max-width: 150px;" title="{{ report.ManagerComments }}">
+                            {{ report.ManagerComments or '--' }}
+                        </td>
+
+                        <td>
+                            <div class="d-flex justify-content-center gap-1">
+                                <a href="{{ url_for('evaluation_details', evaluation_id=report.EvaluationID) }}" class="btn btn-sm btn-outline-info" title="عرض">
+                                    👁️
+                                </a>
+                                {% if is_admin %}
+                                <form action="{{ url_for('evaluation_delete', evaluation_id=report.EvaluationID) }}" method="POST" onsubmit="return confirm('حذف نهائي؟');">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="حذف">🗑️</button>
+                                </form>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="9" class="py-5 text-muted">
+                            <div class="fs-1 mb-2">📭</div>
+                            لا توجد تقارير مطابقة.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 
 <script>
-    function clearFilters() {
-        // Find all inputs and selects in the form and clear them
-        const form = document.getElementById('filtersForm');
-        form.querySelectorAll('input, select').forEach(element => {
-            if (element.type === 'text' || element.type === 'date') {
-                element.value = '';
-            } else if (element.type === 'select-one') {
-                element.selectedIndex = 0;
+    document.addEventListener('DOMContentLoaded', function() {
+        // === Safe Analytics Extraction (From DOM) ===
+        const rows = document.querySelectorAll('.report-row');
+        
+        let total = 0;
+        let sumScore = 0;
+        let excellentCount = 0;
+        
+        const ratingCounts = {};
+        const recCounts = {};
+
+        rows.forEach(row => {
+            total++;
+            const score = parseFloat(row.getAttribute('data-score')) || 0;
+            const rating = row.getAttribute('data-rating');
+            const rec = row.getAttribute('data-rec');
+
+            sumScore += score;
+
+            // Rating Counts
+            if (rating.includes('ممتاز')) excellentCount++;
+            ratingCounts[rating] = (ratingCounts[rating] || 0) + 1;
+
+            // Rec Counts
+            recCounts[rec] = (recCounts[rec] || 0) + 1;
+        });
+
+        // Don't render if empty
+        if (total === 0) return;
+
+        // Update KPIs
+        document.getElementById('statTotal').innerText = total;
+        document.getElementById('statAvgScore').innerText = (sumScore / total).toFixed(1) + "%";
+        document.getElementById('statExcellent').innerText = Math.round((excellentCount / total) * 100) + "%";
+
+        // --- Chart 1: Ratings (Doughnut) ---
+        new Chart(document.getElementById('ratingChart'), {
+            type: 'doughnut',
+            data: {
+                labels: Object.keys(ratingCounts),
+                datasets: [{
+                    data: Object.values(ratingCounts),
+                    backgroundColor: ['#198754', '#20c997', '#ffc107', '#fd7e14', '#dc3545'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                cutout: '70%'
             }
         });
-        // Resubmit the form to show all results
+
+        // --- Chart 2: Recommendations (Bar) ---
+        // Sort & Slice Top 5
+        const sortedRecs = Object.entries(recCounts).sort((a,b) => b[1] - a[1]).slice(0, 5);
+
+        new Chart(document.getElementById('recChart'), {
+            type: 'bar',
+            data: {
+                labels: sortedRecs.map(i => i[0]),
+                datasets: [{
+                    label: 'عدد التوصيات',
+                    data: sortedRecs.map(i => i[1]),
+                    backgroundColor: '#0d6efd',
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { 
+                    x: { display: false }, 
+                    y: { display: false, beginAtZero: true } 
+                }
+            }
+        });
+    });
+
+    function clearFilters() {
+        const form = document.getElementById('filtersForm');
+        form.querySelectorAll('input, select').forEach(el => {
+            el.value = '';
+        });
         form.submit();
     }
 </script>

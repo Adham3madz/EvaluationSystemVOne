@@ -1,0 +1,52 @@
+{% extends "layout.html" %}
+{% block title %}Trainers{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">👨‍🏫 قائمة المدربين</h1>
+        <a href="{{ url_for('lms_trainers_add') }}" class="btn btn-info shadow-sm">
+            <i class="fas fa-plus fa-sm text-white-50"></i> إضافة مدرب
+        </a>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>الاسم</th>
+                            <th>النوع</th>
+                            <th>التخصص</th>
+                            <th>البريد الإلكتروني</th>
+                            <th>إجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for t in trainers %}
+                        <tr>
+                            <td class="fw-bold">{{ t.TrainerName }}</td>
+                            <td>
+                                {% if t.TrainerType == 'Internal' %}
+                                    <span class="badge bg-primary">موظف داخلي</span>
+                                {% else %}
+                                    <span class="badge bg-warning text-dark">خارجي</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ t.Specialization or '-' }}</td>
+                            <td>{{ t.Email or '-' }}</td>
+                            <td>
+                                <a href="{{ url_for('lms_trainers_edit', tid=t.TrainerID) }}" class="btn btn-sm btn-secondary">تعديل</a>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="5" class="text-center text-muted">لا يوجد مدربين.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

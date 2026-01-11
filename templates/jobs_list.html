@@ -3,95 +3,84 @@
 
 {% block content %}
 <style>
-    /* === Header === */
-    .job-header {
-        background: linear-gradient(135deg, #004d7a, #00608f);
-        color: white; padding: 35px; border-radius: 20px; text-align: center; margin-bottom: 40px;
-        box-shadow: 0 10px 30px rgba(0, 77, 122, 0.2); position: relative; overflow: hidden;
-    }
-    .job-header h2 { font-weight: 800; margin-bottom: 10px; letter-spacing: 0.5px; }
+    /* خلفية هادئة ومريحة */
+    body { background: #f8fcff; }
 
-    /* === Add Button === */
-    .btn-add-floating {
-        background: rgba(255,255,255,0.2); backdrop-filter: blur(5px);
-        border: 1px solid rgba(255,255,255,0.4); color: white;
-        padding: 10px 25px; border-radius: 50px; font-weight: bold;
-        text-decoration: none; display: inline-flex; align-items: center; gap: 8px;
-        margin-top: 15px; transition: 0.3s;
+    /* عنوان الصفحة - لطيف وواضح */
+    .page-header {
+        text-align: center; padding: 40px 20px; background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+        border-radius: 20px; margin-bottom: 40px; box-shadow: 0 8px 25px rgba(0,0,0,0.08);
     }
-    .btn-add-floating:hover { background: white; color: #004d7a; transform: translateY(-3px); }
+    .page-header h2 { font-size: 28px; color: #1565c0; margin-bottom: 10px; }
+    .page-header p { color: #424242; font-size: 16px; }
 
-    /* === Job Card === */
+    /* زر إضافة وظيفة - بارز وودود */
+    .btn-add {
+        background: #4caf50; color: white; padding: 14px 30px; border-radius: 50px;
+        font-weight: bold; text-decoration: none; display: inline-flex; align-items: center; gap: 10px;
+        box-shadow: 0 6px 15px rgba(76,175,80,0.3); transition: 0.3s;
+    }
+    .btn-add:hover { background: #43a047; transform: translateY(-3px); color: white; }
+
+    /* بطاقة الوظيفة - بسيطة ومريحة للعين */
     .job-card {
-        background: #fff; border-radius: 16px; border: 1px solid #f0f2f5;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.04); transition: all 0.3s ease;
-        height: 100%; display: flex; flex-direction: column; position: relative; overflow: hidden;
+        background: white; border-radius: 16px; padding: 25px; height: 100%;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.06); transition: 0.3s; border: 1px solid #e8f4fd;
     }
-    .job-card:hover { transform: translateY(-7px); box-shadow: 0 15px 35px rgba(0,0,0,0.08); }
+    .job-card:hover { transform: translateY(-8px); box-shadow: 0 15px 30px rgba(0,0,0,0.12); }
 
-    /* Status Strip */
-    .status-strip { height: 5px; width: 100%; }
-    .strip-Active { background: #2ecc71; }
-    .strip-Paused { background: #f1c40f; }
-    .strip-Closed { background: #e74c3c; }
+    /* شريط الحالة العلوي */
+    .status-bar { height: 6px; border-radius: 16px 16px 0 0; margin: -25px -25px 20px -25px; }
+    .status-Active { background: #4caf50; }
+    .status-Paused { background: #ff9800; }
+    .status-Closed { background: #f44336; }
 
-    /* Card Body */
-    .card-body { padding: 25px; flex: 1; }
+    /* عنوان الوظيفة */
+    .job-title { font-size: 20px; font-weight: 800; color: #1e3a8a; margin-bottom: 8px; }
 
-    /* Badges */
-    .badge-status {
-        position: absolute; top: 20px; left: 20px;
-        padding: 5px 12px; border-radius: 30px; font-size: 11px; font-weight: 800; text-transform: uppercase;
-    }
-    .badge-Active { background: #e8f8f5; color: #27ae60; }
-    .badge-Paused { background: #fef9e7; color: #f1c40f; }
-    .badge-Closed { background: #fdedec; color: #c0392b; }
+    /* القسم */
+    .job-dept { color: #1565c0; font-weight: 600; margin-bottom: 15px; }
 
-    .job-title { font-size: 18px; font-weight: 800; color: #2c3e50; margin-bottom: 5px; margin-top: 10px; }
-    .dept-name { color: #004d7a; font-size: 13px; font-weight: 600; display: block; margin-bottom: 15px; }
-    
-    /* Details Grid */
-    .details-grid {
-        display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;
-        font-size: 13px; color: #555; background: #f8f9fa; padding: 10px; border-radius: 8px;
-    }
-    .detail-item i { color: #95a5a6; width: 20px; }
+    /* التفاصيل */
+    .job-details { font-size: 14px; color: #555; line-height: 1.8; }
+    .job-details div { margin-bottom: 8px; }
 
-    .job-desc { font-size: 13px; color: #777; margin-bottom: 20px; line-height: 1.5; 
-                display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    /* الوصف */
+    .job-desc { font-size: 14px; color: #666; margin: 15px 0; line-height: 1.6; }
 
-    /* Footer Actions */
-    .card-footer {
-        padding: 15px 25px; border-top: 1px solid #f1f2f5; background: #fff;
-        display: flex; justify-content: space-between; align-items: center;
+    /* عدد المتقدمين */
+    .applicants {
+        font-weight: bold; color: #1565c0; font-size: 15px; margin-top: auto; padding-top: 15px;
+        border-top: 1px dashed #e0e0e0;
     }
 
-    .applicant-count {
-        font-size: 13px; font-weight: 700; color: #555; display: flex; align-items: center; gap: 5px;
+    /* الأزرار السفلية */
+    .job-actions { display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap; }
+    .btn-small {
+        padding: 10px 18px; border-radius: 10px; font-size: 13px; font-weight: bold;
+        text-decoration: none; display: inline-flex; align-items: center; gap: 6px;
+        transition: 0.2s;
     }
-    .count-badge { background: #e3f2fd; color: #004d7a; padding: 2px 8px; border-radius: 10px; }
+    .btn-view { background: #1565c0; color: white; }
+    .btn-view:hover { background: #0d47a1; }
+    .btn-edit { background: #fff3e0; color: #ef6c00; border: 1px solid #ffe0b2; }
+    .btn-edit:hover { background: #ff9800; color: white; }
+    .btn-delete { background: #ffebee; color: #c62828; border: 1px solid #ffcdd2; }
+    .btn-delete:hover { background: #f44336; color: white; }
 
-    .action-group { display: flex; gap: 8px; }
-    .btn-icon {
-        width: 32px; height: 32px; border-radius: 8px; border: none;
-        display: inline-flex; align-items: center; justify-content: center;
-        transition: 0.2s; cursor: pointer; font-size: 14px; text-decoration: none;
+    /* عندما لا توجد وظائف */
+    .no-jobs {
+        text-align: center; padding: 80px 20px; color: #78909c;
     }
-    .btn-view { background: #004d7a; color: white; width: auto; padding: 0 15px; font-weight: bold; font-size: 12px; }
-    .btn-view:hover { background: #003a5c; color: white; }
-    
-    .btn-edit { background: #fff4e5; color: #f39c12; }
-    .btn-edit:hover { background: #f39c12; color: white; }
-    
-    .btn-delete { background: #ffecec; color: #e74c3c; }
-    .btn-delete:hover { background: #e74c3c; color: white; }
+    .no-jobs-icon { font-size: 80px; margin-bottom: 20px; opacity: 0.4; }
 </style>
 
-<div class="job-header">
-    <h2>📢 الوظائف الشاغرة (Job Listings)</h2>
-    <p>إدارة إعلانات الوظائف ومتابعة المتقدمين</p>
-    <a href="{{ url_for('job_add') }}" class="btn-add-floating">
-        <i class="fa-solid fa-plus"></i> نشر وظيفة جديدة
+<!-- عنوان الصفحة الودود -->
+<div class="page-header">
+    <h2>📢 الوظائف المتاحة حاليًا</h2>
+    <p>اعرض الوظائف الشاغرة وتابع المتقدمين بسهولة</p>
+    <a href="{{ url_for('job_add') }}" class="btn-add">
+        ➕ إضافة وظيفة جديدة
     </a>
 </div>
 
@@ -99,60 +88,50 @@
     {% for job in jobs %}
     <div class="col-md-6 col-lg-4">
         <div class="job-card">
-            <div class="status-strip strip-{{ job.Status }}"></div>
-            
-            <div class="card-body">
-                <span class="badge-status badge-{{ job.Status }}">{{ job.Status }}</span>
-                
-                <div class="job-title">{{ job.JobTitle }}</div>
-                <span class="dept-name"><i class="fa-solid fa-building"></i> {{ job.DEPTNAME }}</span>
+            <div class="status-bar status-{{ job.Status }}"></div>
 
-                <div class="details-grid">
-                    <div class="detail-item">
-                        <i class="fa-solid fa-money-bill-wave"></i> {{ job.SalaryRange or 'غير محدد' }}
-                    </div>
-                    <div class="detail-item">
-                        <i class="fa-regular fa-clock"></i> {{ job.Deadline.strftime('%Y-%m-%d') if job.Deadline else 'مفتوح' }}
-                    </div>
-                    <div class="detail-item" style="grid-column: span 2;">
-                        <i class="fa-regular fa-calendar-check"></i> نُشر: {{ job.PostDate.strftime('%Y-%m-%d') }}
-                    </div>
-                </div>
+            <div class="job-title">{{ job.JobTitle }}</div>
+            <div class="job-dept">🏢 {{ job.DEPTNAME or 'غير محدد' }}</div>
 
-                <div class="job-desc">
-                    {{ job.Description or 'لا يوجد وصف متاح...' }}
-                </div>
+            <div class="job-details">
+                <div>💰 الراتب: {{ job.SalaryRange or 'غير محدد' }}</div>
+                <div>📅 الموعد النهائي: {{ job.Deadline.strftime('%Y-%m-%d') if job.Deadline else 'مفتوح' }}</div>
+                <div>🗓️ تاريخ النشر: {{ job.PostDate.strftime('%Y-%m-%d') }}</div>
             </div>
-            
-            <div class="card-footer">
-                <div class="applicant-count">
-                    <i class="fa-solid fa-users"></i> المتقدمين <span class="count-badge">{{ job.ApplicantCount }}</span>
-                </div>
-                
-                <div class="action-group">
-                    <a href="{{ url_for('recruitment_list', job_id=job.JobID) }}" class="btn-icon btn-view" title="عرض المتقدمين">
-                        <i class="fa-solid fa-eye"></i> عرض
-                    </a>
-                    
-                    <a href="{{ url_for('job_edit', jid=job.JobID) }}" class="btn-icon btn-edit" title="تعديل">
-                        <i class="fa-solid fa-pen"></i>
-                    </a>
 
-                    <form action="{{ url_for('job_delete', jid=job.JobID) }}" method="POST" style="margin:0;" onsubmit="return confirm('هل أنت متأكد من حذف الوظيفة؟');">
-                        <button type="submit" class="btn-icon btn-delete" title="حذف">
-                            <i class="fa-solid fa-trash"></i>
-                        </button>
-                    </form>
-                </div>
+            <div class="job-desc">
+                {{ job.Description or 'لا يوجد وصف متاح حاليًا...' }}
+            </div>
+
+            <div class="applicants">
+                👥 عدد المتقدمين: <strong>{{ job.ApplicantCount }}</strong>
+            </div>
+
+            <div class="job-actions">
+                <a href="{{ url_for('recruitment_list', job_id=job.JobID) }}" class="btn-small btn-view">
+                    👀 عرض المتقدمين
+                </a>
+                <a href="{{ url_for('job_edit', jid=job.JobID) }}" class="btn-small btn-edit">
+                    ✏️ تعديل
+                </a>
+                <form action="{{ url_for('job_delete', jid=job.JobID) }}" method="POST" style="display:inline;" onsubmit="return confirm('🚨 هل أنت متأكد من حذف هذه الوظيفة؟');">
+                    <button type="submit" class="btn-small btn-delete">
+                        🗑️ حذف
+                    </button>
+                </form>
             </div>
         </div>
     </div>
     {% else %}
-    <div class="col-12 text-center py-5">
-        <i class="fa-solid fa-briefcase fa-3x text-muted mb-3" style="opacity: 0.3;"></i>
-        <h4 class="text-muted">لا توجد وظائف منشورة حالياً</h4>
-        <p class="text-muted">ابدأ بإضافة وظيفة جديدة لفتح باب التقديم.</p>
+    <div class="col-12">
+        <div class="no-jobs">
+            <div class="no-jobs-icon">💼</div>
+            <h4>لا توجد وظائف منشورة حاليًا</h4>
+            <p>كل الوظائف مغلقة أو لم يتم نشر أي وظيفة بعد.</p>
+            <p>يمكنك البدء بإضافة وظيفة جديدة من الأعلى 👆</p>
+        </div>
     </div>
     {% endfor %}
 </div>
+
 {% endblock %}

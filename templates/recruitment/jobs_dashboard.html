@@ -1,0 +1,405 @@
+{% extends "layout.html" %}
+{% block title %}لوحة التوظيف{% endblock %}
+
+{% block content %}
+<script src="{{ url_for('static', filename='js/chart.min.js') }}"></script>
+
+<style>
+    /* === Glass Panel Theme === */
+    .glass-panel {
+        background: rgba(255, 255, 255, 0.75);
+        backdrop-filter: blur(15px);
+        -webkit-backdrop-filter: blur(15px);
+        border: 1px solid rgba(255, 255, 255, 0.6);
+        border-radius: 16px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+
+    /* === KPI Cards === */
+    .kpi-card {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.4));
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        border-radius: 16px;
+        padding: 15px;
+        text-align: center;
+        transition: transform 0.2s;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+    .kpi-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+    .kpi-icon { font-size: 2.5rem; margin-bottom: 10px; }
+    .kpi-value { font-size: 2rem; font-weight: 800; color: #333; line-height: 1; }
+    .kpi-label { font-size: 0.9rem; font-weight: 600; color: #666; }
+
+    /* === Chart Containers === */
+    .chart-container {
+        position: relative; 
+        height: 200px; 
+        width: 100%;
+        display: flex;
+        justify-content: center;
+    }
+
+    /* === Toggle Switch Style === */
+    .toggle-container {
+        position: absolute;
+        bottom: 80px;
+        left: 20px;
+        z-index: 10;
+        background: rgba(255, 255, 255, 0.9);
+        padding: 6px 12px;
+        border-radius: 30px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        color: #495057;
+    }
+    .form-check-input { cursor: pointer; }
+
+    /* === Job Card Styles === */
+    .job-card.closed .card {
+        filter: grayscale(80%);
+        opacity: 0.9;
+        background-color: #f8f9fa !important;
+    }
+    .job-card .card { transition: all 0.3s ease; }
+</style>
+
+<div class="container py-4">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-white mb-1">📊 لوحة التوظيف</h2>
+            <p class="fw-bold text-white-50">نظرة عامة على التقدم والوظائف الشاغرة.</p>
+        </div>
+        <a href="{{ url_for('job_create') }}" class="btn btn-primary btn-lg rounded-pill px-4 shadow-sm">
+            ➕ نشر وظيفة جديدة
+        </a>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-md-3 col-6">
+            <div class="kpi-card">
+                <div class="kpi-icon">💼</div>
+                <div class="kpi-value">{{ jobs|length }}</div>
+                <div class="kpi-label">إجمالي الوظائف</div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 col-6">
+            <div class="kpi-card">
+                <div class="kpi-icon">🔥</div>
+                {% set active_jobs = jobs | selectattr('Status', 'equalto', 'Open') | list | length %}
+                <div class="kpi-value text-success">{{ active_jobs }}</div>
+                <div class="kpi-label">وظائف نشطة</div>
+            </div>
+        </div>
+
+        <div class="col-md-3 col-6">
+            <div class="kpi-card">
+                <div class="kpi-icon">👥</div>
+                {% set total_candidates = jobs | sum(attribute='TotalCandidates') %}
+                <div class="kpi-value text-primary">{{ total_candidates }}</div>
+                <div class="kpi-label">إجمالي المتقدمين</div>
+            </div>
+        </div>
+
+        <div class="col-md-3 col-6">
+            <div class="glass-panel p-2 d-flex flex-column align-items-center justify-content-center h-100">
+                <h6 class="fw-bold small mb-2">حالة الوظائف</h6>
+                <div style="height: 120px; width: 120px;">
+                    <canvas id="statusChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-4 border-0 glass-panel">
+        <div class="card-body py-2">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold text-muted small">🔍 البحث بالمسمى الوظيفي</label>
+                    <input type="text" id="searchInput" class="form-control" placeholder="اكتب اسم الوظيفة..." onkeyup="applyFilters()">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold text-muted small">القسم</label>
+                    <select id="deptFilter" class="form-select" onchange="applyFilters()">
+                        <option value="">🏢 كل الأقسام</option>
+                        {% set depts_list = [] %}
+                        {% for job in jobs %}
+                            {% if job.DEPTNAME and job.DEPTNAME not in depts_list %}
+                                {% set _ = depts_list.append(job.DEPTNAME) %}
+                            {% endif %}
+                        {% endfor %}
+                        {% for dept in depts_list | sort %}
+                            <option value="{{ dept }}">{{ dept }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold text-muted small">الحالة</label>
+                    <div class="btn-group w-100" id="statusFilterGroup" role="group">
+                        <button type="button" class="btn btn-outline-secondary active" data-status="">الكل</button>
+                        <button type="button" class="btn btn-outline-secondary" data-status="Open">✅ نشط</button>
+                        <button type="button" class="btn btn-outline-secondary" data-status="Closed">🔒 مغلق</button>
+                    </div>
+                </div>
+                <div class="col-md-2 text-md-end">
+                    <button class="btn btn-outline-secondary w-100" onclick="clearFilters()">🧹 مسح</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-2">
+        <div class="col-md-12">
+            <h6 class="text-white opacity-75 small fw-bold">نتائج البحث: <span id="jobsCount" class="text-white fs-5">{{ jobs|length }}</span> وظيفة</h6>
+        </div>
+    </div>
+
+    <div class="row g-4" id="jobsGrid">
+        {% for job in jobs %}
+        <div class="col-md-6 col-lg-4 job-card {{ 'closed' if job.Status == 'Closed' else '' }}" 
+             id="job-card-{{ job.JobID }}"
+             data-title="{{ job.JobTitle|lower }}" 
+             data-dept="{{ job.DEPTNAME|default('') }}" 
+             data-status="{{ job.Status }}">
+             
+            <div class="card h-100 border-0 shadow position-relative bg-body" 
+                 style="border-radius: 12px;"
+                 onmouseover="this.style.transform='translateY(-8px)'; this.style.boxShadow='0 12px 24px rgba(0,0,0,0.12)'"
+                 onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 6px 16px rgba(0,0,0,0.08)'">
+
+                <div class="toggle-container">
+                    <span class="toggle-label">الحالة:</span>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" role="switch" 
+                               id="toggle-{{ job.JobID }}" 
+                               onchange="toggleJobStatus({{ job.JobID }})"
+                               {{ 'checked' if job.Status == 'Open' else '' }}>
+                    </div>
+                </div>
+
+                <button type="button" 
+                        class="btn btn-danger position-absolute bottom-0 end-0 mb-3 me-3 rounded-circle shadow"
+                        style="width: 44px; height: 44px; z-index: 10;"
+                        data-bs-toggle="modal" 
+                        data-bs-target="#deleteModal{{ job.JobID }}"
+                        title="حذف الوظيفة">
+                    🗑️
+                </button>
+
+                <div class="card-body pt-4 pb-5">
+                    <div class="d-flex justify-content-between mb-3">
+                        <span class="badge bg-secondary-subtle text-dark border px-3 py-2">{{ job.DEPTNAME or 'عام' }}</span>
+                        <span id="status-badge-{{ job.JobID }}" class="badge {{ 'bg-success' if job.Status == 'Open' else 'bg-secondary' }} px-3 py-2">
+                            {{ 'نشط' if job.Status == 'Open' else 'مغلق' }}
+                        </span>
+                    </div>
+                    
+                    <h4 class="card-title fw-bold mb-3 text-dark">
+                        <a href="{{ url_for('job_pipeline', job_id=job.JobID) }}" 
+                           class="text-decoration-none text-dark stretched-link">
+                            {{ job.JobTitle }}
+                        </a>
+                    </h4>
+                    
+                    <p class="text-muted small mb-4">
+                        👤 مدير التوظيف: <span class="fw-semibold text-dark">{{ job.HiringManager }}</span>
+                    </p>
+
+                    <hr class="my-4 border-secondary-subtle">
+
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="text-center">
+                            <span class="d-block fw-bold fs-4 text-primary">{{ job.TotalCandidates }}</span>
+                            <small class="text-muted fw-medium">متقدمين</small>
+                        </div>
+                        
+                        <a href="{{ url_for('job_pipeline', job_id=job.JobID) }}" 
+                           class="btn btn-outline-primary rounded-pill btn-sm px-4 shadow-sm">
+                            عرض المراحل →
+                        </a>
+                    </div>
+                </div>
+
+                <div class="card-footer bg-transparent border-0 text-muted small pt-3 pb-5 text-center">
+                    تاريخ النشر: {{ job.PostDate.strftime('%Y-%m-%d') }}
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="deleteModal{{ job.JobID }}" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content shadow-lg border-0">
+                    <div class="modal-header border-0 pb-0">
+                        <h5 class="modal-title text-danger fw-bold">تأكيد الحذف</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body text-center py-5">
+                        <p class="fs-5 mb-3">هل أنت متأكد من حذف الوظيفة؟</p>
+                        <p class="fw-bold fs-4 text-dark mb-4">"{{ job.JobTitle }}"</p>
+                        <p class="text-muted">سيتم حذف جميع المتقدمين والمراحل نهائياً.<br>
+                           <strong class="text-danger">لا يمكن التراجع عن هذا الإجراء.</strong>
+                        </p>
+                    </div>
+                    <div class="modal-footer border-0 justify-content-center gap-3 pb-4">
+                        <button type="button" class="btn btn-secondary px-5 py-2" data-bs-dismiss="modal">🔙 إلغاء</button>
+                        <form method="POST" action="{{ url_for('job_delete', job_id=job.JobID) }}" style="display:inline;">
+                            <button type="submit" class="btn btn-danger px-5 py-2">🗑️ نعم، احذفها</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+
+        <div class="col-12 text-center py-5 d-none" id="noResults">
+            <div class="text-muted mb-4 fs-1">🔍</div>
+            <h4 class="text-dark fw-bold">لا توجد وظائف تطابق الفلاتر</h4>
+            <p class="text-muted">جرب تغيير معايير البحث أو إزالة بعض الفلاتر.</p>
+        </div>
+    </div>
+</div>
+
+<script>
+// === 1. PREPARE DATA FOR ANALYTICS (From Jinja to JS) ===
+document.addEventListener('DOMContentLoaded', function() {
+    
+    // Extracting simple stats from the rendered DOM or Jinja variables
+    const openJobs = {{ active_jobs }};
+    const closedJobs = {{ jobs|length }} - openJobs;
+
+    // --- Status Chart (Doughnut) ---
+    const ctxStatus = document.getElementById('statusChart').getContext('2d');
+    new Chart(ctxStatus, {
+        type: 'doughnut',
+        data: {
+            labels: ['نشط', 'مغلق'],
+            datasets: [{
+                data: [openJobs, closedJobs],
+                backgroundColor: ['#198754', '#6c757d'], // Green & Grey
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }, // Hide legend to save space
+                tooltip: { enabled: true }
+            },
+            cutout: '70%' // Thinner ring
+        }
+    });
+});
+
+// === 2. EXISTING FUNCTIONS (Toggle & Filters) ===
+
+function toggleJobStatus(jobId) {
+    const cardDiv = document.getElementById(`job-card-${jobId}`);
+    const badgeSpan = document.getElementById(`status-badge-${jobId}`);
+    const toggleInput = document.getElementById(`toggle-${jobId}`);
+
+    fetch(`/recruitment/job/toggle/${jobId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            if (data.new_status === 'Open') {
+                cardDiv.classList.remove('closed');
+                cardDiv.setAttribute('data-status', 'Open');
+                badgeSpan.classList.remove('bg-secondary');
+                badgeSpan.classList.add('bg-success');
+                badgeSpan.textContent = 'نشط';
+            } else {
+                cardDiv.classList.add('closed');
+                cardDiv.setAttribute('data-status', 'Closed');
+                badgeSpan.classList.remove('bg-success');
+                badgeSpan.classList.add('bg-secondary');
+                badgeSpan.textContent = 'مغلق';
+            }
+            applyFilters();
+            // Optional: You could reload the page to update the Charts at the top
+        } else {
+            alert('حدث خطأ: ' + (data.error || 'غير معروف'));
+            toggleInput.checked = !toggleInput.checked;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('فشل الاتصال بالسيرفر');
+        toggleInput.checked = !toggleInput.checked;
+    });
+}
+
+function applyFilters() {
+    const search = document.getElementById('searchInput').value.toLowerCase().trim();
+    const dept = document.getElementById('deptFilter').value;
+    const status = getSelectedStatus();
+
+    let visibleCount = 0;
+
+    document.querySelectorAll('.job-card').forEach(card => {
+        const title = card.getAttribute('data-title');
+        const cardDept = card.getAttribute('data-dept');
+        const cardStatus = card.getAttribute('data-status');
+
+        const matchesSearch = title.includes(search);
+        const matchesDept = dept === '' || cardDept === dept;
+        const matchesStatus = status === '' || cardStatus === status;
+
+        if (matchesSearch && matchesDept && matchesStatus) {
+            card.style.display = '';
+            visibleCount++;
+        } else {
+            card.style.display = 'none';
+        }
+    });
+
+    document.getElementById('jobsCount').textContent = visibleCount;
+    document.getElementById('noResults').classList.toggle('d-none', visibleCount > 0);
+}
+
+function getSelectedStatus() {
+    const activeBtn = document.querySelector('#statusFilterGroup .btn.active');
+    return activeBtn ? activeBtn.getAttribute('data-status') : '';
+}
+
+function clearFilters() {
+    document.getElementById('searchInput').value = '';
+    document.getElementById('deptFilter').value = '';
+
+    document.querySelectorAll('#statusFilterGroup .btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    document.querySelector('#statusFilterGroup .btn[data-status=""]').classList.add('active');
+
+    applyFilters();
+}
+
+document.querySelectorAll('#statusFilterGroup .btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('#statusFilterGroup .btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        applyFilters();
+    });
+});
+
+// Initial Run
+document.addEventListener('DOMContentLoaded', applyFilters);
+</script>
+{% endblock %}

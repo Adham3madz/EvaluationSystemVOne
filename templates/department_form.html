@@ -1,30 +1,117 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
+<html lang="en" dir="rtl"> <head>
     <meta charset="UTF-8">
     <title>{{ action }} Department</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
     
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/fontawesome.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
     
     <link rel="stylesheet" href="{{ url_for('static', filename='css/cairo.css') }}">
 
-    <script src="{{ url_for('static', filename='js/chart.min.js') }}"></script>
-
     <style>
+        /* === Background & Layout === */
         body {
-            background-color: #f8f9fa;
+            /* Same Gradient as the List Page */
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: "Cairo", sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            padding: 20px;
+            color: #1e293b;
         }
-        .container {
-            margin-top: 50px;
+
+        /* === The Glass Card (Overlay Effect) === */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.75); /* Semi-transparent */
+            backdrop-filter: blur(16px);            /* Blur effect */
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            border-radius: 20px;
+            width: 100%;
             max-width: 600px;
+            transition: transform 0.3s ease;
         }
-        .card {
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+
+        .card-body {
+            padding: 2.5rem;
         }
+
+        /* === Typography === */
         h2 {
+            font-weight: 800;
+            color: #1a237e;
+            text-align: center;
+            margin-bottom: 30px;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        label {
             font-weight: 700;
+            color: #334155;
+            margin-bottom: 8px;
+        }
+
+        /* === Glass Inputs === */
+        .form-control {
+            background: rgba(255, 255, 255, 0.5); /* See-through input */
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            border-radius: 12px;
+            padding: 12px 15px;
+            color: #0f172a;
+            backdrop-filter: blur(5px);
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .form-control::placeholder {
+            color: #94a3b8;
+            font-weight: 400;
+        }
+
+        .form-control:focus {
+            background: rgba(255, 255, 255, 0.95);
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15);
+            color: #000;
+        }
+
+        /* === Glass Buttons === */
+        .btn {
+            padding: 10px 20px;
+            border-radius: 12px;
+            font-weight: 700;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+        }
+
+        /* Primary Action Button (Gradient) */
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 6px rgba(50, 50, 93, 0.11);
+        }
+
+        /* Secondary/Back Button (Glass) */
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.5);
+            color: #334155;
+            border: 1px solid rgba(148, 163, 184, 0.2);
+        }
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.9);
+            color: #0f172a;
         }
     </style>
 </head>
@@ -32,37 +119,38 @@
 
     <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
     
-<div class="container">
-    <div class="card">
+    <div class="glass-card">
         <div class="card-body">
-            <h2 class="text-center text-primary mb-4">{{ action }} Department</h2>
+            <h2>
+                {% if 'add' in action|lower %}✨{% else %}✏️{% endif %} 
+                {{ action }} Department
+            </h2>
 
             <form method="POST">
-                <div class="mb-3">
-                    <label for="deptname" class="form-label fw-semibold">Department Name</label>
+                <div class="mb-4">
+                    <label for="deptname" class="form-label">🏷️ اسم القسم (Department Name)</label>
                     <input type="text" name="deptname" id="deptname" class="form-control" 
-                           value="{{ dept.DEPTNAME if dept else '' }}" required>
+                           value="{{ dept.DEPTNAME if dept else '' }}" required placeholder="مثال: الموارد البشرية">
                 </div>
 
-                <div class="mb-3">
-                    <label for="supdeptid" class="form-label fw-semibold">Supervisor Department ID</label>
+                <div class="mb-4">
+                    <label for="supdeptid" class="form-label">🏢 رقم القسم التابع (Supervisor ID)</label>
                     <input type="number" name="supdeptid" id="supdeptid" class="form-control" 
-                           value="{{ dept.SUPDEPTID if dept and dept.SUPDEPTID else '' }}" placeholder="Optional">
+                           value="{{ dept.SUPDEPTID if dept and dept.SUPDEPTID else '' }}" placeholder="اختياري (Optional)">
                 </div>
 
-                <div class="d-flex justify-content-between">
+                <div class="d-flex justify-content-between mt-5">
                     <a href="{{ url_for('departments_manage') }}" class="btn btn-secondary">
-                        <i class="bi bi-arrow-left-circle"></i> Back
+                        ⬅️ رجوع (Back)
                     </a>
+                    
                     <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-save"></i> {{ action }}
+                        💾 حفظ (Save)
                     </button>
                 </div>
             </form>
         </div>
     </div>
-</div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

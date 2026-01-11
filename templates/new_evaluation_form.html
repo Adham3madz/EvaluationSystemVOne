@@ -83,29 +83,30 @@
       color: #999;
   }
 
-  table {
+  /* Modified to be specific to the evaluation table so it doesn't break the new training table */
+  table.eval-table {
       width: 100%;
       border-collapse: collapse;
       margin-top: 15px;
       font-size: 0.95rem;
   }
 
-  th, td {
+  table.eval-table th, table.eval-table td {
       border: 1px solid #e0e0e0;
       padding: 10px;
       text-align: center;
   }
 
-  thead {
+  table.eval-table thead {
       background: #004b8d;
       color: #fff;
   }
 
-  tbody tr:nth-child(even) {
+  table.eval-table tbody tr:nth-child(even) {
       background: #f9fbfd;
   }
 
-  tbody tr:hover {
+  table.eval-table tbody tr:hover {
       background: #eef3f9;
   }
 
@@ -145,7 +146,7 @@
   /* Style for invalid input */
     input.is-invalid {
         border-color: #d93025;
-        background-color: #fbebee; /* <-- This is the fix */
+        background-color: #fbebee;
     }
 
   @media (max-width: 768px) {
@@ -153,7 +154,7 @@
           padding: 20px;
       }
 
-      table th, table td {
+      table.eval-table th, table.eval-table td {
           font-size: 0.85rem;
           padding: 6px;
       }
@@ -175,7 +176,7 @@
 
   <form method="POST" id="evaluationForm">
     <div class="form-section">
-      <div class="mb-3">
+      <div class="mb-4">
         <label for="evaluation_type_id" class="fw-bold">🔹 نوع التقييم:</label>
         
         <select name="evaluation_type_id" id="evaluation_type_id" required>
@@ -188,10 +189,61 @@
           {% endfor %}
           
         </select>
-        </div>
+      </div>
 
+      <div class="card mb-4 shadow-sm border-0">
+        <div class="card-header text-white" style="background-color: #17a2b8;">
+            <h5 class="mb-0" style="font-size: 1rem;"><i class="fa-solid fa-graduation-cap"></i> سجل التدريب والدورات (Training History)</h5>
+        </div>
+        <div class="card-body p-0">
+            <table class="table table-striped mb-0 text-center" style="font-size: 0.9rem;">
+                <thead class="bg-light text-dark">
+                    <tr>
+                        <th>اسم الدورة</th>
+                        <th>التاريخ</th>
+                        <th>المدرب</th>
+                        <th>الحضور (%)</th>
+                        <th>الحالة</th>
+                        <th>ملاحظات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if training_history %}
+                        {% for t in training_history %}
+                        <tr>
+                            <td class="fw-bold">{{ t.CourseName }}</td>
+                            <td>{{ t.StartDate.strftime('%Y-%m-%d') if t.StartDate else '-' }}</td>
+                            <td>{{ t.Trainers or 'Multiple/Unknown' }}</td>
+                            <td>
+                                {% if t.TotalSessions > 0 %}
+                                    {% set pct = (t.SessionsAttended / t.TotalSessions * 100)|round|int %}
+                                    <div class="progress" style="height: 20px;">
+                                        <div class="progress-bar bg-{{ 'success' if pct >= 80 else 'warning' }}" 
+                                             style="width: {{ pct }}%">{{ pct }}%</div>
+                                    </div>
+                                {% else %}
+                                    <span class="badge bg-secondary">No Sessions</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge bg-{{ 'success' if t.Status == 'Completed' else 'primary' }}">
+                                    {{ t.Status }}
+                                </span>
+                            </td>
+                            <td class="text-muted small">{{ t.TrainerNotes or '-' }}</td>
+                        </tr>
+                        {% endfor %}
+                        {% else %}
+                        <tr>
+                            <td colspan="6" class="text-muted py-3">لا يوجد سجل تدريبي لهذا الموظف.</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+      </div>
       <div class="section-title">بنود التقييم</div>
-      <table>
+      <table class="eval-table">
         <thead>
           <tr>
             <th>البند</th>

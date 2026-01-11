@@ -167,29 +167,34 @@
 </style>
 
 <div class="training-header">
-    <h2>🎓 جدول الدورات التدريبية</h2>
-    <p>إدارة الجلسات، متابعة الحضور، وتعيين الموظفين للدورات التدريبية</p>
+    <h2>🎓 لوحة تحكم التدريب</h2>
+    <p>نظرة عامة على الجلسات الحالية والقادمة</p>
     
-    <a href="{{ url_for('training_create') }}" class="btn-add-floating">
-        <i class="fa-solid fa-plus"></i> جدولة دورة جديدة
-    </a>
+    <div class="d-flex gap-2 justify-content-center mt-3">
+        <a href="{{ url_for('training_session_add') }}" class="btn-add-floating">
+            <i class="fa-solid fa-plus"></i> جدولة جلسة
+        </a>
+        <a href="{{ url_for('training_history_add') }}" class="btn-add-floating" style="background: rgba(255,255,255,0.1);">
+            <i class="fa-solid fa-clock-rotate-left"></i> سجل سابق
+        </a>
+    </div>
 </div>
 
 <div class="course-grid">
     {% for s in sessions %}
     <div class="course-card">
-        <div class="status-strip {{ 'strip-full' if s.EnrolledCount >= s.MaxCapacity else 'strip-open' }}"></div>
+        <div class="status-strip {{ 'strip-full' if s.EnrolledCount >= (s.MaxSeats or 100) else 'strip-open' }}"></div>
         
         <div class="card-content">
             <div class="card-meta">
                 <span class="session-id">#{{ s.SessionID }}</span>
-                {% if s.EnrolledCount >= s.MaxCapacity %}
+                {% if s.EnrolledCount >= (s.MaxSeats or 100) %}
                     <span class="badge-status status-full">
-                        <i class="fa-solid fa-lock"></i> مكتمل ({{ s.EnrolledCount }}/{{ s.MaxCapacity }})
+                        <i class="fa-solid fa-lock"></i> ممتلئ
                     </span>
                 {% else %}
                     <span class="badge-status status-open">
-                        <i class="fa-solid fa-door-open"></i> متاح ({{ s.EnrolledCount }}/{{ s.MaxCapacity }})
+                        <i class="fa-solid fa-door-open"></i> متاح ({{ s.EnrolledCount }}/{{ s.MaxSeats or '∞' }})
                     </span>
                 {% endif %}
             </div>
@@ -198,33 +203,32 @@
 
             <div class="info-item">
                 <div class="info-icon icon-date"><i class="fa-regular fa-calendar-days"></i></div>
-                <span>{{ s.SessionDate.strftime('%Y-%m-%d') }}</span>
+                <span>{{ s.SessionDate }}</span>
             </div>
             <div class="info-item">
                 <div class="info-icon icon-user"><i class="fa-solid fa-chalkboard-user"></i></div>
-                <span>{{ s.InstructorName }}</span>
+                <span>
+                    {% if s.IsExternal %}{{ s.ExternalTrainerName }} (Ext){% else %}{{ s.InstructorName }}{% endif %}
+                </span>
             </div>
             <div class="info-item">
                 <div class="info-icon icon-loc"><i class="fa-solid fa-location-dot"></i></div>
-                <span>{{ s.Location or 'أونلاين (Online)' }}</span>
+                <span>{{ s.Location or 'Online' }}</span>
             </div>
         </div>
 
         <div class="card-footer">
-            <a href="{{ url_for('training_session_view', sid=s.SessionID) }}" class="btn-action">
-                إدارة الحضور <i class="fa-solid fa-arrow-left"></i>
+            <a href="{{ url_for('training_session_detail', sid=s.SessionID) }}" class="btn-action">
+                إدارة الجلسة <i class="fa-solid fa-arrow-left"></i>
             </a>
         </div>
     </div>
     {% else %}
-    
     <div class="empty-state">
         <i class="fa-solid fa-clipboard-list empty-icon"></i>
-        <h3>لا توجد دورات تدريبية مجدولة حالياً</h3>
-        <p>يمكنك البدء بجدولة دورة جديدة من الزر في الأعلى.</p>
+        <h3>لا توجد جلسات مجدولة</h3>
+        <p>ابدأ بجدولة جلسة تدريبية جديدة.</p>
     </div>
-    
     {% endfor %}
 </div>
 {% endblock %}
-

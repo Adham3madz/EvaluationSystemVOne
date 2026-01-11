@@ -1,269 +1,104 @@
 {% extends "layout.html" %}
-{% block title %}مرحلة: {{ page_info.title }}{% endblock %}
+{% block title %}{{ page_info.title }} {% if page_info.title == 'مرحلة الفرز (New)' %}🆕{% elif page_info.title == 'المقابلة الأولى (HR)' %}👥{% elif page_info.title == 'المقابلة الثانية (Technical)' %}🧑‍💻{% elif page_info.title == 'عروض العمل (Offer)' %}📄{% elif page_info.title == 'المرفوضين (Rejected)' %}❌{% endif %}{% endblock %}
 
 {% block content %}
-<style>
-    .stage-header {
-        background: {{ page_info.color }}; 
-        background: linear-gradient(135deg, {{ page_info.color }}, #2c3e50);
-        color: white;
-        padding: 30px;
-        border-radius: 16px;
-        text-align: center;
-        margin-bottom: 30px;
-        box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-    }
-    .stage-header h2 { margin: 0; font-weight: 800; }
-    
-    /* Filter Styles (Copied from recruitment_list) */
-    .filter-card {
-        background: #fff; padding: 20px; border-radius: 12px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 25px;
-        border: 1px solid #f0f2f5;
-    }
-    .filter-form { display: flex; flex-wrap: wrap; gap: 15px; align-items: flex-end; }
-    .filter-item { flex: 1; min-width: 180px; }
-    .filter-label { font-weight: 700; font-size: 12px; color: #666; margin-bottom: 5px; display: block; }
-    .filter-control { width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid #e0e0e0; font-size: 14px; background-color: #fafafa; }
-    
-    /* Buttons */
-    .btn-search { background: {{ page_info.color }}; color: white; width: 100%; padding: 10px; border:none; border-radius:8px; font-weight:bold; cursor:pointer;}
-    .btn-reset { background: #e0e0e0; color: #333; width: 100%; text-align: center; padding: 10px; border-radius:8px; display:block; text-decoration:none;}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="fw-bold">{{ page_info.title }}</h4>
+        <span class="badge bg-secondary fs-5">عدد المرشحين: {{ candidates|length }}</span>
+    </div>
 
-    /* Table Styles */
-    .card-table { background: #fff; border-radius: 16px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); padding: 0; overflow: hidden; }
-    .table { margin: 0; vertical-align: middle; }
-    .table thead th { background: #f8f9fa; padding: 15px; border-bottom: 2px solid #eee; color: #555; font-weight: 700; text-align: center; }
-    .table tbody td { padding: 15px; border-bottom: 1px solid #f1f1f1; text-align: center; }
-    
-    .action-btn { padding: 6px 12px; border-radius: 50px; background: #f0f2f5; color: #333; text-decoration: none; font-size: 13px; font-weight: bold; transition: 0.2s; }
-    .action-btn:hover { background: {{ page_info.color }}; color: white; }
-
-    /* Note Style */
-    .note-text { font-size: 12px; color: #555; background-color: #fffcf2; border: 1px solid #faebcc; padding: 8px; border-radius: 6px; text-align: right; max-width: 250px; margin: 0 auto; white-space: pre-wrap; }
-    
-    .info-icon { color: #95a5a6; margin-left: 5px; font-size: 13px; }
-
-    /* Action Button */
-    .action-btn {
-        padding: 6px 12px; border-radius: 50px; 
-        background: #f0f2f5; color: #333; text-decoration: none; 
-        font-size: 13px; font-weight: bold; transition: 0.2s;
-    }
-    .action-btn:hover { background: {{ page_info.color }}; color: white; }
-
-    /* Notes Box */
-    .note-text {
-        font-size: 12px; color: #555; background-color: #fffcf2; 
-        border: 1px solid #faebcc; padding: 8px; border-radius: 6px; 
-        text-align: right; max-width: 250px; margin: 0 auto; white-space: pre-wrap;
-    }
-    
-    /* Document Icons */
-    .docs-container { display: flex; flex-direction: column; gap: 5px; align-items: center; }
-    .cv-link { font-size: 11px; font-weight: bold; color: #2c3e50; text-decoration: none; background: #e3f2fd; padding: 2px 8px; border-radius: 4px; display: inline-block; margin-bottom: 4px; }
-    .cv-link:hover { background: #bbdefb; }
-    .checklist-icons { display: flex; gap: 3px; justify-content: center; }
-    .doc-icon { width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; color: white; }
-    .doc-received { background-color: #2ecc71; }
-    .doc-missing { background-color: #ecf0f1; color: #bdc3c7; }
-
-    /* --- NEW: Document Icons Styles --- */
-    .docs-container {
-        display: flex; flex-direction: column; gap: 5px; align-items: center;
-    }
-    .cv-link {
-        font-size: 12px; font-weight: bold; color: #2c3e50; text-decoration: none;
-        background: #e3f2fd; padding: 4px 10px; border-radius: 4px; display: inline-block;
-    }
-    .cv-link:hover { background: #bbdefb; }
-    
-    .checklist-icons {
-        display: flex; gap: 5px; justify-content: center; margin-top: 4px;
-    }
-    .doc-icon {
-        width: 24px; height: 24px; border-radius: 50%; 
-        display: flex; align-items: center; justify-content: center;
-        font-size: 11px; color: white;
-    }
-    .doc-received { background-color: #2ecc71; } /* Green */
-    .doc-missing { background-color: #ecf0f1; color: #bdc3c7; } /* Grey */
-</style>
-
-<div class="stage-header">
-    <h2><i class="fa-solid {{ page_info.icon }}"></i> {{ page_info.title }}</h2>
-    <p style="margin-top: 5px; opacity: 0.9;">عدد المرشحين: {{ candidates|length }}</p>
-</div>
-
-<div class="filter-card">
-    <form method="GET" action="{{ url_for('recruitment_stage', status_name=status_filter) }}" class="filter-form">
-        <div class="filter-item" style="flex: 2;">
-            <label class="filter-label">بحث (الاسم / الهاتف / SSN)</label>
-            <input type="text" name="search" class="filter-control" placeholder="بحث..." value="{{ filters.get('search', '') }}">
+    <!-- فلاتر -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-body">
+            <form method="GET" class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label">🔍 بحث</label>
+                    <input type="text" name="search" class="form-control" placeholder="الاسم أو الهاتف أو البريد" value="{{ filters.search or '' }}">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">🏢 القسم</label>
+                    <select name="dept_id" class="form-select">
+                        <option value="">كل الأقسام</option>
+                        {% for d in depts %}
+                            <option value="{{ d.DEPTID }}" {% if filters.dept_id == d.DEPTID|string %}selected{% endif %}>{{ d.DEPTNAME }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">💼 الوظيفة</label>
+                    <select name="pos_id" class="form-select">
+                        <option value="">كل الوظائف</option>
+                        {% for p in positions %}
+                            <option value="{{ p.PositionID }}" {% if filters.pos_id == p.PositionID|string %}selected{% endif %}>{{ p.PositionName }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">📅 من تاريخ</label>
+                    <input type="date" name="date_from" class="form-control" value="{{ filters.date_from or '' }}">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">📅 إلى تاريخ</label>
+                    <input type="date" name="date_to" class="form-control" value="{{ filters.date_to or '' }}">
+                </div>
+                <div class="col-12 text-end">
+                    <button type="submit" class="btn btn-primary">🔍 تطبيق الفلاتر</button>
+                    <a href="{{ url_for('recruitment_stage', status_name=status_filter) }}" class="btn btn-outline-secondary">🗑️ مسح الفلاتر</a>
+                </div>
+            </form>
         </div>
-        <div class="filter-item">
-            <label class="filter-label">القسم</label>
-            <select name="dept_id" class="filter-control">
-                <option value="">الكل</option>
-                {% for d in depts %}
-                <option value="{{ d.DEPTID }}" {% if filters.get('dept_id') == d.DEPTID|string %}selected{% endif %}>{{ d.DEPTNAME }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <div class="filter-item">
-            <label class="filter-label">الوظيفة</label>
-            <select name="pos_id" class="filter-control">
-                <option value="">الكل</option>
-                {% for p in positions %}
-                <option value="{{ p.PositionID }}" {% if filters.get('pos_id') == p.PositionID|string %}selected{% endif %}>{{ p.PositionName }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <div class="filter-item">
-            <label class="filter-label">من تاريخ</label>
-            <input type="date" name="date_from" class="filter-control" value="{{ filters.get('date_from', '') }}">
-        </div>
-        <div class="filter-item">
-            <label class="filter-label">إلى تاريخ</label>
-            <input type="date" name="date_to" class="filter-control" value="{{ filters.get('date_to', '') }}">
-        </div>
-        <div class="filter-item" style="flex: 0 0 auto; min-width: auto;">
-            <label class="filter-label">&nbsp;</label>
-            <button type="submit" class="btn-search"><i class="fa-solid fa-filter"></i> تصفية</button>
-        </div>
-        {% if filters|length > 0 %}
-        <div class="filter-item" style="flex: 0 0 auto; min-width: auto;">
-            <label class="filter-label">&nbsp;</label>
-            <a href="{{ url_for('recruitment_stage', status_name=status_filter) }}" class="btn-reset"><i class="fa-solid fa-rotate-right"></i></a>
-        </div>
-        {% endif %}
-    </form>
-</div>
+    </div>
 
-<div class="card-table">
-    <div class="table-responsive">
-        <table class="table table-hover">
-            <thead>
-                <tr>
-                    <th style="text-align: right;">بيانات المرشح</th>
-                    <th>الوظيفة / القسم</th>
-                    <th>الملفات</th> <th>التواريخ</th>
-                    
-                    {% if 'Interview 1' in status_filter %}
-                        <th>القائم بالمقابلة (HR)</th>
-                        <th>تاريخ المقابلة</th>
-                        <th style="width: 25%;">ملاحظات</th>
-                    {% elif 'Interview 2' in status_filter %}
-                        <th>القائم بالمقابلة (Tech)</th>
-                        <th>تاريخ المقابلة</th>
-                        <th style="width: 25%;">ملاحظات</th>
-                    {% else %}
-                         <th style="width: 20%;">ملاحظات عامة</th>
-                    {% endif %}
-                    
-                    <th>إجراء</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for c in candidates %}
-                <tr>
-                    <td style="text-align: right;">
-                        <div style="font-weight: bold; color: #2c3e50; font-size: 15px;">{{ c.FullName }}</div>
-                        <div style="margin-top: 4px; font-size: 13px; color: #555;">
-                            <i class="fa-solid fa-phone info-icon"></i> {{ c.Phone }}
-                        </div>
-                        <div style="margin-top: 4px; font-size: 12px; color: #777;">
-                            <span title="الرقم القومي"><i class="fa-regular fa-id-card info-icon"></i> {{ c.SSN or '-' }}</span>
-                            <span style="margin-right: 10px;" title="العنوان"><i class="fa-solid fa-location-dot info-icon"></i> {{ c.Address or '-' }}</span>
-                        </div>
-                    </td>
-                    
-                    <td>
-                        <span class="badge bg-light text-dark border">{{ c.PositionName }}</span><br>
-                        <small class="text-muted">{{ c.DEPTNAME }}</small>
-                    </td>
+    <!-- جدول المرشحين -->
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>الاسم 📛</th>
+                            <th>الهاتف 📞</th>
+                            <th>البريد 📧</th>
+                            <th>القسم 🏢</th>
+                            <th>الوظيفة 💼</th>
+                            <th>تاريخ التقديم 📅</th>
+                            <th>إجراءات 🛠️</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if candidates %}
+                            {% for c in candidates %}
+                            <tr>
+                                <td><strong>{{ c.FullName }}</strong></td>
+                                <td>{{ c.Phone }}</td>
+                                <td>{{ c.Email or '—' }}</td>
+                                <td>{{ c.DEPTNAME or '—' }}</td>
+                                <td>{{ c.PositionName or '—' }}</td>
+                                <td>{{ c.ApplicationDate|format_date }}</td>
+                                <td>
+                                    <a href="{{ url_for('recruitment_edit', cid=c.CandidateID) }}" class="btn btn-sm btn-warning">✏️ تعديل</a>
+                                    {% if is_admin() %}
+                                    <form action="{{ url_for('recruitment_delete', cid=c.CandidateID) }}" method="POST" style="display:inline;" onsubmit="return confirm('🗑️ هل تريد حذف هذا المرشح نهائيًا؟');">
+                                        <button type="submit" class="btn btn-sm btn-danger">🗑️ حذف</button>
+                                    </form>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="7" class="text-center py-5 text-muted">لا يوجد مرشحين في هذه المرحلة حاليًا 😔</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 
-                    <td>
-                        <div class="docs-container">
-                            {% if c.CV_FileName %}
-                                <a href="{{ url_for('static', filename='uploads/cvs/' + c.CV_FileName) }}" target="_blank" class="cv-link">
-                                    <i class="fa-solid fa-file-pdf"></i> فتح CV
-                                </a>
-                            {% else %}
-                                <span style="font-size:11px; color:#aaa;">لا يوجد CV</span>
-                            {% endif %}
-
-                            <div class="checklist-icons">
-                                <div class="doc-icon {{ 'doc-received' if c.Doc_IDCard else 'doc-missing' }}" title="صورة البطاقة" data-bs-toggle="tooltip">
-                                    <i class="fa-solid fa-id-card"></i>
-                                </div>
-                                <div class="doc-icon {{ 'doc-received' if c.Doc_Certificate else 'doc-missing' }}" title="المؤهل" data-bs-toggle="tooltip">
-                                    <i class="fa-solid fa-graduation-cap"></i>
-                                </div>
-                                <div class="doc-icon {{ 'doc-received' if c.Doc_Military else 'doc-missing' }}" title="الجيش" data-bs-toggle="tooltip">
-                                    <i class="fa-solid fa-shield-halved"></i>
-                                </div>
-                                <div class="doc-icon {{ 'doc-received' if c.Doc_Criminal else 'doc-missing' }}" title="فيش جنائي" data-bs-toggle="tooltip">
-                                    <i class="fa-solid fa-fingerprint"></i>
-                                </div>
-                                <div class="doc-icon {{ 'doc-received' if c.Doc_Photos else 'doc-missing' }}" title="صور شخصية" data-bs-toggle="tooltip">
-                                    <i class="fa-solid fa-image"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </td>
-                    
-                    <td>
-                        <div style="font-size: 12px; color: #555;">
-                            <i class="fa-regular fa-calendar-plus info-icon"></i> التقديم:<br>
-                            {{ c.ApplicationDate }}
-                        </div>
-                    </td>
-
-                    {% if 'Interview 1' in status_filter %}
-                        <td>{{ c.Int1_Interviewer or '-' }}</td>
-                        <td style="color: #d35400; font-weight: bold;">{{ c.Int1_Date or 'لم يحدد' }}</td>
-                        <td><div class="note-text">{{ c.Int1_Notes or '-' }}</div></td>
-                    
-                    {% elif 'Interview 2' in status_filter %}
-                        <td>{{ c.Int2_Interviewer or '-' }}</td>
-                        <td style="color: #d35400; font-weight: bold;">{{ c.Int2_Date or 'لم يحدد' }}</td>
-                        <td><div class="note-text">{{ c.Int2_Notes or '-' }}</div></td>
-                    
-                    {% else %}
-                        <td>
-                            {% if c.Notes %}
-                            <div class="note-text">{{ c.Notes }}</div>
-                            {% else %}
-                            <span class="text-muted">-</span>
-                            {% endif %}
-                        </td>
-                    {% endif %}
-                    
-                    <td>
-                        <a href="{{ url_for('recruitment_edit', cid=c.CandidateID) }}" class="action-btn">
-                            <i class="fa-solid fa-eye"></i> تفاصيل
-                        </a>
-                    </td>
-                </tr>
-                {% else %}
-                <tr>
-                    <td colspan="10" class="text-center py-5 text-muted">
-                        <i class="fa-solid fa-box-open fa-2x mb-2"></i><br>
-                        لا يوجد مرشحين مطابقين للبحث في هذه المرحلة.
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <div class="mt-4 text-center">
+        <a href="{{ url_for('recruitment_list') }}" class="btn btn-outline-primary">🔙 العودة للقائمة الكاملة</a>
     </div>
 </div>
-
-<script>
-    // Activate Tooltips
-    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
-    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-      return new bootstrap.Tooltip(tooltipTriggerEl)
-    })
-</script>
 {% endblock %}

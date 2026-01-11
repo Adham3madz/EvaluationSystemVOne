@@ -1,0 +1,285 @@
+{% extends "layout.html" %}
+{% block title %}إدارة الجلسة التدريبية{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="fw-bold mb-1">🎓 {{ training_session.TrainingCourseText }}</h4>
+            <span class="text-muted">
+                {{ training_session.SessionDate }} 
+                {% if training_session.EndDate %} - {{ training_session.EndDate }} {% endif %}
+            </span>
+        </div>
+        <div>
+            <a class="btn btn-secondary me-2" href="{{ url_for('training_session_print', sid=training_session.SessionID) }}" target="_blank">🖨️ طباعة</a>
+            <a class="btn btn-primary" href="{{ url_for('training_enroll', sid=training_session.SessionID) }}">➕ تسجيل طلاب</a>
+        </div>
+    </div>
+
+    <ul class="nav nav-tabs mb-4" id="myTab" role="tablist">
+        <li class="nav-item">
+            <button class="nav-link active fw-bold" id="schedule-tab" data-bs-toggle="tab" data-bs-target="#schedule" type="button">
+                📅 الجدول (الأيام)
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link fw-bold" id="attendance-tab" data-bs-toggle="tab" data-bs-target="#attendance" type="button">
+                ✅ الحضور والغياب
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link fw-bold" id="grading-tab" data-bs-toggle="tab" data-bs-target="#grading" type="button">
+                📊 الدرجات والنتيجة
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="myTabContent">
+
+        <!-- ==================== جدول الأيام ==================== -->
+        <div class="tab-pane fade show active" id="schedule">
+            <div class="card shadow-sm p-4">
+                <h5 class="fw-bold text-primary mb-3">🛠️ إدارة الأيام والأوقات</h5>
+                
+                <form method="POST" action="{{ url_for('training_day_add', sid=training_session.SessionID) }}" class="row g-3 align-items-end mb-5 bg-light p-3 rounded border">
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold small">التاريخ</label>
+                        <input type="date" name="day_date" class="form-control" required>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label fw-bold small">من</label>
+                        <input type="time" name="start_time" class="form-control">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label fw-bold small">إلى</label>
+                        <input type="time" name="end_time" class="form-control">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold small">الموضوع (Topic)</label>
+                        <input type="text" name="topic" class="form-control" placeholder="مثال: مقدمة">
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-success w-100 fw-bold">➕ إضافة</button>
+                    </div>
+                </form>
+
+                <h5 class="fw-bold text-dark mb-3">📅 الأيام المجدولة</h5>
+
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>#</th>
+                                <th>التاريخ</th>
+                                <th>التوقيت</th>
+                                <th>الموضوع</th>
+                                <th class="text-center">إجراء</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for day in session_days %}
+                            <tr>
+                                <td>{{ loop.index }}</td>
+                                <td class="fw-bold">{{ day.DayDate }}</td>
+                                <td class="text-muted small">
+                                    {% if day.StartTime %}{{ day.StartTime }}{% endif %}
+                                    {% if day.EndTime %} - {{ day.EndTime }}{% endif %}
+                                </td>
+                                <td>{{ day.Topic or '-' }}</td>
+                                <td class="text-center">
+                                    <!-- زر حذف يوم مع تأكيد Modal آمن -->
+                                    <button type="button" class="btn btn-sm btn-outline-danger border-0" data-bs-toggle="modal" data-bs-target="#deleteDayModal{{ day.DayID }}">
+                                        🗑️
+                                    </button>
+
+                                    <!-- Modal تأكيد حذف اليوم -->
+                                    <div class="modal fade" id="deleteDayModal{{ day.DayID }}" tabindex="-1" aria-hidden="true">
+                                        <div class="modal-dialog modal-dialog-centered">
+                                            <div class="modal-content">
+                                                <div class="modal-header bg-danger text-white">
+                                                    <h5 class="modal-title">تأكيد حذف اليوم</h5>
+                                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                                </div>
+                                                <div class="modal-body text-center py-4">
+                                                    <p>هل أنت متأكد من حذف هذا اليوم؟</p>
+                                                    <p class="fw-bold">{{ day.DayDate }} {% if day.Topic %} - {{ day.Topic }}{% endif %}</p>
+                                                    <p class="text-muted small">سيتم حذف جميع بيانات الحضور لهذا اليوم نهائيًا.</p>
+                                                </div>
+                                                <div class="modal-footer justify-content-center">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                                                    <form method="POST" action="{{ url_for('training_day_delete', did=day.DayID) }}" class="d-inline">
+                                                        <button type="submit" class="btn btn-danger">نعم، احذف</button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-5">لم يتم إضافة أي أيام للجدول بعد.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== تبويب الحضور ==================== -->
+        <div class="tab-pane fade" id="attendance">
+            <div class="card shadow-sm p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold text-success mb-0">📝 تسجيل الحضور اليومي</h5>
+                    <button form="attendanceForm" class="btn btn-success fw-bold">💾 حفظ الحضور</button>
+                </div>
+
+                {% if session_days and enrollments %}
+                <form id="attendanceForm" method="POST" action="{{ url_for('training_attendance_save', sid=training_session.SessionID) }}">
+                    <div class="table-responsive">
+                        <table class="table table-bordered text-center align-middle">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th style="position: sticky; left: 0; background: #343a40; z-index: 10;">الموظف</th>
+                                    {% for day in session_days %}
+                                    <th>
+                                        <div class="small fw-bold">{{ day.DayDate }}</div>
+                                        {% if day.Topic %}<small class="text-light">{{ day.Topic }}</small>{% endif %}
+                                    </th>
+                                    {% endfor %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for emp in enrollments %}
+                                <tr>
+                                    <td class="bg-light fw-bold text-start ps-3" style="position: sticky; left: 0; z-index: 5;">{{ emp.NAME }}</td>
+                                    {% for day in session_days %}
+                                    <td>
+                                        <input type="checkbox" 
+                                               name="attend_{{ day.DayID }}_{{ emp.EnrollmentID }}" 
+                                               class="form-check-input" 
+                                               style="width: 22px; height: 22px; cursor: pointer;"
+                                               {% if (day.DayID, emp.EnrollmentID) in attendance_set %}checked{% endif %}>
+                                    </td>
+                                    {% endfor %}
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </form>
+                {% else %}
+                <div class="alert alert-warning text-center">
+                    ⚠️ يرجى <strong>إضافة أيام للجدول</strong> و <strong>تسجيل طلاب</strong> أولاً لتفعيل كشف الحضور.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- ==================== تبويب الدرجات ==================== -->
+        <div class="tab-pane fade" id="grading">
+            <div class="card shadow-sm p-4">
+                
+                <form id="bulkUpdateForm" method="POST" action="{{ url_for('training_session_bulk_update_grades', sid=training_session.SessionID) }}">
+                </form>
+
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0">📊 النتائج النهائية</h5>
+                    <button type="submit" form="bulkUpdateForm" class="btn btn-primary fw-bold">
+                        💾 حفظ الكل (Save All)
+                    </button>
+                </div>
+                
+                {% if enrollments %}
+                <div class="table-responsive">
+                    <table class="table table-bordered text-center align-middle">
+                        <thead class="table-secondary">
+                            <tr>
+                                <th style="width: 25%;">الموظف</th>
+                                <th style="width: 15%;">الدرجة</th>
+                                <th style="width: 20%;">النتيجة</th>
+                                <th>نسبة الحضور</th>
+                                <th>إجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for e in enrollments %}
+                            <tr>
+                                <td class="fw-bold text-start ps-3">{{ e.NAME }}</td>
+                                
+                                <td>
+                                    <input type="number" 
+                                        name="grade_{{ e.EnrollmentID }}" 
+                                        form="bulkUpdateForm" 
+                                        class="form-control text-center" 
+                                        placeholder="0-100" 
+                                        value="{{ e.Grade or '' }}" 
+                                        min="0" max="100">
+                                </td>
+                                
+                                <td>
+                                    <select name="pass_status_{{ e.EnrollmentID }}" 
+                                            form="bulkUpdateForm" 
+                                            class="form-select">
+                                        <option value="">---</option>
+                                        <option value="Passed" {% if e.PassStatus=='Passed' %}selected{% endif %}>ناجح</option>
+                                        <option value="Failed" {% if e.PassStatus=='Failed' %}selected{% endif %}>راسب</option>
+                                        <option value="Excuse" {% if e.PassStatus=='Excuse' %}selected{% endif %}>اعتذار</option>
+                                        <option value="Canceled" {% if e.PassStatus=='Canceled' %}selected{% endif %}>ملغى</option>
+                                    </select>
+                                </td>
+                                
+                                <td>
+                                    {% if (e.AttendancePercent or 0) >= 75 %}
+                                        <span class="badge bg-success">{{ e.AttendancePercent|default('0') }}%</span>
+                                    {% elif (e.AttendancePercent or 0) >= 50 %}
+                                        <span class="badge bg-warning text-dark">{{ e.AttendancePercent|default('0') }}%</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">{{ e.AttendancePercent|default('0') }}%</span>
+                                    {% endif %}
+                                </td>
+                                
+                                <td>
+                                    <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#cancelEnrollmentModal{{ e.EnrollmentID }}">
+                                        🚫 إلغاء
+                                    </button>
+
+                                    <div class="modal fade" id="cancelEnrollmentModal{{ e.EnrollmentID }}" tabindex="-1">
+                                        <div class="modal-dialog modal-dialog-centered">
+                                            <div class="modal-content">
+                                                <div class="modal-header bg-danger text-white">
+                                                    <h5 class="modal-title">تأكيد إلغاء التسجيل</h5>
+                                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                                </div>
+                                                <div class="modal-body text-center py-4">
+                                                    <p>هل أنت متأكد من إلغاء تسجيل <strong>{{ e.NAME }}</strong>؟</p>
+                                                </div>
+                                                <div class="modal-footer justify-content-center">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">تراجع</button>
+                                                    <form method="POST" action="{{ url_for('training_enrollment_cancel', eid=e.EnrollmentID) }}">
+                                                        <button type="submit" class="btn btn-danger">نعم، ألغِ التسجيل</button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="alert alert-info text-center py-4">
+                    لا يوجد طلاب مسجلين في هذه الجلسة حاليًا.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

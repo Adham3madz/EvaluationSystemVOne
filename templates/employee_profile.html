@@ -153,92 +153,163 @@
     .rating-excellent { background-color: #27ae60; }
     .rating-very-good { background-color: #2980b9; }
     .rating-good { background-color: #f39c12; }
-    .rating-acceptable { background-color: #d35400; }
-    .rating-weak { background-color: #c0392b; }
-    .rating-default { background-color: #95a5a6; }
+    .rating-acceptable { background-color: #bdc3c7; }
+    .rating-weak { background-color: #e74c3c; }
 
     .action-bar {
-        margin-top: 40px;
         display: flex;
         justify-content: center;
         gap: 15px;
+        margin-top: 40px;
+        flex-wrap: wrap;
     }
-    .btn-action {
-        padding: 10px 25px;
+
+    .action-bar .btn {
+        padding: 12px 25px;
         border-radius: 8px;
         font-weight: 600;
-        text-decoration: none;
-        transition: 0.3s;
     }
-    .btn-secondary { background-color: #6c757d; color: white; }
-    .btn-edit { background-color: #f1c40f; color: #333; }
-    .btn-edit:hover { background-color: #f39c12; }
+
+    .btn-edit {
+        background-color: #f39c12;
+    }
+
+    .btn-edit:hover {
+        background-color: #e67e22;
+    }
+
+    .btn-secondary {
+        background-color: #6c757d;
+    }
+
+    .btn-secondary:hover {
+        background-color: #5a6268;
+    }
+
+    /* Print Styles - Hide unnecessary elements and format for print */
+    @media print {
+        body * {
+            visibility: hidden;  /* Hide everything */
+        }
+        .profile-container, .profile-container * {
+            visibility: visible;  /* Show only profile content */
+        }
+        .profile-container {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        .profile-card {
+            border: none;
+            box-shadow: none;
+            padding: 10mm;  /* A4 margins */
+        }
+        .action-bar, .btn, nav, footer, .no-print {
+            display: none !important;  /* Hide buttons and navigation */
+        }
+        .section-title {
+            page-break-before: avoid;  /* Avoid page breaks before sections */
+        }
+        .history-table {
+            page-break-inside: auto;
+        }
+        .profile-header {
+            text-align: center;
+            margin-bottom: 20mm;
+        }
+        .profile-header::after {
+            content: "تاريخ الطباعة: {{ current_date }}";  /* Add print date - replace with actual date if needed */
+            display: block;
+            font-size: 12px;
+            color: #666;
+            margin-top: 10px;
+        }
+        /* Ensure RTL and black/white for print */
+        body {
+            color: #000 !important;
+            background: #fff !important;
+        }
+        .rating-badge {
+            color: #000 !important;
+            background: #eee !important;  /* Grayscale for print */
+        }
+        img {
+            filter: grayscale(100%);  /* Optional: black/white image */
+        }
+    }
 </style>
 
 <div class="profile-container">
     <div class="profile-card">
-        
+
         <div class="profile-header">
-            <img src="{{ url_for('user_pic', user_id=user.USERID) }}" 
-                 alt="صورة الموظف" 
-                 class="profile-img"
-                 onerror="this.src='https://placehold.co/150x150/004d7a/white?text=No+Image'; this.onerror=null;">
+            <img src="{{ url_for('user_pic', user_id=user.USERID) }}" alt="صورة الموظف" class="profile-img">
             <h2>{{ user.NAME }}</h2>
-            <p class="text-muted">{{ user.TITLE or user.PositionName or 'غير محدد' }}</p>
+            <p class="text-muted">{{ user.PositionName or 'غير محدد' }}</p>
         </div>
 
         <div class="info-grid">
             <div class="info-item">
-                <strong>الرقم الوظيفي</strong>
+                <strong>رقم البادج</strong>
                 {{ user.BADGENUMBER or '-' }}
-            </div>
-            <div class="info-item">
-                <strong>الرقم القومي</strong>
-                {{ user.SSN or '-' }}
             </div>
             <div class="info-item">
                 <strong>تاريخ التعيين</strong>
                 {{ user.HIREDDAY.strftime('%Y-%m-%d') if user.HIREDDAY else '-' }}
             </div>
             <div class="info-item">
-                <strong>القسم</strong>
-                {{ user.DEPTNAME or 'غير محدد' }}
-            </div>
-            <div class="info-item">
-                <strong>المسمى الوظيفي</strong>
-                {{ user.PositionName or user.TITLE or '-' }}
-            </div>
-            <div class="info-item">
-                <strong>فئة الموظف</strong>
-                {{ user.employee_class or 'غير محدد' }}
-            </div>
-            <div class="info-item">
-                <strong>النوع</strong>
+                <strong>الجنس</strong>
                 {{ 'ذكر' if user.GENDER == 'M' else 'أنثى' if user.GENDER == 'F' else '-' }}
             </div>
+            <div class="info-item">
+                <strong>القسم</strong>
+                {{ user.DEPTNAME or '-' }}
+            </div>
+            <div class="info-item">
+                <strong>الرقم الوظيفي</strong>
+                {{ user.SSN or '-' }}
+            </div>
+            <div class="info-item">
+                <strong>الجوال</strong>
+                {{ user.MOBILE or '-' }}
+            </div>
+            <div class="info-item">
+                <strong>الحالة</strong>
+                {{ 'نشط' if user.IsActive else 'غير نشط' }}
+            </div>
+            <div class="info-item">
+                <strong>الفئات</strong>
+                {% if user.employee_class %}
+                    {{ user.employee_class|join(', ') }}
+                {% else %}
+                    -
+                {% endif %}
+            </div>
         </div>
 
-        <h3 class="section-title">ملخص التقييمات</h3>
+        <h4 class="section-title">إحصائيات التقييمات</h4>
         <div class="stats-grid">
             <div class="stat-card">
-                <h5>عدد التقييمات</h5>
-                <p class="stat-number">{{ avg_stats.eval_count or 0 }}</p>
+                <h5>متوسط التقييم</h5>
+                <p class="stat-number">{{ "%.1f"|format(avg_stats.avg_score) if avg_stats.avg_score else '-' }}%</p>
             </div>
             <div class="stat-card">
-                <h5>متوسط الأداء</h5>
-                <p class="stat-number">{{ "%.1f"|format(avg_stats.avg_score) if avg_stats.avg_score is not none else 'N/A' }}%</p>
+                <h5>عدد التقييمات</h5>
+                <p class="stat-number">{{ avg_stats.eval_count if avg_stats else '-' }}</p>
             </div>
         </div>
 
-        <h3 class="section-title">سجل التقييمات</h3>
+        <h4 class="section-title">سجل التقييمات</h4>
         <div class="table-responsive">
-
-            
             <table class="history-table">
                 <thead>
                     <tr>
-                        <th>تاريخ التقييم</th>
-                        <th>نوع التقييم</th> <th>النتيجة</th>
+                        <th>التاريخ</th>
+                        <th>النوع</th>
+                        <th>الدرجة</th>
                         <th>التقدير</th>
                         <th>المقيّم</th>
                         <th>الإجراء</th>
@@ -284,38 +355,48 @@
                     {% endfor %}
                 </tbody>
             </table>
+        </div>
+
+        <h4 class="section-title">سجل التدريبات</h4>
+        <div class="table-responsive">
             <table class="history-table">
-    <thead>
-        <tr>
-            <th>الدورة</th>
-            <th>التاريخ</th>
-            <th>المدرب / الجهة</th>
-            <th>الدرجة</th>
-            <th>الحالة</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for t in training_history %}
-        <tr>
-            <td>{{ t.TrainingCourseText }}</td>
-            <td>{{ t.SessionDate.strftime('%Y-%m-%d') }}</td>
-            <td>
-                {% if t.IsExternal %}
-                    {{ t.ExternalTrainerName }} ({{ t.ExternalCompany }}) <span class="badge bg-warning text-dark">External</span>
-                {% else %}
-                    {{ t.IntTrainer }} <span class="badge bg-info">Internal</span>
-                {% endif %}
-            </td>
-            <td>{{ t.Grade or '-' }}%</td>
-            <td>
-                {% if t.PassStatus == 'Passed' %}<span class="badge bg-success">ناجح</span>
-                {% elif t.PassStatus == 'Failed' %}<span class="badge bg-danger">راسب</span>
-                {% else %}<span>-</span>{% endif %}
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+                <thead>
+                    <tr>
+                        <th>الدورة</th>
+                        <th>التاريخ</th>
+                        <th>المدرب / الجهة</th>
+                        <th>الدرجة</th>
+                        <th>الحالة</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for t in training_history %}
+                    <tr>
+                        <td>{{ t.TrainingCourseText }}</td>
+                        <td>{{ t.SessionDate.strftime('%Y-%m-%d') }}</td>
+                        <td>
+                            {% if t.IsExternal %}
+                                {{ t.ExternalTrainerName }} ({{ t.ExternalCompany }}) <span class="badge bg-warning text-dark">External</span>
+                            {% else %}
+                                {{ t.IntTrainer }} <span class="badge bg-info">Internal</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ t.Grade or '-' }}%</td>
+                        <td>
+                            {% if t.PassStatus == 'Passed' %}<span class="badge bg-success">ناجح</span>
+                            {% elif t.PassStatus == 'Failed' %}<span class="badge bg-danger">راسب</span>
+                            {% elif t.PassStatus == 'Excuse' %}<span class="badge bg-warning text-dark">اعتذار</span>
+                            {% elif t.PassStatus == 'Canceled' %}<span class="badge bg-secondary">ملغى (خطأ تسجيل)</span>
+                            {% else %}<span class="badge bg-light text-dark">غير محدد</span>{% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center text-muted" style="padding: 20px;">لا يوجد سجل تدريبي لهذا الموظف.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
 
         <div class="action-bar">
@@ -327,6 +408,10 @@
                     تعديل الملف
                 </a>
             {% endif %}
+            <!-- زر الطباعة الجديد -->
+            <button onclick="window.print()" class="btn btn-primary btn-action no-print">
+                🖨️ طباعة الملف
+            </button>
         </div>
 
     </div>

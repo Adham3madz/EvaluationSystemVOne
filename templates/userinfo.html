@@ -2,59 +2,66 @@
 {% block title %}قائمة الموظفين{% endblock %}
 
 {% block content %}
+<script src="{{ url_for('static', filename='js/chart.min.js') }}"></script>
+
 <style>
-    /* ====== Global Styling ====== */
+    /* ====== Global Glass Styling ====== */
     body {
         direction: rtl;
         font-family: "Tajawal", "Segoe UI", sans-serif;
-        background-color: #f9fafb;
+        background-color: transparent;
         color: #222;
-        margin: 0;
-        padding: 0;
     }
 
+    /* Page Header */
     .page-header {
         text-align: center;
-        margin: 30px 0 10px;
+        margin: 20px 0 15px;
     }
 
     .page-header h2 {
-        color: #004d7a;
+        color: #fff;
         font-weight: 700;
         margin-bottom: 5px;
+        text-shadow: 0 2px 5px rgba(0,0,0,0.3);
     }
 
-    .page-actions {
+    /* ====== Glass Containers ====== */
+    .glass-panel {
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    }
+
+    /* ====== KPI Cards (Workforce Theme) ====== */
+    .kpi-card {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(230, 242, 255, 0.6));
+        border: 1px solid rgba(13, 110, 253, 0.2);
+        border-radius: 16px;
+        padding: 15px;
+        text-align: center;
+        transition: transform 0.2s;
+        height: 100%;
         display: flex;
-        justify-content: space-between;
+        flex-direction: column;
+        justify-content: center;
         align-items: center;
-        margin: 15px 40px 25px;
-        flex-wrap: wrap;
-        gap: 15px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
     }
-
-    .page-actions .btn {
-        background-color: #0b9444;
-        color: #fff;
-        padding: 8px 15px;
-        border-radius: 6px;
-        text-decoration: none;
-        font-size: 14px;
-        transition: background 0.3s;
-        border: none;
-        cursor: pointer;
+    .kpi-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(13, 110, 253, 0.15);
     }
+    .kpi-icon { font-size: 2rem; margin-bottom: 8px; }
+    .kpi-value { font-size: 1.5rem; font-weight: 800; color: #004d7a; }
+    .kpi-label { font-size: 0.85rem; font-weight: 700; color: #666; }
 
-    .page-actions .btn:hover {
-        background-color: #087938;
-    }
-
-    /* ====== Filters and Search Section ====== */
+    /* ====== Filters Section ====== */
     .filters-section {
-        background: #fff;
         padding: 20px;
-        border-radius: 10px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         margin: 0 auto 20px;
         width: 95%;
     }
@@ -66,316 +73,163 @@
         margin-bottom: 15px;
     }
 
-    .filter-group {
-        display: flex;
-        flex-direction: column;
-    }
+    .filter-group { display: flex; flex-direction: column; }
+    .filter-label { font-weight: 700; margin-bottom: 5px; color: #444; font-size: 14px; }
 
-    .filter-label {
-        font-weight: 600;
-        margin-bottom: 5px;
+    .filter-select, .filter-input, .search-input {
+        padding: 10px 12px;
+        border: 1px solid rgba(0,0,0,0.1);
+        border-radius: 8px;
+        font-size: 14px;
+        background: rgba(255, 255, 255, 0.6);
+        transition: all 0.3s;
         color: #333;
-        font-size: 14px;
     }
 
-    .filter-select, .filter-input {
-        padding: 8px 12px;
-        border: 1px solid #ddd;
-        border-radius: 6px;
-        font-size: 14px;
+    .filter-select:focus, .filter-input:focus, .search-input:focus {
         background: #fff;
+        border-color: #0b66b2;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(11, 102, 178, 0.1);
     }
 
-    .search-box {
-        display: flex;
-        gap: 10px;
-        margin-bottom: 15px;
-    }
+    .search-box { display: flex; gap: 10px; margin-bottom: 15px; }
+    .search-input { flex: 1; }
+    .filter-actions { display: flex; gap: 10px; justify-content: flex-end; }
 
-    .search-input {
-        flex: 1;
-        padding: 8px 12px;
-        border: 1px solid #ddd;
-        border-radius: 6px;
-        font-size: 14px;
+    /* ====== Buttons ====== */
+    .btn {
+        padding: 10px 20px; border-radius: 8px; text-decoration: none;
+        font-size: 14px; font-weight: bold; border: none; cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
     }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
+    .btn-primary { background: linear-gradient(135deg, #0b66b2, #004d7a); color: white; }
+    .btn-clear { background-color: #555; color: white; }
 
-    .filter-actions {
-        display: flex;
-        gap: 10px;
-        justify-content: flex-end;
+    /* ====== Legend ====== */
+    .legend-container {
+        width: 95%; margin: 0 auto 20px; padding: 10px;
+        display: flex; justify-content: center; flex-wrap: wrap; gap: 15px;
+        border-radius: 50px; background: rgba(0, 0, 0, 0.3); backdrop-filter: blur(5px);
     }
+    .legend-item { display: flex; align-items: center; gap: 5px; font-size: 13px; color: #fff; }
 
-    .btn-secondary {
-        background-color: #6c757d;
-    }
-
-    .btn-secondary:hover {
-        background-color: #5a6268;
-    }
-
-    .btn-outline {
-        background-color: transparent;
-        border: 1px solid #0b9444;
-        color: #0b9444;
-    }
-
-    .btn-outline:hover {
-        background-color: #0b9444;
-        color: #fff;
+    /* ====== Results Info ====== */
+    .results-info {
+        text-align: center; color: #eee; font-size: 14px;
+        margin: 10px auto; padding: 8px; width: 95%;
+        background: rgba(255, 255, 255, 0.1); border-radius: 8px;
     }
 
     /* ====== Table Styling ====== */
     table {
-        width: 95%;
-        margin: 0 auto 40px;
-        border-collapse: collapse;
-        background: #fff;
-        border-radius: 10px;
-        overflow: hidden;
-        box-shadow: 0 0 8px rgba(0, 0, 0, 0.08);
+        width: 95%; margin: 0 auto 40px; border-collapse: separate; border-spacing: 0;
+        background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(15px);
+        -webkit-backdrop-filter: blur(15px); border-radius: 12px; overflow: hidden;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
     }
-
-    thead {
-        background-color: #004d7a;
-        color: #fff;
-    }
-
+    thead { background: linear-gradient(90deg, #004d7a, #0b66b2); color: #fff; }
     thead th {
-        padding: 12px;
-        font-size: 15px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: background-color 0.3s;
-        position: relative;
-        white-space: nowrap; /* Prevent header wrapping */
+        padding: 15px; font-size: 14px; font-weight: 700; cursor: pointer;
+        text-align: center; border-bottom: 2px solid rgba(0,0,0,0.1);
     }
-
-    thead th:hover {
-        background-color: #003d6a;
-    }
-
-    .sort-indicator {
-        margin-right: 5px;
-        font-size: 12px;
-    }
-
     tbody td {
-        padding: 10px;
-        border-top: 1px solid #e0e0e0;
-        text-align: center;
-        font-size: 14px;
-        color: #333;
-        vertical-align: middle; /* Center content vertically */
+        padding: 12px 10px; border-bottom: 1px solid rgba(0,0,0,0.05);
+        text-align: center; font-size: 14px; color: #333; vertical-align: middle;
     }
+    tbody tr:hover { background-color: rgba(11, 102, 178, 0.1); }
 
-    tbody tr:hover {
-        background-color: #f3f7fa;
-    }
-
-    /* ====== Action Buttons Styling (IMPROVED) ====== */
-    .actions-cell {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 5px;
-        flex-wrap: nowrap; /* Keep buttons on one line if possible */
-    }
-
-    .btn-action {
-        padding: 6px 12px;
-        font-size: 13px;
-        border: none;
-        border-radius: 6px;
-        cursor: pointer;
-        text-decoration: none;
-        transition: all 0.2s ease;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 4px;
-        font-weight: 600;
-        white-space: nowrap;
-        min-width: 70px;
-    }
-
-    .btn-info {
-        background-color: #17a2b8;
-        color: #fff;
-    }
-    .btn-info:hover {
-        background-color: #138496;
-        transform: translateY(-1px);
-    }
-
-    .btn-warning {
-        background-color: #ffc107;
-        color: #212529;
-    }
-    .btn-warning:hover {
-        background-color: #e0a800;
-        transform: translateY(-1px);
-    }
-
-    .btn-danger {
-        background-color: #dc3545;
-        color: #fff;
-    }
-    .btn-danger:hover {
-        background-color: #c82333;
-        transform: translateY(-1px);
-    }
-
-    /* ====== Employee Class Badges ====== */
+    /* ====== Badges ====== */
     .employee-class {
-        display: inline-block;
-        padding: 4px 10px;
-        border-radius: 15px;
-        font-weight: 600;
-        font-size: 12px;
-        min-width: 30px;
-        text-align: center;
-        margin: 2px;
+        display: inline-block; padding: 4px 10px; border-radius: 12px;
+        font-weight: 700; font-size: 11px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     }
+    .class-a { background: #d4edda; color: #155724; }
+    .class-b { background: #cce5ff; color: #004085; }
+    .class-c { background: #fff3cd; color: #856404; }
+    .class-d { background: #f8d7da; color: #721c24; }
+    .class-e { background: #fff3cd; color: #856404; }
+    .class-unknown { background: #e2e3e5; color: #383d41; }
 
-    .class-a {
-        background: #e8f5e8;
-        color: #2e7d32;
-        border: 1px solid #2e7d32;
+    /* ====== Actions ====== */
+    .actions-cell { display: flex; justify-content: center; gap: 5px; }
+    .btn-action {
+        padding: 5px 10px; font-size: 12px; border-radius: 6px;
+        text-decoration: none; display: inline-flex; align-items: center;
+        gap: 4px; font-weight: 600; border: none;
     }
-
-    .class-b {
-        background: #e3f2fd;
-        color: #1565c0;
-        border: 1px solid #1565c0;
-    }
-
-    .class-c {
-        background: #fff3e0;
-        color: #ef6c00;
-        border: 1px solid #ef6c00;
-    }
-
-    .class-d {
-        background: #ffebee;
-        color: #c62828;
-        border: 1px solid #c62828;
-    }
-
-    .class-e {
-        background: #fff9c4; /* Light yellow */
-        color: #f57f17;   /* Dark yellow */
-        border: 1px solid #f57f17;
-    }
-
-    .class-unknown {
-        background: #f5f5f5;
-        color: #757575;
-        border: 1px solid #bdbdbd;
-    }
-
-    /* ====== Footer ====== */
-    .footer-note {
-        text-align: center;
-        color: #666;
-        font-size: 13px;
-        margin-top: 20px;
-        margin-bottom: 20px;
-    }
-
-    /* ====== Legend ====== */
-    .legend {
-        display: flex;
-        justify-content: center;
-        gap: 15px;
-        margin: 15px 0;
-        flex-wrap: wrap;
-    }
-
-    .legend-item {
-        display: flex;
-        align-items: center;
-        gap: 5px;
-        font-size: 13px;
-    }
-
-    /* ====== Results Info ====== */
-    .results-info {
-        text-align: center;
-        color: #666;
-        font-size: 14px;
-        margin: 10px 0;
-        padding: 10px;
-        background: #f8f9fa;
-        border-radius: 6px;
-        width: 95%;
-        margin: 10px auto;
-    }
-    .btn-primary{
-        background-color: #004d7a;
-        color: white;
-        padding: 16px;
-        border-radius: 6px;
-        font-size:14px;
-        font-weight: bold;
-    }
-
-    .btn-clear{
-        background-color: #4b4600;
-        color: white;
-        padding: 16px;
-        border-radius: 6px;
-        font-size:14px;
-        font-weight: bold;
-    }
+    .btn-info { background-color: rgba(23, 162, 184, 0.1); color: #17a2b8; border: 1px solid rgba(23, 162, 184, 0.2); }
+    .btn-info:hover { background-color: #17a2b8; color: white; }
+    .btn-warning { background-color: rgba(255, 193, 7, 0.1); color: #856404; border: 1px solid rgba(255, 193, 7, 0.3); }
+    .btn-warning:hover { background-color: #ffc107; color: #000; }
 
     @media (max-width: 768px) {
-        .filters-grid {
-            grid-template-columns: 1fr;
-        }
-        
-        .page-actions {
-            flex-direction: column;
-            align-items: stretch;
-        }
-        
-        .filter-actions {
-            justify-content: center;
-        }
+        .filters-grid { grid-template-columns: 1fr; }
+        .page-header h2 { font-size: 1.5rem; }
+        table { display: block; overflow-x: auto; }
     }
-    
 </style>
 
 <div class="page-header">
-    <h2>قائمة الموظفين</h2>
+    <h2>👥 قائمة الموظفين</h2>
 </div>
 
-<div class="legend">
-    <div class="legend-item">
-        <span class="employee-class class-a">A - إداري</span>
-    </div>
-    <div class="legend-item">
-        <span class="employee-class class-b">B - فني</span>
-    </div>
-    <div class="legend-item">
-        <span class="employee-class class-e">C - فئة ج</span>
-    </div>
-    <div class="legend-item">
-        <span class="employee-class class-c">مشرف</span>
-    </div>
-    <div class="legend-item">
-        <span class="employee-class class-d">مدير</span>
+{% if users %}
+<div class="container-fluid" style="width: 95%; margin: 0 auto 20px;">
+    <div class="row g-3">
+        <div class="col-md-3">
+            <div class="kpi-card">
+                <div class="kpi-icon">👨‍👩‍👧‍👦</div>
+                <div class="kpi-value" id="kpiTotal">0</div>
+                <div class="kpi-label">إجمالي الموظفين</div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="kpi-card" style="border-color: rgba(220, 53, 69, 0.3);">
+                <div class="kpi-icon">⚖️</div>
+                <div class="kpi-value text-dark" style="font-size: 1.1rem;">
+                    <span class="text-primary">👨 <span id="kpiMales">0</span></span> | 
+                    <span class="text-danger">👩 <span id="kpiFemales">0</span></span>
+                </div>
+                <div class="kpi-label">توزيع النوع</div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="glass-panel p-2 d-flex flex-column align-items-center justify-content-center h-100 mb-0">
+                <h6 class="fw-bold small mb-2 text-muted">توزيع الفئات</h6>
+                <div style="height: 100px; width: 100px;">
+                    <canvas id="classChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="glass-panel p-2 d-flex flex-column align-items-center justify-content-center h-100 mb-0">
+                <h6 class="fw-bold small mb-2 text-muted">أكبر الأقسام</h6>
+                <div style="height: 100px; width: 100%;">
+                    <canvas id="deptChart"></canvas>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
+{% endif %}
 
-<div class="filters-section">
+<div class="legend-container">
+    <div class="legend-item"><span class="employee-class class-a">A - إداري</span></div>
+    <div class="legend-item"><span class="employee-class class-b">B - فني</span></div>
+    <div class="legend-item"><span class="employee-class class-e">C - فئة ج</span></div>
+    <div class="legend-item"><span class="employee-class class-c">مشرف</span></div>
+    <div class="legend-item"><span class="employee-class class-d">مدير</span></div>
+</div>
+
+<div class="filters-section glass-panel">
     <form id="filtersForm" method="GET" action="{{ url_for('userinfo_list') }}">
         <div class="search-box">
-            <input type="text" 
-                   name="search" 
-                   class="search-input" 
-                   placeholder="ابحث بالاسم، الرقم الوظيفي، الرقم القومي..." 
-                   value="{{ request.args.get('search', '') }}">
+            <input type="text" name="search" class="search-input" placeholder="ابحث بالاسم، الرقم الوظيفي، الرقم القومي..." value="{{ request.args.get('search', '') }}">
             <button type="submit" class="btn btn-primary">بحث</button>
         </div>
 
@@ -415,19 +269,12 @@
 
             <div class="filter-group">
                 <label class="filter-label">المسمى الوظيفي:</label>
-                <select name="position" class="filter-select">
-                    <option value="">جميع المسميات</option>
-                    {% for pos in positions %}
-                    <option value="{{ pos.PositionID }}" {% if request.args.get('position') == pos.PositionID|string %}selected{% endif %}>
-                        {{ pos.PositionName }}
-                    </option>
-                    {% endfor %}
-                </select>
+                <input type="text" name="title" class="filter-input" placeholder="مثال: مدير مبيعات، مهندس..." value="{{ request.args.get('title', '') }}">
             </div>
         </div>
 
         <div class="filter-actions">
-            <button type="submit" class="btn btn-primary">تطبيق الفلاتر</button>
+            <button type="submit" class="btn btn-primary">تطبيق</button>
             <button type="button" onclick="clearFilters()" class="btn btn-clear">مسح الكل</button>
             <input type="hidden" name="sort" id="sortField" value="{{ request.args.get('sort', 'USERID') }}">
             <input type="hidden" name="order" id="sortOrder" value="{{ request.args.get('order', 'asc') }}">
@@ -437,105 +284,38 @@
 
 <div class="results-info">
     عرض {{ users|length }} موظف 
-    {% if request.args.get('search') or request.args.get('employee_class') or request.args.get('gender') or request.args.get('department') or request.args.get('position') %}
+    {% if request.args.get('search') or request.args.get('employee_class') or request.args.get('gender') or request.args.get('department') %}
     (نتائج مُصفاة)
     {% endif %}
 </div>
 
-{% if is_admin %}
-<div class="page-actions">
-    <a href="{{ url_for('userinfo_add') }}" class="btn">+ إضافة موظف جديد</a>
-    <a href="{{ url_for('userinfo_list') }}" class="btn btn-outline">عرض الكل</a>
-</div>
-{% endif %}
-
 <table>
     <thead>
         <tr>
-            <th onclick="sortTable('USERID')">
-                <span class="sort-indicator">
-                    {% if request.args.get('sort') == 'USERID' %}
-                        {% if request.args.get('order') == 'asc' %}↑{% else %}↓{% endif %}
-                    {% endif %}
-                </span>
-                رقم المستخدم
-            </th>
-            <th onclick="sortTable('BADGENUMBER')">
-                <span class="sort-indicator">
-                    {% if request.args.get('sort') == 'BADGENUMBER' %}
-                        {% if request.args.get('order') == 'asc' %}↑{% else %}↓{% endif %}
-                    {% endif %}
-                </span>
-                الرقم الوظيفي
-            </th>
-            <th onclick="sortTable('SSN')">
-                <span class="sort-indicator">
-                    {% if request.args.get('sort') == 'SSN' %}
-                        {% if request.args.get('order') == 'asc' %}↑{% else %}↓{% endif %}
-                    {% endif %}
-                </span>
-                الرقم القومي
-            </th>
-            <th onclick="sortTable('NAME')">
-                <span class="sort-indicator">
-                    {% if request.args.get('sort') == 'NAME' %}
-                        {% if request.args.get('order') == 'asc' %}↑{% else %}↓{% endif %}
-                    {% endif %}
-                </span>
-                الاسم
-            </th>
-            <th onclick="sortTable('employee_class')">
-                <span class="sort-indicator">
-                    {% if request.args.get('sort') == 'employee_class' %}
-                        {% if request.args.get('order') == 'asc' %}↑{% else %}↓{% endif %}
-                    {% endif %}
-                </span>
-                فئة الموظف
-            </th>
-
-            <th onclick="sortTable('HIREDDAY')">
-                <span class="sort-indicator">
-                    {% if request.args.get('sort') == 'HIREDDAY' %}
-                        {% if request.args.get('order') == 'asc' %}↑{% else %}↓{% endif %}
-                    {% endif %}
-                </span>
-                تاريخ التعيين
-            </th>
-
-            <th onclick="sortTable('GENDER')">
-                <span class="sort-indicator">
-                    {% if request.args.get('sort') == 'GENDER' %}
-                        {% if request.args.get('order') == 'asc' %}↑{% else %}↓{% endif %}
-                    {% endif %}
-                </span>
-                النوع
-            </th>
-            <th onclick="sortTable('DEFAULTDEPTID')">
-                <span class="sort-indicator">
-                    {% if request.args.get('sort') == 'DEFAULTDEPTID' %}
-                        {% if request.args.get('order') == 'asc' %}↑{% else %}↓{% endif %}
-                    {% endif %}
-                </span>
-                القسم
-            </th>
-            <th onclick="sortTable('PositionID')">
-                <span class="sort-indicator">
-                    {% if request.args.get('sort') == 'PositionID' %}
-                        {% if request.args.get('order') == 'asc' %}↑{% else %}↓{% endif %}
-                    {% endif %}
-                </span>
-                المسمى الوظيفي
-            </th>
+            <th onclick="sortTable('USERID')">رقم المستخدم</th>
+            <th onclick="sortTable('BADGENUMBER')">الرقم الوظيفي</th>
+            <th onclick="sortTable('SSN')">الرقم القومي</th>
+            <th onclick="sortTable('NAME')">الاسم</th>
+            <th onclick="sortTable('employee_class')">فئة الموظف</th>
+            <th onclick="sortTable('HIREDDAY')">تاريخ التعيين</th>
+            <th onclick="sortTable('GENDER')">النوع</th>
+            <th onclick="sortTable('DEFAULTDEPTID')">القسم</th>
+            <th onclick="sortTable('TITLE')">المسمى الوظيفي</th>
             <th>الصورة</th>
-            <th style="min-width: 200px;">الإجراءات</th> </tr>
+            <th style="min-width: 150px;">الإجراءات</th> 
+        </tr>
     </thead>
     <tbody>
         {% for u in users %}
-        <tr>
+        <tr class="employee-row" 
+            data-gender="{{ u.GENDER }}" 
+            data-dept="{{ u.DEPTNAME or 'غير محدد' }}" 
+            data-class="{{ u.employee_class or 'غير محدد' }}">
+            
             <td>{{ u.USERID }}</td>
             <td>{{ u.BADGENUMBER }}</td>
             <td>{{ u.SSN }}</td>
-            <td>{{ u.NAME }}</td>
+            <td style="font-weight: bold;">{{ u.NAME }}</td>
             
             <td>
                 {% set classes = u.employee_class.split(',') if u.employee_class else [] %}
@@ -543,43 +323,30 @@
                     <span class="employee-class class-unknown">-</span>
                 {% else %}
                     {% for cls in classes %}
-                        {% if cls == 'A' %}
-                            <span class="employee-class class-a">A - إداري</span>
-                        {% elif cls == 'B' %}
-                            <span class="employee-class class-b">B - فني</span>
-                        {% elif cls == 'C' %}
-                            <span class="employee-class class-e">C - فئة ج</span>        
-                        {% elif cls == 'مشرف' %}
-                            <span class="employee-class class-c">مشرف</span>
-                        {% elif cls == 'مدير' %}
-                            <span class="employee-class class-d">مدير</span>
-                        {% else %}
-                            <span class="employee-class class-unknown">{{ cls }}</span>
+                        {% if cls == 'A' %} <span class="employee-class class-a">A - إداري</span>
+                        {% elif cls == 'B' %} <span class="employee-class class-b">B - فني</span>
+                        {% elif cls == 'C' %} <span class="employee-class class-e">C - فئة ج</span>        
+                        {% elif cls == 'مشرف' %} <span class="employee-class class-c">مشرف</span>
+                        {% elif cls == 'مدير' %} <span class="employee-class class-d">مدير</span>
+                        {% else %} <span class="employee-class class-unknown">{{ cls }}</span>
                         {% endif %}
                     {% endfor %}
                 {% endif %}
             </td>
 
             <td>{{ u.HIREDDAY.strftime('%Y-%m-%d') if u.HIREDDAY else '-' }}</td>
-
             <td>{{ 'ذكر' if u.GENDER == 'M' else 'أنثى' if u.GENDER == 'F' else '-' }}</td>
-            
-            <td>{{ u.DEPTNAME or '-' }}</td>      <td>{{ u.PositionName or '-' }}</td>  <td>
-                <img src="{{ url_for('user_pic', user_id=u.USERID) }}" alt="صورة الموظف" width="40" height="40"
-                     style="border-radius: 50%; object-fit: cover; border: 1px solid #ddd;">
+            <td>{{ u.DEPTNAME or '-' }}</td>
+            <td>{{ u.TITLE or '-' }}</td>
+            <td>
+                <img src="{{ url_for('user_pic', user_id=u.USERID) }}" alt="صورة" width="35" height="35"
+                     style="border-radius: 50%; object-fit: cover; border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
             </td>
             <td>
                 <div class="actions-cell">
-                    <a href="{{ url_for('userinfo_view', uid=u.USERID) }}" class="btn-action btn-info">
-                        👁️ عرض
-                    </a>
+                    <a href="{{ url_for('userinfo_view', uid=u.USERID) }}" class="btn-action btn-info">👁️ عرض</a>
                     {% if is_admin %}
-                    <a href="{{ url_for('userinfo_edit', uid=u.USERID) }}" class="btn-action btn-warning">
-                        ✏️ تعديل
-                    </a>
-                    <a href="{{ url_for('userinfo_archive', uid=u.USERID) }}" class="btn-action btn-danger">
-                        🗑️ حذف
-                    </a>
+                    <a href="{{ url_for('userinfo_edit', uid=u.USERID) }}" class="btn-action btn-warning">✏️ تعديل</a>
                     {% endif %}
                 </div>
             </td>
@@ -595,49 +362,92 @@
 <p class="footer-note">© 2025 نظام إدارة الموارد البشرية - يعمل بدون اتصال بالإنترنت</p>
 
 <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // === Fast Analytics (Server-Side Data) ===
+        // No DOM looping needed! We use the data passed from Python directly.
+        
+        // 1. Get Data from Jinja
+        const stats = {{ analytics | tojson }};
+        
+        // 2. Update KPI Cards
+        document.getElementById('kpiTotal').innerText = stats.total;
+        document.getElementById('kpiMales').innerText = stats.males;
+        document.getElementById('kpiFemales').innerText = stats.females;
+
+        if (stats.total === 0) return;
+
+        // 3. Render Class Chart
+        new Chart(document.getElementById('classChart'), {
+            type: 'doughnut',
+            data: {
+                labels: Object.keys(stats.classes),
+                datasets: [{
+                    data: Object.values(stats.classes),
+                    backgroundColor: ['#d4edda', '#cce5ff', '#fff3cd', '#f8d7da', '#e2e3e5', '#20c997'],
+                    borderColor: '#ffffff',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                cutout: '65%'
+            }
+        });
+
+        // 4. Render Dept Chart
+        new Chart(document.getElementById('deptChart'), {
+            type: 'bar',
+            data: {
+                labels: Object.keys(stats.depts),
+                datasets: [{
+                    label: 'عدد الموظفين',
+                    data: Object.values(stats.depts),
+                    backgroundColor: '#0b66b2',
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { 
+                    x: { display: false }, 
+                    y: { display: false, beginAtZero: true } 
+                }
+            }
+        });
+    });
+
+    // === Existing Filter & Sort Logic (Unchanged) ===
     function sortTable(field) {
         const currentSort = document.getElementById('sortField').value;
         const currentOrder = document.getElementById('sortOrder').value;
-        
         let newOrder = 'asc';
         if (currentSort === field) {
             newOrder = currentOrder === 'asc' ? 'desc' : 'asc';
         }
-        
         document.getElementById('sortField').value = field;
         document.getElementById('sortOrder').value = newOrder;
         document.getElementById('filtersForm').submit();
     }
     
     function clearFilters() {
-        // Clear all form inputs
         const form = document.getElementById('filtersForm');
-        const inputs = form.querySelectorAll('input, select');
-        inputs.forEach(input => {
+        form.querySelectorAll('input, select').forEach(input => {
             if (input.type !== 'hidden' || (input.name !== 'sort' && input.name !== 'order')) {
-                if (input.type === 'text' || input.type === 'search') {
-                    input.value = '';
-                } else if (input.type === 'select-one') {
-                    input.selectedIndex = 0;
-                }
+                if (input.type === 'text' || input.type === 'search') input.value = '';
+                else if (input.type === 'select-one') input.selectedIndex = 0;
             }
         });
-        
-        // Reset sort to default
         document.getElementById('sortField').value = 'USERID';
         document.getElementById('sortOrder').value = 'asc';
-        
         form.submit();
     }
     
-    // Auto-submit form when filters change (optional)
-    document.addEventListener('DOMContentLoaded', function() {
-        const filterSelects = document.querySelectorAll('.filter-select');
-        filterSelects.forEach(select => {
-            select.addEventListener('change', function() {
-                document.getElementById('filtersForm').submit();
-            });
-        });
+    document.querySelectorAll('.filter-select').forEach(select => {
+        select.addEventListener('change', () => document.getElementById('filtersForm').submit());
     });
 </script>
 {% endblock %}

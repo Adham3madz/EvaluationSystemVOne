@@ -87,12 +87,12 @@ input[type="text"], input[type="date"], select {
         <div class="mb-3" style="flex:1;">
           <label for="start_date">تاريخ البدء:</label>
           <input type="date" id="start_date" name="start_date" required 
-                 value="{{ cycle.StartDate.strftime('%Y-%m-%d') if cycle else '' }}">
+                 value="{{ cycle.StartDate | format_date if cycle else '' }}">
         </div>
         <div class="mb-3" style="flex:1;">
             <label for="end_date">تاريخ الانتهاء:</label>
             <input type="date" id="end_date" name="end_date" required
-                   value="{{ cycle.EndDate.strftime('%Y-%m-%d') if cycle else '' }}">
+                  value="{{ cycle.EndDate | format_date if cycle else '' }}">
         </div>
     </div>
     

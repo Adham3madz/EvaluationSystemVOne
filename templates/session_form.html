@@ -1,0 +1,270 @@
+{% extends "layout.html" %}
+{% block title %}جلسة تدريب{% endblock %}
+
+{% block content %}
+<style>
+    /* === Glass Panel === */
+    .glass-panel {
+        background: rgba(255, 255, 255, 0.85); /* Milky White Glass */
+        backdrop-filter: blur(15px);
+        -webkit-backdrop-filter: blur(15px);
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        border-radius: 16px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        padding: 30px;
+        max-width: 900px;
+        margin: 0 auto;
+    }
+
+    /* === Typography === */
+    .page-title {
+        color: #fff;
+        text-shadow: 0 2px 5px rgba(0,0,0,0.4);
+        font-weight: 800;
+        text-align: center;
+        margin-bottom: 25px;
+    }
+
+    .section-header {
+        color: #0b66b2;
+        font-weight: 700;
+        border-bottom: 2px solid rgba(11, 102, 178, 0.1);
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+    }
+
+    /* === Form Elements === */
+    .form-label {
+        font-weight: 700;
+        color: #444;
+        font-size: 0.9rem;
+        margin-bottom: 8px;
+    }
+
+    .form-control, .form-select {
+        background: rgba(255, 255, 255, 0.6); /* Semi-transparent */
+        border: 1px solid rgba(0,0,0,0.1);
+        border-radius: 8px;
+        color: #333;
+        transition: all 0.3s;
+        padding: 10px;
+    }
+
+    .form-control:focus, .form-select:focus {
+        background: #fff;
+        box-shadow: 0 0 0 3px rgba(11, 102, 178, 0.2);
+        border-color: #0b66b2;
+    }
+
+    /* === Switch Styling === */
+    .form-check-input:checked {
+        background-color: #0b66b2;
+        border-color: #0b66b2;
+    }
+
+    /* === Multiple Select Styling === */
+    select[multiple] {
+        background: rgba(255, 255, 255, 0.5);
+        height: 250px; /* Fixed height for better scrolling */
+    }
+    
+    select[multiple] option {
+        padding: 8px;
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+        border-radius: 4px;
+    }
+    
+    select[multiple] option:checked {
+        background: linear-gradient(135deg, #004d7a, #0b66b2) !important;
+        color: white !important;
+    }
+
+    /* === Buttons === */
+    .btn-glass-save {
+        background: linear-gradient(135deg, #28a745, #1e7e34);
+        color: white;
+        border: none;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        font-weight: bold;
+        padding: 10px 25px;
+        border-radius: 8px;
+    }
+    .btn-glass-save:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,0,0,0.3); color: white; }
+
+    .btn-glass-back {
+        background: rgba(108, 117, 125, 0.8);
+        color: white;
+        border: 1px solid rgba(255,255,255,0.2);
+        padding: 10px 25px;
+        border-radius: 8px;
+        backdrop-filter: blur(4px);
+    }
+    .btn-glass-back:hover { background: #5a6268; color: white; }
+
+</style>
+
+<div class="container-fluid py-4">
+
+    <h4 class="page-title">📚 {{ action }} جلسة تدريب</h4>
+
+    <div class="glass-panel">
+
+        <form method="POST">
+
+            <div class="mb-4">
+                <label class="form-label">الدورة التدريبية</label>
+                <select name="course_id" class="form-select form-select-lg" required>
+                    {% for c in courses %}
+                        <option value="{{ c.TrainingCourseID }}"
+                            {% if training_session and training_session.CourseID == c.TrainingCourseID %}selected{% endif %}>
+                            {{ c.TrainingCourseText }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">تاريخ البداية</label>
+                    <input type="date" name="session_date" class="form-control" required
+                           value="{{ training_session.SessionDate if training_session else '' }}">
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">تاريخ النهاية</label>
+                    <input type="date" name="end_date" class="form-control"
+                           value="{{ training_session.EndDate if training_session else '' }}">
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label">المكان</label>
+                <input type="text" name="location" class="form-control" placeholder="أدخل مكان الانعقاد..."
+                       value="{{ training_session.Location if training_session else '' }}">
+            </div>
+
+            <div class="section-header mt-4">👩‍🏫 بيانات المدربين</div>
+
+            <div class="form-check form-switch mb-4 p-3 bg-light rounded border border-white">
+                <input class="form-check-input float-end ms-0 me-3" type="checkbox" name="is_external" id="isExternalCheck"
+                       onchange="toggleTrainerType()"
+                       {% if training_session and training_session.IsExternal %}checked{% endif %}>
+                <label class="form-check-label fw-bold" for="isExternalCheck" style="margin-right: 50px;">هل المدرب خارجي؟</label>
+            </div>
+
+            <div id="internalTrainerDiv">
+                <div class="row">
+                    <div class="col-md-12 mb-2">
+                        <label class="form-label text-muted small">تصفية القائمة حسب القسم (اختياري)</label>
+                        <select id="deptFilter" class="form-select form-select-sm mb-2" onchange="filterInstructors()">
+                            <option value="">-- كل الأقسام --</option>
+                            {% for d in depts %}
+                                <option value="{{ d.DEPTID }}">{{ d.DEPTNAME }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">اختر المدربين الداخليين (يمكن اختيار أكثر من واحد)</label>
+                    <select multiple class="form-select shadow-sm" name="instructors[]" id="instructorSelect" size="10">
+                        <option disabled class="text-center fw-bold text-muted border-bottom mb-2">-- قائمة الموظفين --</option>
+                        {% for u in instructors %}
+                            <option value="{{ u.USERID }}" data-dept="{{ u.DEFAULTDEPTID }}"
+                                {% if selected_instructor_ids and u.USERID in selected_instructor_ids %}selected{% endif %}>
+                                {{ u.NAME }} 
+                                ({% if u.DEPTNAME %}{{ u.DEPTNAME }}{% else %}غير محدد{% endif %})
+                                {% if not u.IsActive %} {% endif %}
+                            </option>
+                        {% endfor %}
+                    </select>
+                    <div class="form-text text-muted mt-2 small">
+                        💡 اضغط <strong>Ctrl</strong> (أو Cmd في Mac) للنقر واختيار متعدد، أو <strong>Shift</strong> لاختيار مجموعة متصلة.
+                    </div>
+                </div>
+            </div>
+
+            <div id="externalTrainerDiv" style="display: none;">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">اسم المدرب الخارجي</label>
+                        <input type="text" name="external_name" class="form-control"
+                               value="{{ training_session.ExternalTrainerName if training_session else '' }}">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">الشركة / الجهة</label>
+                        <input type="text" name="external_company" class="form-control"
+                               value="{{ training_session.ExternalCompany if training_session else '' }}">
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-4 mt-3">
+                <label class="form-label">عدد المقاعد القصوى (اختياري)</label>
+                <input type="number" name="max_seats" class="form-control" style="max-width: 200px;"
+                       value="{{ training_session.MaxSeats if training_session else '' }}">
+            </div>
+
+            <div class="d-flex justify-content-between mt-5 pt-3 border-top border-white">
+                <a href="{{ url_for('training_sessions') }}" class="btn btn-glass-back">🔙 رجوع</a>
+                <button class="btn btn-glass-save">💾 حفظ الجلسة</button>
+            </div>
+
+        </form>
+
+    </div>
+</div>
+
+<script>
+function toggleTrainerType() {
+    const isExternal = document.getElementById('isExternalCheck').checked;
+    const internalDiv = document.getElementById('internalTrainerDiv');
+    const externalDiv = document.getElementById('externalTrainerDiv');
+    
+    if (isExternal) {
+        internalDiv.style.display = 'none';
+        externalDiv.style.display = 'block';
+        // Add animation class if desired
+        externalDiv.classList.add('fade-in');
+    } else {
+        internalDiv.style.display = 'block';
+        externalDiv.style.display = 'none';
+        internalDiv.classList.add('fade-in');
+    }
+}
+
+function filterInstructors() {
+    const deptId = document.getElementById('deptFilter').value;
+    const select = document.getElementById('instructorSelect');
+    const options = select.options;
+
+    for (let i = 1; i < options.length; i++) {  // start from 1 to skip placeholder
+        const opt = options[i];
+        const empDept = opt.getAttribute('data-dept');
+
+        if (deptId === "" || empDept === deptId) {
+            opt.style.display = "";
+        } else {
+            opt.style.display = "none";
+        }
+    }
+}
+
+// Initial setup on page load
+document.addEventListener('DOMContentLoaded', function() {
+    toggleTrainerType();
+    filterInstructors();  // Apply filter if any pre-selected
+});
+</script>
+
+<style>
+    .fade-in {
+        animation: fadeIn 0.5s;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+</style>
+
+{% endblock %}

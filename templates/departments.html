@@ -3,168 +3,195 @@
 
 {% block content %}
 <style>
-/* === RTL & Base Styling === */
+/* === Base Settings (Offline & RTL) === */
 body {
     direction: rtl;
-    background-color: #f8fafc;
-    font-family: "Cairo", sans-serif;
-    color: #222;
+    /* The gradient background is essential for the glass effect to be visible */
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    font-family: "Cairo", sans-serif; /* Assumes Cairo is loaded locally in layout.html */
+    color: #1e293b;
     margin: 0;
-    padding: 0;
+    padding: 20px 0;
 }
 
 /* === Page Header === */
 .page-header {
     text-align: center;
-    margin-bottom: 25px;
+    margin-bottom: 30px;
+    color: #fff;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
 .page-header h2 {
-    color: #1a237e;
-    font-weight: 700;
-    margin-bottom: 8px;
-    font-size: 28px;
+    color: #ffffff;
+    font-weight: 800;
+    font-size: 32px;
+    margin: 0 0 5px 0;
 }
 
 .page-header .subtitle {
-    color: #555;
-    font-size: 15px;
+    opacity: 0.9;
+    font-size: 16px;
+    font-weight: 300;
+    margin: 0;
 }
 
-/* === Alerts === */
-.alert {
-    padding: 12px 20px;
-    border-radius: 8px;
-    margin: 15px 0;
-    font-weight: 500;
-    border: none;
-    text-align: center;
-}
-.alert-success { background: #e8f5e9; color: #2e7d32; }
-.alert-danger { background: #ffebee; color: #c62828; }
-.alert-warning { background: #fff8e1; color: #f57f17; }
-
-/* === Card Container === */
+/* === The Main Glass Card === */
 .card {
-    background: #fff;
-    border-radius: 14px;
-    box-shadow: 0 3px 10px rgba(0,0,0,0.07);
-    padding: 20px;
+    /* This creates the frosted glass look */
+    background: rgba(255, 255, 255, 0.75); 
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    
+    /* White border to act as the glass edge */
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    
+    /* Deep shadow to create depth/overlay effect */
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+    
+    border-radius: 20px;
+    padding: 30px;
     max-width: 950px;
     margin: 0 auto;
-    transition: all 0.3s ease;
-}
-
-.card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 6px 15px rgba(0,0,0,0.12);
 }
 
 .card-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 2px solid #eee;
-    margin-bottom: 20px;
-    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+    margin-bottom: 25px;
+    padding-bottom: 15px;
 }
 
 .card-header h3 {
-    font-size: 20px;
-    color: #0d47a1;
-    font-weight: 600;
+    margin: 0;
+    font-size: 22px;
+    color: #1a237e;
+    font-weight: 700;
 }
 
-/* === Buttons === */
+/* === Glass Buttons (Emoji Support) === */
 .btn {
-    padding: 8px 14px;
+    padding: 10px 20px;
     border: none;
-    border-radius: 8px;
-    font-weight: 600;
+    border-radius: 12px;
+    font-family: "Cairo", sans-serif;
+    font-weight: 700;
     cursor: pointer;
     text-decoration: none;
-    transition: background 0.3s ease, transform 0.2s;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px; /* Space between Emoji and Text */
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
 }
 
 .btn:hover {
-    transform: translateY(-1px);
+    transform: translateY(-3px);
+    box-shadow: 0 7px 14px rgba(0,0,0,0.15);
 }
 
-.btn-success {
-    background: #2e7d32;
-    color: white;
-}
-.btn-success:hover { background: #1b5e20; }
+/* Gradient Buttons */
+.btn-success { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; }
+.btn-warning { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; }
+.btn-danger  { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; }
 
-.btn-warning {
-    background: #f9a825;
-    color: #fff;
+.btn-sm { 
+    padding: 6px 14px; 
+    font-size: 0.9em; 
+    border-radius: 8px;
 }
-.btn-warning:hover { background: #f57f17; }
 
-.btn-danger {
-    background: #c62828;
-    color: #fff;
-}
-.btn-danger:hover { background: #b71c1c; }
-
-/* === Table Styling === */
+/* === Floating Glass Table === */
 table {
     width: 100%;
-    border-collapse: collapse;
+    border-collapse: separate; 
+    border-spacing: 0 10px; /* Space between rows */
     margin-top: 10px;
     text-align: center;
 }
 
-th, td {
-    padding: 12px 10px;
-    border-bottom: 1px solid #ddd;
+th {
+    padding: 15px;
+    color: #475569;
+    font-weight: 800;
+    border: none;
 }
 
-th {
-    background: #1565c0;
-    color: #fff;
-    font-weight: 600;
+td {
+    /* Inner glass effect for each row */
+    background: rgba(255, 255, 255, 0.5);
+    padding: 15px;
+    border: none;
+    transition: background 0.2s;
+    vertical-align: middle;
 }
+
+/* Round the edges of the rows */
+tr td:first-child { border-top-right-radius: 12px; border-bottom-right-radius: 12px; }
+tr td:last-child { border-top-left-radius: 12px; border-bottom-left-radius: 12px; }
 
 tr:hover td {
-    background: #f1f8e9;
+    background: rgba(255, 255, 255, 0.95);
+    cursor: default;
 }
 
 /* === Footer Note === */
 .footer-note {
     text-align: center;
-    margin-top: 25px;
-    color: #555;
+    margin-top: 40px;
+    color: rgba(255, 255, 255, 0.7);
     font-size: 13px;
 }
+
+/* === Alerts === */
+.alert {
+    padding: 15px;
+    margin: 0 auto 20px auto;
+    max-width: 950px;
+    border-radius: 12px;
+    text-align: center;
+    font-weight: bold;
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255,255,255,0.3);
+}
+.alert-success { background: rgba(209, 250, 229, 0.9); color: #065f46; }
+.alert-danger  { background: rgba(254, 226, 226, 0.9); color: #991b1b; }
+.alert-warning { background: rgba(254, 243, 199, 0.9); color: #92400e; }
 </style>
 
 <div class="page-header">
-    <h2>إدارة الأقسام</h2>
+    <h2>🧩 إدارة الأقسام</h2>
     <p class="subtitle">عرض وإدارة جميع الأقسام داخل النظام</p>
 </div>
 
 {% with messages = get_flashed_messages(with_categories=true) %}
   {% if messages %}
     {% for category, message in messages %}
-      <div class="alert alert-{{ category }}">{{ message }}</div>
+      <div class="alert alert-{{ category }}">
+        {% if category == 'success' %}✅{% elif category == 'danger' %}⚠️{% endif %} 
+        {{ message }}
+      </div>
     {% endfor %}
   {% endif %}
 {% endwith %}
 
 <div class="card">
     <div class="card-header">
-        <h3>قائمة الأقسام</h3>
-        <a href="{{ url_for('departments_add') }}" class="btn btn-success">+ إضافة قسم جديد</a>
+        <h3>📄 قائمة الأقسام</h3>
+        <a href="{{ url_for('departments_add') }}" class="btn btn-success">
+            ➕ إضافة قسم جديد
+        </a>
     </div>
 
     <table>
         <thead>
             <tr>
-                <th>الرقم</th>
+                <th>#</th>
                 <th>اسم القسم</th>
-                <th>رمز القسم التابع</th>
+                <th>القسم التابع</th>
                 <th>الإجراءات</th>
             </tr>
         </thead>
@@ -172,24 +199,45 @@ tr:hover td {
             {% if departments %}
                 {% for dept in departments %}
                 <tr>
-                    <td>{{ dept.DEPTID }}</td>
-                    <td>{{ dept.DEPTNAME }}</td>
-                    <td>{{ dept.SUPDEPTID if dept.SUPDEPTID else '-' }}</td>
+                    <td style="font-weight: bold; color: #555;">{{ dept.DEPTID }}</td>
+                    
+                    <td style="color: #1e40af; font-weight: 700; font-size: 1.1em;">
+                        {{ dept.DEPTNAME }}
+                    </td>
+                    
                     <td>
-                        <a href="{{ url_for('departments_edit', did=dept.DEPTID) }}" class="btn btn-warning btn-sm">تعديل</a>
+                        {% if dept.SUPDEPTID %}
+                            <span style="background: rgba(0,0,0,0.05); padding: 5px 10px; border-radius: 8px;">
+                                📂 {{ dept.SUPDEPTID }}
+                            </span>
+                        {% else %}
+                            <span style="opacity: 0.5;">-</span>
+                        {% endif %}
+                    </td>
+                    
+                    <td>
+                        <a href="{{ url_for('departments_edit', did=dept.DEPTID) }}" class="btn btn-warning btn-sm">
+                            ✏️ تعديل
+                        </a>
                         <form action="{{ url_for('departments_delete', did=dept.DEPTID) }}" method="POST" style="display:inline;"
-                              onsubmit="return confirm('هل أنت متأكد من حذف هذا القسم؟');">
-                            <button type="submit" class="btn btn-danger btn-sm">حذف</button>
+                              onsubmit="return confirm('هل أنت متأكد من حذف هذا القسم؟ 🗑️');">
+                            <button type="submit" class="btn btn-danger btn-sm">
+                                🗑️ حذف
+                            </button>
                         </form>
                     </td>
                 </tr>
                 {% endfor %}
             {% else %}
-                <tr><td colspan="4" style="color:#777;">لا توجد أقسام حالياً</td></tr>
+                <tr>
+                    <td colspan="4" style="padding: 40px; color: #64748b;">
+                        📂 لا توجد أقسام مسجلة في قاعدة البيانات
+                    </td>
+                </tr>
             {% endif %}
         </tbody>
     </table>
 </div>
 
-<p class="footer-note">© 2025 نظام إدارة الموارد البشرية - يعمل بدون اتصال بالإنترنت</p>
+<p class="footer-note">© 2025 نظام إدارة الموارد البشرية - 📡 وضع عدم الاتصال</p>
 {% endblock %}

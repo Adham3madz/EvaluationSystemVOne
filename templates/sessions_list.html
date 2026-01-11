@@ -1,0 +1,228 @@
+{% extends "layout.html" %}
+{% block title %}الجلسات التدريبية{% endblock %}
+
+{% block content %}
+<style>
+    /* === Glass Panel Container === */
+    .glass-panel {
+        background: rgba(255, 255, 255, 0.85); /* Milky White Glass */
+        backdrop-filter: blur(15px);
+        -webkit-backdrop-filter: blur(15px);
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        border-radius: 16px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        padding: 25px;
+        overflow: hidden;
+    }
+
+    /* === Page Title === */
+    .page-title {
+        color: #fff;
+        text-shadow: 0 2px 5px rgba(0,0,0,0.4);
+        font-weight: 800;
+    }
+
+    /* === Table Styling === */
+    .table-custom {
+        margin-bottom: 0;
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .table-custom thead th {
+        background: linear-gradient(135deg, #004d7a, #0b66b2);
+        color: #fff;
+        padding: 15px;
+        border: none;
+        font-weight: 600;
+        text-align: center;
+    }
+
+    /* Rounded corners for header */
+    .table-custom thead th:first-child { border-top-right-radius: 10px; }
+    .table-custom thead th:last-child { border-top-left-radius: 10px; }
+
+    .table-custom tbody td {
+        background-color: transparent;
+        padding: 15px;
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+        color: #333;
+        font-size: 0.95rem;
+    }
+
+    .table-custom tbody tr:last-child td { border-bottom: none; }
+    
+    .table-custom tbody tr:hover td {
+        background-color: rgba(11, 102, 178, 0.08); /* Light blue highlight */
+        transition: background-color 0.2s;
+    }
+
+    /* === Buttons === */
+    .btn-add {
+        background: linear-gradient(135deg, #28a745, #1e7e34);
+        border: none;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        transition: transform 0.2s;
+    }
+    .btn-add:hover { transform: translateY(-2px); }
+
+    .action-btn {
+        width: 35px;
+        height: 35px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        margin: 0 3px;
+        transition: all 0.2s;
+        border: 1px solid transparent;
+        text-decoration: none;
+    }
+
+    .btn-view { background: rgba(13, 110, 253, 0.1); color: #0d6efd; }
+    .btn-view:hover { background: #0d6efd; color: #fff; transform: scale(1.1); }
+
+    .btn-edit { background: rgba(255, 193, 7, 0.1); color: #e6a700; }
+    .btn-edit:hover { background: #ffc107; color: #000; transform: scale(1.1); }
+
+    .btn-delete { background: rgba(220, 53, 69, 0.1); color: #dc3545; border: none; }
+    .btn-delete:hover { background: #dc3545; color: #fff; transform: scale(1.1); }
+
+    /* === Modal Glass === */
+    .modal-content.glass-modal {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255,255,255,0.4);
+        border-radius: 20px;
+        box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+    }
+</style>
+
+<div class="container-fluid" style="padding-top: 20px;">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="page-title">📅 الجلسات التدريبية</h4>
+        <a href="{{ url_for('training_session_add') }}" class="btn btn-primary btn-add fw-bold px-4">
+            ➕ إضافة جلسة
+        </a>
+    </div>
+
+    <div class="glass-panel">
+        <div class="table-responsive">
+            <table class="table table-custom align-middle text-center">
+                <thead>
+                    <tr>
+                        <th>الدورة</th>
+                        <th>من</th>
+                        <th>إلى</th>
+                        <th>المدرب</th>
+                        <th>المقاعد</th>
+                        <th style="width: 200px;">إجراءات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in sessions %}
+                    <tr>
+                        <td class="fw-bold">{{ s.TrainingCourseText }}</td>
+                        <td>{{ s.SessionDate }}</td>
+                        <td>{{ s.EndDate or '-' }}</td>
+                        <td>
+                            {% if s.IsExternal %}
+                                <span class="badge bg-secondary bg-opacity-75">خارجي</span> {{ s.ExternalTrainerName }}
+                            {% else %}
+                                {{ s.InstructorName or '-' }}
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if s.MaxSeats %}
+                            <span class="badge bg-info text-dark bg-opacity-25 border border-info">{{ s.MaxSeats }}</span>
+                            {% else %}
+                            -
+                            {% endif %}
+                        </td>
+                        
+                        <td>
+                            <div class="d-flex justify-content-center">
+                                <a href="{{ url_for('training_session_detail', sid=s.SessionID) }}" 
+                                   class="action-btn btn-view" title="عرض">
+                                    👁️
+                                </a>
+
+                                <a href="{{ url_for('training_session_edit', sid=s.SessionID) }}" 
+                                   class="action-btn btn-edit" title="تعديل">
+                                    ✏️
+                                </a>
+
+                                <button type="button" 
+                                        class="action-btn btn-delete" 
+                                        title="حذف"
+                                        onclick="confirmDelete('{{ s.SessionID }}', '{{ s.TrainingCourseText }}')">
+                                    🗑️
+                                </button>
+                            </div>
+                        </td>
+
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="py-5 text-muted">لا توجد جلسات تدريبية مسجلة حالياً</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content glass-modal border-0">
+            
+            <div class="modal-header bg-danger text-white" style="border-radius: 20px 20px 0 0;">
+                <h5 class="modal-title fw-bold">⚠️ تأكيد الحذف</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            
+            <div class="modal-body text-center p-4">
+                <div class="fs-1 mb-3">🗑️</div>
+                <h5 class="mb-3 text-dark">هل أنت متأكد من حذف هذه الجلسة؟</h5>
+                
+                <div class="alert alert-light border text-dark fw-bold mb-3 shadow-sm">
+                    📚 <span id="modalCourseName"></span>
+                </div>
+
+                <p class="text-secondary small">
+                    هذا الإجراء <strong>نهائي</strong>. سيتم حذف سجلات الحضور وأسماء المتدربين المرتبطين بهذه الجلسة.
+                </p>
+            </div>
+            
+            <div class="modal-footer justify-content-center border-0 pb-4">
+                <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">إلغاء</button>
+                
+                <form id="deleteForm" method="POST" action="">
+                    <button type="submit" class="btn btn-danger px-4 fw-bold shadow-sm">
+                        نعم، احذف نهائياً
+                    </button>
+                </form>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    function confirmDelete(sessionId, courseName) {
+        // 1. Set the Course Name in the modal
+        document.getElementById('modalCourseName').innerText = courseName;
+        
+        // 2. Set the form action dynamically
+        const form = document.getElementById('deleteForm');
+        form.action = "/training/session/delete/" + sessionId; 
+
+        // 3. Show the modal
+        new bootstrap.Modal(document.getElementById('deleteModal')).show();
+    }
+</script>
+
+{% endblock %}

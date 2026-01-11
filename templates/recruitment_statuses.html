@@ -1,150 +1,64 @@
 {% extends "layout.html" %}
-{% block title %}أنواع حالات التوظيف{% endblock %}
+{% block title %}إدارة حالات التوظيف ⚙️{% endblock %}
 
 {% block content %}
-<style>
-    /* === Modern Container === */
-    .settings-card {
-        max-width: 800px;
-        margin: 40px auto;
-        background: #fff;
-        border-radius: 16px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-        overflow: hidden;
-    }
-    
-    /* === Header === */
-    .settings-header {
-        background: linear-gradient(135deg, #6c5ce7, #a29bfe); /* Purple theme for Settings */
-        padding: 25px;
-        text-align: center;
-        color: white;
-    }
-    .settings-header h3 { margin: 0; font-weight: 800; letter-spacing: 0.5px; }
+<div class="container-fluid">
+    <h4 class="fw-bold mb-4">⚙️ إدارة حالات التوظيف</h4>
 
-    /* === Body === */
-    .settings-body { padding: 30px; }
-
-    /* === Form Styles === */
-    .form-label { font-weight: 700; color: #444; font-size: 13px; margin-bottom: 5px; }
-    .form-control {
-        border-radius: 8px;
-        padding: 10px;
-        border: 1px solid #dfe6e9;
-    }
-    .form-control:focus {
-        border-color: #6c5ce7;
-        box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.1);
-    }
-    
-    /* Color Input Fix */
-    .form-control-color { width: 100%; height: 45px; padding: 5px; cursor: pointer; }
-
-    /* === Button === */
-    .btn-add {
-        background: linear-gradient(135deg, #00b894, #00cec9);
-        border: none;
-        color: white;
-        font-weight: bold;
-        padding: 10px 20px;
-        border-radius: 8px;
-        width: 100%;
-        transition: 0.3s;
-        box-shadow: 0 4px 10px rgba(0, 184, 148, 0.2);
-    }
-    .btn-add:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0, 184, 148, 0.3); }
-
-    /* === Table === */
-    .modern-table { width: 100%; margin-top: 20px; border-collapse: collapse; }
-    .modern-table th { background: #f8f9fa; padding: 15px; font-size: 13px; color: #636e72; border-bottom: 2px solid #eee; }
-    .modern-table td { padding: 15px; border-bottom: 1px solid #f1f1f1; vertical-align: middle; color: #2d3436; font-weight: 600; }
-    .modern-table tr:last-child td { border-bottom: none; }
-
-    /* Color Badge */
-    .color-preview {
-        display: inline-block;
-        width: 25px;
-        height: 25px;
-        border-radius: 50%;
-        border: 2px solid #fff;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        vertical-align: middle;
-        margin-left: 8px;
-    }
-
-    /* Delete Button */
-    .btn-delete {
-        background: #ffecec;
-        color: #d63031;
-        border: none;
-        padding: 5px 10px;
-        border-radius: 6px;
-        font-size: 12px;
-        cursor: pointer;
-        transition: 0.2s;
-    }
-    .btn-delete:hover { background: #fab1a0; color: #fff; }
-</style>
-
-<div class="container">
-    <div class="settings-card">
-        <div class="settings-header">
-            <h3><i class="fa-solid fa-tags"></i> إدارة حالات التوظيف</h3>
+    <!-- نموذج إضافة حالة جديدة -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-primary text-white">
+            <strong>➕ إضافة حالة جديدة</strong>
         </div>
-        
-        <div class="settings-body">
-            <form action="{{ url_for('add_recruitment_status') }}" method="POST" class="row g-3 mb-4 align-items-end">
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('add_recruitment_status') }}" class="row g-3">
                 <div class="col-md-6">
-                    <label class="form-label">اسم الحالة (Status Name)</label>
-                    <input type="text" name="name" class="form-control" required placeholder="مثال: مقابلة فنية, تم الرفض...">
+                    <input type="text" name="name" class="form-control" placeholder="اسم الحالة (مثل: Medical Check)" required>
                 </div>
-                <div class="col-md-3">
-                    <label class="form-label">لون التمييز</label>
-                    <input type="color" name="color" class="form-control form-control-color" value="#6c5ce7">
+                <div class="col-md-4">
+                    <input type="color" name="color" class="form-control form-control-color" value="#0d6efd" title="اختر لون الحالة">
                 </div>
-                <div class="col-md-3">
-                    <button type="submit" class="btn-add">
-                        <i class="fa-solid fa-plus"></i> إضافة
-                    </button>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-success w-100">💾 إضافة</button>
                 </div>
             </form>
-
-            <div class="table-responsive">
-                <table class="modern-table text-center">
-                    <thead>
-                        <tr>
-                            <th style="width: 10%;">ID</th>
-                            <th style="width: 40%;">اسم الحالة</th>
-                            <th style="width: 30%;">اللون</th>
-                            <th style="width: 20%;">إجراء</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for s in statuses %}
-                        <tr>
-                            <td class="text-muted">#{{ s.StatusID }}</td>
-                            <td>{{ s.StatusName }}</td>
-                            <td>
-                                <span class="color-preview" style="background-color: {{ s.ColorCode }};"></span>
-                                <span style="font-size: 13px; color: #888;">{{ s.ColorCode }}</span>
-                            </td>
-                            <td>
-                                <form action="{{ url_for('delete_recruitment_status', sid=s.StatusID) }}" method="POST" style="display:inline;" onsubmit="return confirm('هل أنت متأكد من حذف هذه الحالة؟');">
-                                    <button type="submit" class="btn-delete">
-                                        <i class="fa-solid fa-trash"></i> حذف
-                                    </button>
-                                </form>
-                            </td>
-                        </tr>
-                        {% else %}
-                        <tr>
-                            <td colspan="4" class="text-center text-muted py-4">لا توجد حالات مضافة حالياً.</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
         </div>
+    </div>
+
+    <!-- قائمة الحالات -->
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>الحالة 📌</th>
+                        <th>اللون 🎨</th>
+                        <th>إجراءات 🛠️</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in statuses %}
+                    <tr>
+                        <td><strong>{{ s.StatusName }}</strong></td>
+                        <td>
+                            <span class="badge" style="background-color: {{ s.ColorCode }}; padding: 8px 15px; font-size: 14px;">
+                                عرض اللون
+                            </span>
+                        </td>
+                        <td>
+                            <form action="{{ url_for('delete_recruitment_status', sid=s.StatusID) }}" method="POST" style="display:inline;" onsubmit="return confirm('🗑️ هل تريد حذف هذه الحالة؟\n(لن يتم حذفها إذا كانت مستخدمة)');">
+                                <button type="submit" class="btn btn-sm btn-danger">🗑️ حذف</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <a href="{{ url_for('recruitment_list') }}" class="btn btn-outline-secondary">🔙 العودة للمرشحين</a>
     </div>
 </div>
 {% endblock %}

@@ -1,0 +1,146 @@
+{% extends "layout.html" %}
+{% block title %}Manage Course{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h2 class="text-primary">{{ course.CourseName }}</h2>
+            <p class="text-muted">{{ course.Description }}</p>
+        </div>
+        <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#enrollModal">
+            <i class="fa-solid fa-user-plus"></i> Enroll Employee
+        </button>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Sessions</h5>
+                    <button class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#sessionModal">+ Add</button>
+                </div>
+                <div class="list-group list-group-flush">
+                    {% for s in sessions %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>{{ s.SessionDate }}</strong> <br>
+                            <small>{{ s.StartTime }} - {{ s.EndTime }} ({{ s.TrainerName }})</small>
+                        </div>
+                        <a href="{{ url_for('lms_attendance', sid=s.SessionID) }}" class="btn btn-sm btn-outline-primary">
+                            Attendance
+                        </a>
+                    </div>
+                    {% else %}
+                    <div class="p-3 text-muted">No sessions yet.</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0">Enrolled Employees ({{ enrollments|length }})</h5>
+                </div>
+                <ul class="list-group list-group-flush" style="max-height: 400px; overflow-y: auto;">
+                    {% for e in enrollments %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>{{ e.Name }}</strong>
+                            <small class="d-block text-muted">{{ e.DEPTNAME }}</small>
+                        </div>
+                        <span class="badge bg-info">{{ e.Status }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="sessionModal" tabindex="-1">
+    <div class="modal-dialog">
+        <form class="modal-content" action="{{ url_for('lms_session_add') }}" method="POST">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Session</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" name="course_id" value="{{ course.CourseID }}">
+                <div class="mb-2">
+                    <label>Date</label>
+                    <input type="date" name="date" class="form-control" required>
+                </div>
+                <div class="row mb-2">
+                    <div class="col"><label>Start</label><input type="time" name="start" class="form-control" required></div>
+                    <div class="col"><label>End</label><input type="time" name="end" class="form-control" required></div>
+                </div>
+                <div class="mb-2">
+                    <label>Trainer</label>
+                    <select name="trainer_id" class="form-select">
+                        {% for t in trainers %}
+                        <option value="{{ t.TrainerID }}">{{ t.TrainerName }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal fade" id="enrollModal" tabindex="-1">
+    <div class="modal-dialog">
+        <form class="modal-content" action="{{ url_for('lms_enroll') }}" method="POST">
+            <div class="modal-header">
+                <h5 class="modal-title">Enroll Employees</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" name="course_id" value="{{ course.CourseID }}">
+                
+                <div class="mb-3">
+                    <label>Filter by Department</label>
+                    <select id="deptFilter" class="form-select" onchange="filterEmployees(this.value)">
+                        <option value="">-- All Departments --</option>
+                        {% for d in depts %}
+                        <option value="{{ d.DEPTID }}">{{ d.DEPTNAME }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label>Select Employees</label>
+                    <select name="employee_ids" id="empSelect" class="form-select" multiple size="10">
+                        </select>
+                    <small class="text-muted">Hold Ctrl to select multiple.</small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-success">Enroll Selected</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function filterEmployees(deptId) {
+    fetch(`/api/employees/${deptId}`)
+        .then(res => res.json())
+        .then(data => {
+            const select = document.getElementById('empSelect');
+            select.innerHTML = '';
+            data.forEach(emp => {
+                const opt = document.createElement('option');
+                opt.value = emp.id;
+                opt.innerText = emp.name;
+                select.appendChild(opt);
+            });
+        });
+}
+// Initial load needs an API endpoint, reusing logic from previous turn:
+// Add route @app.route('/api/employees/<int:dept_id>') returning JSON id/name
+</script>
+{% endblock %}

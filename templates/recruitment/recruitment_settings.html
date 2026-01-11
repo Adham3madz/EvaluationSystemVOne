@@ -1,0 +1,153 @@
+{% extends "layout.html" %}
+{% block title %}إعدادات التوظيف{% endblock %}
+
+{% block content %}
+<style>
+    /* === Global Glass Theme === */
+    body {
+        background: linear-gradient(135deg, #1e1e24, #2a2a35); /* Dark background */
+        color: white;
+    }
+
+    /* Glass Panel Container */
+    .glass-panel {
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(15px);
+        -webkit-backdrop-filter: blur(15px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        overflow: hidden;
+    }
+
+    /* Glass Header inside panels */
+    .glass-header {
+        background: rgba(255, 255, 255, 0.1);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 15px 20px;
+    }
+
+    /* Glass Inputs */
+    .form-control-glass {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: white !important;
+        border-radius: 10px;
+    }
+    .form-control-glass::placeholder { color: rgba(255, 255, 255, 0.5); }
+    .form-control-glass:focus {
+        background: rgba(255, 255, 255, 0.2);
+        box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+        color: white;
+        outline: none;
+        border-color: rgba(255, 255, 255, 0.5);
+    }
+
+    /* Glass Table */
+    .table-glass {
+        color: white;
+        margin-bottom: 0;
+    }
+    .table-glass th {
+        background: rgba(255, 255, 255, 0.1);
+        color: #ffc107; /* Gold color for headers */
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        font-weight: bold;
+    }
+    .table-glass td {
+        background: transparent;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        color: white;
+    }
+    .table-glass tr:hover td {
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    /* Buttons */
+    .btn-glass-back {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: white;
+    }
+    .btn-glass-back:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+    }
+</style>
+
+<div class="container-fluid py-4" style="min-height: 100vh;">
+    
+    <div class="container" style="max-width: 800px;">
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="fw-bold text-white mb-1">⚙️ إعدادات التوظيف</h2>
+                <p class="text-white-50">إدارة قائمة أسباب الاستقالة والرفض.</p>
+            </div>
+            <a href="{{ url_for('recruitment_jobs') }}" class="btn btn-glass-back shadow-sm rounded-pill px-4">
+                ⬅️ العودة للوظائف
+            </a>
+        </div>
+
+        <div class="glass-panel mb-4">
+            <div class="glass-header">
+                <h5 class="mb-0 fw-bold text-warning">➕ إضافة سبب جديد</h5>
+            </div>
+            <div class="p-4">
+                <form method="POST" class="row g-3 align-items-center">
+                    <div class="col-md-9">
+                        <label class="visually-hidden">نص السبب</label>
+                        <input type="text" name="new_reason" class="form-control form-control-lg form-control-glass" placeholder="مثال: الراتب غير مناسب، بعد المسافة..." required>
+                    </div>
+                    <div class="col-md-3">
+                        <button type="submit" class="btn btn-success btn-lg w-100 fw-bold shadow-lg">
+                            💾 حفظ
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="glass-panel">
+            <div class="glass-header">
+                <h5 class="mb-0 fw-bold text-white">📋 القائمة الحالية</h5>
+            </div>
+            <div class="p-0">
+                <table class="table table-glass align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th class="ps-4 py-3">السبب</th>
+                            <th class="text-end pe-4 py-3">إجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for reason in reasons %}
+                        <tr>
+                            <td class="ps-4 fw-bold">
+                                {{ reason.ReasonText }}
+                            </td>
+                            <td class="text-end pe-4">
+                                <form method="POST" onsubmit="return confirm('هل أنت متأكد من الحذف؟');">
+                                    <input type="hidden" name="delete_id" value="{{ reason.ReasonID }}">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-3">
+                                        🗑️ حذف
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="2" class="text-center py-5 text-white-50">
+                                <div class="fs-2 mb-2">📂</div>
+                                لا توجد أسباب مضافة حالياً.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

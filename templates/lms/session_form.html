@@ -1,0 +1,71 @@
+{% extends "layout.html" %}
+{% block title %}Schedule Session{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">📅 جدولة دورة تدريبية</h4>
+        </div>
+        <div class="card-body">
+            <form method="POST">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">اختر الدورة</label>
+                    <select name="course_id" class="form-select" required>
+                        <option value="">-- Select Course --</option>
+                        {% for c in courses %}
+                        <option value="{{ c.CourseID }}">{{ c.CourseName }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">تاريخ البدء</label>
+                        <input type="date" name="start_date" class="form-control" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">تاريخ الانتهاء</label>
+                        <input type="date" name="end_date" class="form-control">
+                        <small class="text-muted">اتركه فارغاً إذا كان يوماً واحداً</small>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">وقت البدء</label>
+                        <input type="time" name="start_time" class="form-control" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">وقت النهاية</label>
+                        <input type="time" name="end_time" class="form-control" required>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">المكان (Location)</label>
+                        <input type="text" name="location" class="form-control" placeholder="Room 101 / Online Link">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">العدد الأقصى (Capacity)</label>
+                        <input type="number" name="capacity" class="form-control" value="15">
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">المدربين (يمكن اختيار أكثر من واحد)</label>
+                    <select name="trainers" class="form-select" multiple style="height: 120px;" required>
+                        {% for t in trainers %}
+                        <option value="{{ t.TrainerID }}">{{ t.TrainerName }}</option>
+                        {% endfor %}
+                    </select>
+                    <small>اضغط Ctrl لتحديد أكثر من مدرب</small>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 mt-3">جدولة الدورة</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

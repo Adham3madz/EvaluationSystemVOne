@@ -1,0 +1,75 @@
+{% extends "layout.html" %}
+{% block title %}Trainers{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>👨‍🏫 Trainers Management</h2>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addTrainerModal">
+            + Add New Trainer
+        </button>
+    </div>
+
+    <div class="card shadow-sm">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Name</th>
+                    <th>Specialty</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for t in trainers %}
+                <tr>
+                    <td class="fw-bold">{{ t.TrainerName }}</td>
+                    <td>{{ t.Specialty }}</td>
+                    <td>{{ t.Email or '-' }}</td>
+                    <td>{{ t.Phone or '-' }}</td>
+                    <td>
+                        <form action="{{ url_for('lms_trainer_delete', id=t.TrainerID) }}" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure?');">
+                            <button type="submit" class="btn btn-sm btn-danger"><i class="fa-solid fa-trash"></i></button>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="5" class="text-center text-muted py-4">No trainers found.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="modal fade" id="addTrainerModal" tabindex="-1">
+    <div class="modal-dialog">
+        <form class="modal-content" action="{{ url_for('lms_trainer_add') }}" method="POST">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Trainer</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label>Full Name</label>
+                    <input type="text" name="name" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label>Specialty</label>
+                    <input type="text" name="specialty" class="form-control" placeholder="e.g. IT, Management">
+                </div>
+                <div class="mb-3">
+                    <label>Email</label>
+                    <input type="email" name="email" class="form-control">
+                </div>
+                <div class="mb-3">
+                    <label>Phone</label>
+                    <input type="text" name="phone" class="form-control">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-success">Save Trainer</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

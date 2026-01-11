@@ -1,240 +1,117 @@
 {% extends "layout.html" %}
-{% block title %}{{ action }} ملف توظيف{% endblock %}
+{% block title %}{% if action == 'Add' %}إضافة مرشح جديد ➕{% else %}تعديل مرشح ✏️{% endif %}{% endblock %}
 
 {% block content %}
-<style>
-    /* ... (Your existing Modern Styles) ... */
-    .form-container { max-width: 950px; margin: 40px auto; background: #ffffff; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.06); overflow: hidden; font-family: "Tajawal", "Cairo", sans-serif; }
-    .form-header { background: linear-gradient(135deg, #004d7a, #00608f); padding: 30px; text-align: center; color: white; }
-    .form-header h3 { margin: 0; font-weight: 800; font-size: 24px; letter-spacing: 0.5px; }
-    .form-body { padding: 30px; }
-    .nav-tabs { border-bottom: 2px solid #f1f2f6; margin-bottom: 25px; gap: 10px; justify-content: center; }
-    .nav-tabs .nav-link { border: none; border-radius: 50px; padding: 10px 20px; font-weight: 700; color: #666; background-color: #f8f9fa; transition: all 0.3s ease; }
-    .nav-tabs .nav-link:hover { background-color: #e9ecef; color: #333; }
-    .nav-tabs .nav-link.active { background: linear-gradient(135deg, #3498db, #2980b9); color: white !important; box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3); }
-    .section-card { background: #fff; border: 1px solid #f0f2f5; padding: 30px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); margin-top: 10px; }
-    .form-label { font-weight: 700; font-size: 13px; color: #2c3e50; margin-bottom: 6px; display: block; }
-    .form-control, .form-select { padding: 10px 15px; border-radius: 8px; border: 1px solid #dfe6e9; font-size: 14px; }
-    .form-control:focus, .form-select:focus { border-color: #3498db; box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1); }
-    .check-card { border: 1px solid #eee; padding: 15px; border-radius: 10px; background: #fafafa; transition: 0.3s; cursor: pointer; display: flex; align-items: center; font-weight: 600; color: #444; }
-    .check-card:hover { background: #e3f2fd; border-color: #90caf9; color: #0d47a1; }
-    .check-card input { width: 18px; height: 18px; margin-left: 10px; accent-color: #004d7a; }
-    .interview-header { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #f0f2f5; color: #004d7a; font-weight: 800; font-size: 16px; }
-    .interview-header i { font-size: 18px; }
-    .form-footer { margin-top: 30px; padding-top: 20px; border-top: 1px dashed #ddd; display: flex; justify-content: space-between; align-items: center; }
-    .btn-save { padding: 12px 30px; background: linear-gradient(135deg, #2e7d32, #1b5e20); color: white; border: none; border-radius: 50px; font-weight: bold; box-shadow: 0 4px 15px rgba(46, 125, 50, 0.2); transition: 0.3s; display: inline-flex; align-items: center; gap: 8px; }
-    .btn-save:hover { transform: translateY(-2px); background: linear-gradient(135deg, #388e3c, #2e7d32); }
-    .btn-back { color: #7f8c8d; text-decoration: none; font-weight: 600; font-size: 14px; }
-    .btn-back:hover { color: #333; }
-</style>
+<div class="container-fluid">
+    <h4 class="fw-bold mb-4">{% if action == 'Add' %}➕ إضافة مرشح جديد{% else %}✏️ تعديل مرشح{% endif %}</h4>
 
-<div class="form-container">
-    <div class="form-header">
-        <h3>{{ '✏️ تحديث حالة المرشح' if action == 'Edit' else '👤 إضافة مرشح جديد' }}</h3>
-        <p>إدارة ملف المرشح، المستندات، المقابلات، والتقييم النهائي</p>
-    </div>
-    
-    <div class="form-body">
+    <div class="card shadow-sm p-4">
         <form method="POST" enctype="multipart/form-data">
-            
-            <ul class="nav nav-tabs" id="myTab" role="tablist">
-                <li class="nav-item"><button class="nav-link active" id="basic-tab" data-bs-toggle="tab" data-bs-target="#basic" type="button" role="tab">👤 البيانات</button></li>
-                <li class="nav-item"><button class="nav-link" id="docs-tab" data-bs-toggle="tab" data-bs-target="#docs" type="button" role="tab">📂 المستندات</button></li>
-                <li class="nav-item"><button class="nav-link" id="int1-tab" data-bs-toggle="tab" data-bs-target="#int1" type="button" role="tab">1️⃣ مقابلة 1</button></li>
-                <li class="nav-item"><button class="nav-link" id="int2-tab" data-bs-toggle="tab" data-bs-target="#int2" type="button" role="tab">2️⃣ مقابلة 2</button></li>
-                <li class="nav-item"><button class="nav-link" id="eval-tab" data-bs-toggle="tab" data-bs-target="#eval" type="button" role="tab">📊 التقييم والقرار</button></li>
-            </ul>
-
-            <div class="tab-content" id="myTabContent">
-                
-                <div class="tab-pane fade show active" id="basic" role="tabpanel">
-                    <div class="section-card">
-                        <div class="interview-header"><i class="fa-solid fa-id-card"></i> البيانات الشخصية</div>
-                        <div class="row g-3">
-                            <div class="col-md-12">
-                                <label class="form-label">الاسم الكامل</label>
-                                <input type="text" name="name" class="form-control" value="{{ candidate.FullName if candidate else '' }}" required>
-                            </div>
-                            
-                            <div class="col-md-12">
-                                <label class="form-label" style="color:#004d7a;">📢 الوظيفة المعلنة (Job Post)</label>
-                                <select name="job_id" class="form-select">
-                                    <option value="">-- تقديم عام (بدون وظيفة محددة) --</option>
-                                    {% for job in active_jobs %}
-                                    <option value="{{ job.JobID }}" {% if candidate and candidate.JobID == job.JobID %}selected{% endif %}>
-                                        {{ job.JobTitle }}
-                                    </option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-
-                            <div class="col-md-6">
-                                <label class="form-label">رقم الهاتف</label>
-                                <input type="text" name="phone" class="form-control" value="{{ candidate.Phone if candidate else '' }}">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">البريد الإلكتروني</label>
-                                <input type="email" name="email" class="form-control" value="{{ candidate.Email if candidate else '' }}">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">الرقم القومي</label>
-                                <input type="text" name="ssn" class="form-control" value="{{ candidate.SSN if candidate else '' }}">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">العنوان</label>
-                                <input type="text" name="address" class="form-control" value="{{ candidate.Address if candidate else '' }}">
-                            </div>
-
-                            <div class="col-md-6">
-                                <label class="form-label">القسم (يدوي)</label>
-                                <select name="dept_id" class="form-select">
-                                    <option value="">-- اختر --</option>
-                                    {% for d in depts %}
-                                    <option value="{{ d.DEPTID }}" {% if candidate and candidate.DepartmentID == d.DEPTID %}selected{% endif %}>{{ d.DEPTNAME }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">المسمى الوظيفي (يدوي)</label>
-                                <select name="pos_id" class="form-select">
-                                    <option value="">-- اختر --</option>
-                                    {% for p in positions %}
-                                    <option value="{{ p.PositionID }}" {% if candidate and candidate.PositionID == p.PositionID %}selected{% endif %}>{{ p.PositionName }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                            
-                            <div class="col-md-12">
-                                <label class="form-label" style="color:#e67e22;">حالة الطلب</label>
-                                <select name="status_id" class="form-select" style="border-color:#ffe0b2; background-color:#fff8e1;">
-                                    {% for s in statuses %}
-                                    <option value="{{ s.StatusName }}" {% if candidate and candidate.Status == s.StatusName %}selected{% endif %}>{{ s.StatusName }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                        </div>
-                    </div>
+            <!-- بيانات أساسية -->
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">الاسم الكامل 📛</label>
+                    <input type="text" name="name" class="form-control" required value="{{ candidate.FullName if candidate else '' }}">
                 </div>
-
-                <div class="tab-pane fade" id="docs" role="tabpanel">
-                     {% include 'includes/_recruitment_docs_tab.html' ignore missing %} 
-                     <div class="section-card">
-                        <div class="interview-header"><i class="fa-solid fa-file-arrow-up"></i> الملفات والمرفقات</div>
-                        <div class="mb-4 p-3 border rounded bg-light">
-                            <label class="form-label mb-2">السيرة الذاتية (CV)</label>
-                            {% if candidate and candidate.CV_FileName %}
-                                <div class="d-flex align-items-center gap-2 mb-2 text-success">
-                                    <i class="fa-solid fa-circle-check"></i> 
-                                    <a href="{{ url_for('static', filename='uploads/cvs/' + candidate.CV_FileName) }}" target="_blank" style="font-weight:bold; text-decoration:underline;">{{ candidate.CV_FileName }}</a>
-                                </div>
-                                <input type="hidden" name="current_cv_filename" value="{{ candidate.CV_FileName }}">
-                            {% else %}
-                                <p class="text-muted small">لا يوجد ملف مرفق حالياً.</p>
-                            {% endif %}
-                            <input type="file" name="cv_file" class="form-control">
-                        </div>
-                        <label class="form-label mb-3">قائمة التحقق</label>
-                        <div class="row g-3">
-                            <div class="col-md-6"><label class="check-card"><input type="checkbox" name="doc_id" {% if candidate and candidate.Doc_IDCard %}checked{% endif %}> صورة البطاقة</label></div>
-                            <div class="col-md-6"><label class="check-card"><input type="checkbox" name="doc_cert" {% if candidate and candidate.Doc_Certificate %}checked{% endif %}> شهادة التخرج</label></div>
-                            </div>
-                    </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">الهاتف 📞</label>
+                    <input type="text" name="phone" class="form-control" required value="{{ candidate.Phone if candidate else '' }}">
                 </div>
-
-                <div class="tab-pane fade" id="int1" role="tabpanel">
-                    <div class="section-card">
-                        <div class="interview-header" style="color: #2980b9;"><i class="fa-solid fa-comments"></i> المقابلة الأولى</div>
-                        <div class="row g-3">
-                            <div class="col-md-6"><label class="form-label">القائم بالمقابلة</label><input type="text" name="int1_by" class="form-control" value="{{ candidate.Int1_Interviewer if candidate else '' }}"></div>
-                            <div class="col-md-6"><label class="form-label">التاريخ</label><input type="date" name="int1_date" class="form-control" value="{{ candidate.Int1_Date if candidate else '' }}"></div>
-                            <div class="col-12"><label class="form-label">ملاحظات</label><textarea name="int1_note" class="form-control" rows="4">{{ candidate.Int1_Notes if candidate else '' }}</textarea></div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="tab-pane fade" id="int2" role="tabpanel">
-                    <div class="section-card">
-                         <div class="interview-header" style="color: #27ae60;"><i class="fa-solid fa-user-check"></i> المقابلة الثانية</div>
-                         <div class="row g-3">
-                            <div class="col-md-6"><label class="form-label">القائم بالمقابلة</label><input type="text" name="int2_by" class="form-control" value="{{ candidate.Int2_Interviewer if candidate else '' }}"></div>
-                            <div class="col-md-6"><label class="form-label">التاريخ</label><input type="date" name="int2_date" class="form-control" value="{{ candidate.Int2_Date if candidate else '' }}"></div>
-                            <div class="col-12"><label class="form-label">ملاحظات</label><textarea name="int2_note" class="form-control" rows="4">{{ candidate.Int2_Notes if candidate else '' }}</textarea></div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="tab-pane fade" id="eval" role="tabpanel">
-                    <div class="section-card">
-                        <div class="interview-header" style="color: #8e44ad;"><i class="fa-solid fa-chart-bar"></i> التقييم النهائي واتخاذ القرار</div>
-                        
-                        <div class="row g-4">
-                            <div class="col-md-6">
-                                <label class="form-label">المهارات التقنية (Technical) <span class="score-val" id="val_tech">0</span>/10</label>
-                                <input type="range" class="form-range" name="eval_tech" min="0" max="10" step="1" value="{{ candidate.Eval_Technical if candidate else 0 }}" oninput="document.getElementById('val_tech').innerText = this.value; calcTotal();">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">مهارات التواصل (Communication) <span class="score-val" id="val_comm">0</span>/10</label>
-                                <input type="range" class="form-range" name="eval_comm" min="0" max="10" step="1" value="{{ candidate.Eval_Communication if candidate else 0 }}" oninput="document.getElementById('val_comm').innerText = this.value; calcTotal();">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">الخبرة (Experience) <span class="score-val" id="val_exp">0</span>/10</label>
-                                <input type="range" class="form-range" name="eval_exp" min="0" max="10" step="1" value="{{ candidate.Eval_Experience if candidate else 0 }}" oninput="document.getElementById('val_exp').innerText = this.value; calcTotal();">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">الملاءمة الثقافية (Culture Fit) <span class="score-val" id="val_cult">0</span>/10</label>
-                                <input type="range" class="form-range" name="eval_cult" min="0" max="10" step="1" value="{{ candidate.Eval_Culture if candidate else 0 }}" oninput="document.getElementById('val_cult').innerText = this.value; calcTotal();">
-                            </div>
-                        </div>
-
-                        <div class="total-score">
-                            المجموع الكلي: <span id="total_score">0</span> / 40
-                        </div>
-
-                        <hr class="my-4">
-
-                        <div class="row g-3">
-                            <div class="col-md-12">
-                                <label class="form-label">ملاحظات التقييم النهائي</label>
-                                <textarea name="eval_notes" class="form-control" rows="3" placeholder="اكتب ملخص التقييم...">{{ candidate.Eval_Notes if candidate else '' }}</textarea>
-                            </div>
-                            <div class="col-md-12">
-                                <label class="form-label fw-bold" style="font-size:16px;">القرار النهائي</label>
-                                <select name="eval_decision" class="form-select form-select-lg">
-                                    <option value="Pending" {% if candidate and candidate.Eval_Decision == 'Pending' %}selected{% endif %}>⏳ تحت المراجعة (Pending)</option>
-                                    <option value="Accepted" {% if candidate and candidate.Eval_Decision == 'Accepted' %}selected{% endif %}>✅ مقبول (Accepted)</option>
-                                    <option value="Rejected" {% if candidate and candidate.Eval_Decision == 'Rejected' %}selected{% endif %}>❌ مرفوض (Rejected)</option>
-                                    <option value="Second Interview" {% if candidate and candidate.Eval_Decision == 'Second Interview' %}selected{% endif %}>🔄 مقابلة ثانية</option>
-                                    <option value="Waitlist" {% if candidate and candidate.Eval_Decision == 'Waitlist' %}selected{% endif %}>🕒 قائمة انتظار</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-            </div> <div class="form-footer">
-                <a href="{{ url_for('recruitment_list') }}" class="btn-back"><i class="fa-solid fa-arrow-right"></i> إلغاء والعودة</a>
-                <button type="submit" class="btn-save"><i class="fa-solid fa-floppy-disk"></i> حفظ جميع البيانات</button>
             </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">البريد الإلكتروني 📧</label>
+                    <input type="email" name="email" class="form-control" value="{{ candidate.Email if candidate else '' }}">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">رقم القومي 🔢</label>
+                    <input type="text" name="ssn" class="form-control" value="{{ candidate.SSN if candidate else '' }}">
+                </div>
+            </div>
+
+            <!-- القسم والوظيفة -->
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">القسم 🏢</label>
+                    <select name="dept_id" class="form-select">
+                        <option value="">— عام —</option>
+                        {% for d in depts %}
+                            <option value="{{ d.DEPTID }}" {% if candidate and candidate.DepartmentID == d.DEPTID %}selected{% endif %}>{{ d.DEPTNAME }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">الوظيفة 💼</label>
+                    <select name="pos_id" class="form-select">
+                        <option value="">— اختر —</option>
+                        {% for p in positions %}
+                            <option value="{{ p.PositionID }}" {% if candidate and candidate.PositionID == p.PositionID %}selected{% endif %}>{{ p.PositionName }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <!-- حالة وتاريخ -->
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">الحالة ⚖️</label>
+                    <select name="status_id" class="form-select" required>
+                        {% for s in statuses %}
+                            <option value="{{ s.StatusID }}" {% if candidate and candidate.Status == s.StatusName %}selected{% endif %}>{{ s.StatusName }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">تاريخ التقديم 📅</label>
+                    <input type="date" name="app_date" class="form-control" value="{{ candidate.ApplicationDate if candidate else today }}">
+                </div>
+            </div>
+
+            <!-- وثائق -->
+            <div class="mb-3">
+                <label class="form-label">الوثائق 📄</label>
+                <div class="row">
+                    <div class="col-md-3 form-check">
+                        <input type="checkbox" name="doc_id" id="doc_id" class="form-check-input" {% if candidate and candidate.Doc_IDCard %}checked{% endif %}>
+                        <label for="doc_id" class="form-check-label">بطاقة الهوية</label>
+                    </div>
+                    <!-- أضف باقي الوثائق بنفس الطريقة -->
+                </div>
+            </div>
+
+            <!-- رفع السيرة الذاتية -->
+            <div class="mb-3">
+                <label class="form-label">رفع السيرة الذاتية 📤</label>
+                <input type="file" name="cv_file" class="form-control">
+                {% if candidate and candidate.CV_FileName %}
+                    <small>الحالي: <a href="{{ url_for('static', filename='uploads/cvs/' ~ candidate.CV_FileName) }}" target="_blank">تحميل CV</a></small>
+                {% endif %}
+            </div>
+
+            <!-- مقابلات -->
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">مقابلة 1 👥</label>
+                    <input type="text" name="int1_by" class="form-control" placeholder="اسم المحاور" value="{{ candidate.Int1_Interviewer if candidate else '' }}">
+                    <input type="date" name="int1_date" class="form-control mt-2" value="{{ candidate.Int1_Date if candidate else '' }}">
+                    <textarea name="int1_note" class="form-control mt-2" placeholder="ملاحظات">{% if candidate %}{{ candidate.Int1_Notes }}{% endif %}</textarea>
+                </div>
+                <!-- مقابلة 2 بنفس الطريقة -->
+            </div>
+
+            <!-- تقييم -->
+            <div class="row">
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">تقييم فني ⭐</label>
+                    <input type="number" name="eval_tech" class="form-control" min="0" max="100" value="{{ candidate.Eval_Technical if candidate else 0 }}">
+                </div>
+                <!-- باقي التقييمات -->
+            </div>
+
+            <button type="submit" class="btn btn-success">💾 حفظ</button>
+            <a href="{{ url_for('recruitment_list') }}" class="btn btn-secondary">🔙 رجوع</a>
         </form>
     </div>
 </div>
-
-<script>
-    function calcTotal() {
-        const tech = parseInt(document.getElementsByName('eval_tech')[0].value) || 0;
-        const comm = parseInt(document.getElementsByName('eval_comm')[0].value) || 0;
-        const exp = parseInt(document.getElementsByName('eval_exp')[0].value) || 0;
-        const cult = parseInt(document.getElementsByName('eval_cult')[0].value) || 0;
-        document.getElementById('total_score').innerText = tech + comm + exp + cult;
-    }
-    // Init on load
-    window.onload = function() {
-        document.getElementById('val_tech').innerText = document.getElementsByName('eval_tech')[0].value;
-        document.getElementById('val_comm').innerText = document.getElementsByName('eval_comm')[0].value;
-        document.getElementById('val_exp').innerText = document.getElementsByName('eval_exp')[0].value;
-        document.getElementById('val_cult').innerText = document.getElementsByName('eval_cult')[0].value;
-        calcTotal();
-    };
-</script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 {% endblock %}

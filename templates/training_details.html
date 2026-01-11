@@ -1,127 +1,115 @@
 {% extends "layout.html" %}
-{% block title %}تفاصيل الدورة{% endblock %}
+{% block title %}تفاصيل الجلسة{% endblock %}
 
 {% block content %}
-<style>
-    /* Header Card */
-    .course-header {
-        background: linear-gradient(135deg, #004d7a, #00608f);
-        color: white; padding: 30px; border-radius: 16px;
-        box-shadow: 0 10px 25px rgba(0, 77, 122, 0.2); margin-bottom: 30px;
-    }
-    .course-title { font-size: 26px; font-weight: 800; margin-bottom: 10px; }
-    .course-meta { font-size: 15px; opacity: 0.9; display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
-    
-    /* Table Card */
-    .table-card { background: #fff; border-radius: 16px; padding: 25px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); border: 1px solid #f0f2f5; }
-    .table thead th { background-color: #f8f9fa; color: #555; font-weight: 700; padding: 15px; }
-    .table tbody td { padding: 15px; vertical-align: middle; }
-    
-    /* Status Badges */
-    .status-badge { padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; }
-    .bg-present { background-color: #d1e7dd; color: #0f5132; }
-    .bg-absent  { background-color: #f8d7da; color: #842029; }
-    .bg-wait    { background-color: #fff3cd; color: #856404; }
-    .bg-reg     { background-color: #e2e3e5; color: #383d41; }
+<div class="container-fluid">
 
-    /* Buttons */
-    .btn-auto { background: white; color: #004d7a; border: none; padding: 8px 20px; border-radius: 50px; font-weight: 700; transition: 0.2s; text-decoration: none; }
-    .btn-auto:hover { background: #f0f8ff; color: #003a5c; }
-    .btn-icon { width: 32px; height: 32px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; border: 1px solid transparent; transition: 0.2s; }
-    .btn-check { background: #d1e7dd; color: #0f5132; border-color: #badbcc; } .btn-check:hover { background: #198754; color: white; }
-    .btn-x { background: #f8d7da; color: #842029; border-color: #f5c2c7; } .btn-x:hover { background: #dc3545; color: white; }
-    .btn-wait { background: #fff3cd; color: #856404; border-color: #ffecb5; } .btn-wait:hover { background: #ffc107; color: black; }
-</style>
+    <div class="d-flex justify-content-between mb-4">
+        <h4 class="fw-bold">🎓 تفاصيل الجلسة التدريبية</h4>
+        <a class="btn btn-primary" href="{{ url_for('training_enroll', sid=training_session.SessionID) }}">➕ تسجيل موظف</a>
+    </div>
 
-<div class="course-header">
-    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
-        <div>
-            <div class="course-title">{{ training_session.TrainingCourseText }}</div>
-            <div class="course-meta">
-                <span><i class="fa-solid fa-user-tie"></i> {{ training_session.InstructorName }}</span>
-                <span><i class="fa-regular fa-calendar-days"></i> {{ training_session.SessionDate.strftime('%Y-%m-%d') }}</span>
-                <span><i class="fa-solid fa-location-dot"></i> {{ training_session.Location or 'N/A' }}</span>
+    <div class="card shadow-sm p-4 mb-4">
+        <h5 class="fw-bold mb-3">ℹ️ معلومات الجلسة</h5>
+
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>الدورة:</strong> {{ training_session.TrainingCourseText }}</p>
+                <p><strong>التاريخ:</strong> {{ training_session.SessionDate }} إلى {{ training_session.EndDate or '-' }}</p>
+            </div>
+            <div class="col-md-6">
+                <p><strong>المكان:</strong> {{ training_session.Location or '-' }}</p>
+                {% if training_session.IsExternal %}
+                    <p><strong>المدرب:</strong> {{ training_session.ExternalTrainerName }} (خارجي)</p>
+                {% else %}
+                    <p><strong>المدرب:</strong> {{ training_session.InstructorName or '-' }}</p>
+                {% endif %}
             </div>
         </div>
-        <form method="POST" style="margin:0;">
-            <input type="hidden" name="auto_enroll" value="1">
-            <button type="submit" class="btn-auto"><i class="fa-solid fa-wand-magic-sparkles"></i> سحب المرشحين تلقائياً</button>
-        </form>
     </div>
-</div>
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h4 style="font-weight:700; color:#444; margin:0;">
-        <i class="fa-solid fa-users-rectangle text-primary"></i> كشف الحضور ({{ enrollments|length }})
-    </h4>
-    <div class="d-flex gap-2">
-        <a href="{{ url_for('training_calendar') }}" class="btn btn-secondary btn-sm rounded-pill px-3">عودة للتقويم</a>
-        <a href="{{ url_for('training_session_print', sid=training_session.SessionID) }}" target="_blank" class="btn btn-dark btn-sm rounded-pill px-3">
-            <i class="fa-solid fa-print"></i> طباعة
-        </a>
-    </div>
-</div>
+    <div class="card shadow-sm p-4">
+        <h5 class="fw-bold mb-3">👥 المسجلين</h5>
 
-<div class="table-card">
-    <div class="table-responsive">
-        <table class="table">
-            <thead>
+        {% if enrollments %}
+        <table class="table table-bordered text-center align-middle">
+            <thead class="table-secondary">
                 <tr>
                     <th style="width: 20%;">الموظف</th>
-                    <th style="width: 15%;">القسم</th>
-                    <th style="width: 15%;">الحالة</th>
-                    <th style="width: 20%;">تسجيل الحضور</th>
-                    <th style="width: 30%;">التقييم (Grade)</th>
+                    <th style="width: 10%;">الدرجة</th>
+                    <th style="width: 10%;">النجاح</th>
+                    <th style="width: 10%;">الحضور %</th>
+                    <th style="width: 10%;">تقييم المدير</th>
+                    <th style="width: 25%;">ملاحظات المدير</th>
+                    <th style="width: 15%;">إجراءات</th>
                 </tr>
             </thead>
             <tbody>
-                {% for emp in enrollments %}
-                <tr style="{{ 'background-color: #fffbf0;' if emp.AttendanceStatus == 'Waitlist' else '' }}">
+                {% for e in enrollments %}
+                <tr>
+                    <td class="fw-bold">{{ e.NAME }}</td>
+                    <td>{{ e.Grade or '-' }}</td>
                     <td>
-                        <div style="font-weight: 700; color: #2c3e50;">{{ emp.NAME }}</div>
-                        <div style="font-size: 12px; color: #888;">#{{ emp.BADGENUMBER }}</div>
-                    </td>
-                    <td><span style="background:#f1f3f5; padding:4px 8px; border-radius:6px; font-size:12px;">{{ emp.DEPTNAME }}</span></td>
-                    
-                    <td>
-                        {% if emp.AttendanceStatus == 'Present' %}<span class="status-badge bg-present">حاضر</span>
-                        {% elif emp.AttendanceStatus == 'Absent' %}<span class="status-badge bg-absent">غائب</span>
-                        {% elif emp.AttendanceStatus == 'Waitlist' %}<span class="status-badge bg-wait">قائمة انتظار</span>
-                        {% else %}<span class="status-badge bg-reg">مسجل</span>{% endif %}
-                    </td>
-
-                    <td>
-                        <form method="POST" style="display:flex; gap:5px;">
-                            <input type="hidden" name="mark_attendance" value="1">
-                            <input type="hidden" name="enrollment_id" value="{{ emp.EnrollmentID }}">
-                            <button type="submit" name="status" value="Present" class="btn-icon btn-check"><i class="fa-solid fa-check"></i></button>
-                            <button type="submit" name="status" value="Absent" class="btn-icon btn-x"><i class="fa-solid fa-xmark"></i></button>
-                            <button type="submit" name="status" value="Waitlist" class="btn-icon btn-wait"><i class="fa-solid fa-clock"></i></button>
-                        </form>
-                    </td>
-
-                    <td>
-                        {% if emp.AttendanceStatus == 'Present' %}
-                        <form action="{{ url_for('training_grade') }}" method="POST" class="d-flex gap-2 align-items-center">
-                            <input type="hidden" name="enrollment_id" value="{{ emp.EnrollmentID }}">
-                            <input type="number" name="grade" class="form-control form-control-sm" placeholder="%" style="width: 60px;" value="{{ emp.Grade or '' }}" min="0" max="100">
-                            <input type="text" name="feedback" class="form-control form-control-sm" placeholder="ملاحظات..." value="{{ emp.InstructorFeedback or '' }}">
-                            <button type="submit" class="btn btn-primary btn-sm"><i class="fa-solid fa-save"></i></button>
-                        </form>
-                        <div style="margin-top: 5px; font-size: 11px;">
-                            {% if emp.PassStatus == 'Passed' %}<span class="text-success fw-bold">ناجح</span>
-                            {% elif emp.PassStatus == 'Failed' %}<span class="text-danger fw-bold">راسب</span>{% endif %}
-                        </div>
+                        {% if e.PassStatus == 'Passed' %}
+                            <span class="badge bg-success">ناجح</span>
+                        {% elif e.PassStatus == 'Failed' %}
+                            <span class="badge bg-danger">راسب</span>
                         {% else %}
-                        <span class="text-muted small">- يتطلب الحضور -</span>
+                            -
                         {% endif %}
                     </td>
+                    <td>{{ e.AttendancePercent or '-' }}%</td>
+                    <td>{{ e.ManagerRating or '-' }}</td>
+                    <td>{{ e.ManagerComments or '-' }}</td>
+                    <td>
+                        <form method="POST"
+                              action="{{ url_for('training_enrollment_update', eid=e.EnrollmentID) }}">
+
+                            <div class="mb-1">
+                                <input type="number" name="grade" class="form-control form-control-sm"
+                                       placeholder="الدرجة" value="{{ e.Grade }}">
+                            </div>
+
+                            <div class="mb-1">
+                                <select name="pass_status" class="form-select form-select-sm">
+                                    <option value="">— الحالة —</option>
+                                    <option value="Passed" {% if e.PassStatus=='Passed' %}selected{% endif %}>
+                                        ناجح
+                                    </option>
+                                    <option value="Failed" {% if e.PassStatus=='Failed' %}selected{% endif %}>
+                                        راسب
+                                    </option>
+                                </select>
+                            </div>
+
+                            <div class="mb-1">
+                                <input type="number" name="attendance" class="form-control form-control-sm"
+                                       placeholder="حضور %" value="{{ e.AttendancePercent }}">
+                            </div>
+
+                            <div class="mb-1">
+                                <input type="number" name="manager_rating" class="form-control form-control-sm"
+                                       placeholder="تقييم (1-5)" value="{{ e.ManagerRating }}">
+                            </div>
+
+                            <div class="mb-1">
+                                <input type="text" name="manager_comments" class="form-control form-control-sm"
+                                       placeholder="ملاحظات" value="{{ e.ManagerComments }}">
+                            </div>
+
+                            <button class="btn btn-sm btn-success w-100">🔄 تحديث</button>
+                        </form>
+                    </td>
                 </tr>
-                {% else %}
-                <tr><td colspan="5" class="text-center py-5 text-muted">لا يوجد موظفين مسجلين.</td></tr>
                 {% endfor %}
             </tbody>
         </table>
+        {% else %}
+            <div class="alert alert-info text-center">
+                لا يوجد موظفين مسجلين في هذه الجلسة حتى الآن.
+            </div>
+        {% endif %}
+
     </div>
 </div>
 {% endblock %}

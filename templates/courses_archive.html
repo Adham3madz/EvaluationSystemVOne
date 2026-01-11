@@ -1,0 +1,150 @@
+{% extends "layout.html" %}
+{% block title %}🗄️ أرشيف الدورات{% endblock %}
+
+{% block content %}
+<style>
+    /* === Glass Panel === */
+    .glass-panel {
+        background: rgba(255, 255, 255, 0.85); /* Milky White Glass */
+        backdrop-filter: blur(15px);
+        -webkit-backdrop-filter: blur(15px);
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        border-radius: 16px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        padding: 25px;
+        overflow: hidden;
+    }
+
+    /* === Page Title === */
+    .page-title {
+        color: #fff;
+        text-shadow: 0 2px 5px rgba(0,0,0,0.4);
+        font-weight: 800;
+        margin-bottom: 0;
+    }
+
+    /* === Table Styling (Archive Theme) === */
+    .table-archive {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        margin-bottom: 0;
+    }
+
+    .table-archive thead th {
+        /* Grey Gradient to indicate Archive */
+        background: linear-gradient(135deg, #495057, #6c757d);
+        color: #fff;
+        padding: 15px;
+        border: none;
+        font-weight: 600;
+        text-align: center;
+    }
+
+    .table-archive thead th:first-child { border-top-right-radius: 10px; }
+    .table-archive thead th:last-child { border-top-left-radius: 10px; }
+
+    .table-archive tbody td {
+        background-color: transparent;
+        padding: 15px;
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+        color: #555; /* Slightly muted text for archive */
+        vertical-align: middle;
+        font-size: 0.95rem;
+    }
+
+    .table-archive tbody tr:last-child td { border-bottom: none; }
+    
+    .table-archive tbody tr:hover td {
+        background-color: rgba(108, 117, 125, 0.1); /* Grey highlight */
+        transition: background-color 0.2s;
+    }
+
+    /* === Buttons === */
+    .btn-glass-back {
+        background: rgba(13, 110, 253, 0.8);
+        color: white;
+        border: 1px solid rgba(255,255,255,0.2);
+        backdrop-filter: blur(4px);
+        font-weight: bold;
+    }
+    .btn-glass-back:hover { background: #0b5ed7; color: white; transform: translateY(-2px); }
+
+    .btn-glass-restore {
+        background: linear-gradient(135deg, #198754, #146c43);
+        color: white;
+        border: none;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        font-size: 0.85rem;
+        padding: 5px 15px;
+        border-radius: 6px;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+    }
+    .btn-glass-restore:hover { 
+        background: #146c43; 
+        color: white; 
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+</style>
+
+<div class="container-fluid" style="padding-top: 20px;">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="page-title">🗄️ أرشيف الدورات (المتوقفة)</h4>
+        <a href="{{ url_for('training_courses') }}" class="btn btn-glass-back px-4">
+            ➡️ عودة للدورات النشطة
+        </a>
+    </div>
+
+    <div class="glass-panel">
+        <div class="table-responsive">
+            <table class="table table-archive text-center align-middle">
+                <thead>
+                    <tr>
+                        <th>الدورة</th>
+                        <th>الوصف</th>
+                        <th>الإدارة</th>
+                        <th>المدة</th>
+                        <th>الحالة</th>
+                        <th width="15%">إجراءات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in courses %}
+                    <tr class="text-muted">
+                        <td class="fw-bold text-dark">{{ c.TrainingCourseText }}</td>
+                        <td class="small">{{ c.Description or '-' }}</td>
+                        <td>
+                            <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary">
+                                {{ c.DEPTNAME or 'عام' }}
+                            </span>
+                        </td>
+                        <td>{{ c.DurationHours or '-' }}</td>
+                        <td>
+                            <span class="badge bg-secondary bg-opacity-75">متوقف</span>
+                        </td>
+                        <td>
+                            <a href="{{ url_for('training_course_edit', cid=c.TrainingCourseID) }}"
+                               class="btn-glass-restore" title="تعديل الحالة">
+                                🔄 استعادة / تعديل
+                            </a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="py-5 text-muted">
+                            <h5 class="text-secondary">الأرشيف فارغ</h5>
+                            <p class="small mb-0">جميع الدورات نشطة حالياً.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

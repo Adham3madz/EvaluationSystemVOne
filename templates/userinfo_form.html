@@ -236,15 +236,15 @@
                     </div>
 
                     <div class="col-md-4">
-                        <label class="form-label">المسمى الوظيفي</label>
-                        <select class="form-select" name="positionid" id="position_select">
-                            <option value="">-- اختر المسمى --</option>
-                            {% for p in positions %}
-                            <option value="{{ p.PositionID }}" {% if user and user.PositionID==p.PositionID %}selected{% endif %}>
-                                {{ p.PositionName }}
-                            </option>
-                            {% endfor %}
-                        </select>
+                        <label class="form-label">المسمى الوظيفي <span class="text-danger">*</span></label>
+                        <input type="text" 
+                            name="title" 
+                            id="title_input" 
+                            class="form-control" 
+                            value="{{ user.TITLE if user else '' }}" 
+                            placeholder="مثال: مدير مبيعات، مهندس شبكات، محاسب..." 
+                            required>
+                        <small class="text-muted">اكتب المسمى الوظيفي يدويًا (سيظهر كما تكتبه في كل التقارير)</small>
                     </div>
 
                     <div class="col-12 mt-4">
@@ -354,40 +354,7 @@
             });
         });
 
-        // Auto-update position dropdown based on department
-        document.addEventListener('DOMContentLoaded', function() {
-            const deptSelect = document.getElementById('dept_select');
-            const positionSelect = document.getElementById('position_select');
-            const allPositions = {{ positions|tojson|safe }};
-            const originalPositionId = positionSelect.value;
-
-            function updatePositionOptions() {
-                const selectedDeptId = deptSelect.value;
-                positionSelect.innerHTML = '';
-
-                const defaultOption = document.createElement('option');
-                defaultOption.value = '';
-                defaultOption.text = '-- اختر المسمى --';
-                positionSelect.appendChild(defaultOption);
-
-                allPositions.forEach(pos => {
-                    if (pos.DeptID == selectedDeptId) {
-                        const option = document.createElement('option');
-                        option.value = pos.PositionID;
-                        option.text = pos.PositionName;
-                        positionSelect.appendChild(option);
-                    }
-                });
-                
-                if (originalPositionId) {
-                    const exists = Array.from(positionSelect.options).some(opt => opt.value == originalPositionId);
-                    if (exists) positionSelect.value = originalPositionId;
-                }
-            }
-
-            deptSelect.addEventListener('change', updatePositionOptions);
-            updatePositionOptions();
-        });
+        
     </script>
 
 </body>

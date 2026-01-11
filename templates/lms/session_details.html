@@ -1,0 +1,107 @@
+{% extends "layout.html" %}
+{% block title %}Session Details{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+    <h3 class="m-0 font-weight-bold text-primary">{{ session.CourseName }}</h3>
+    <div>
+        <span class="badge bg-{{ 'success' if session.Status == 'Scheduled' else 'secondary' }} me-2">
+            {{ session.Status }}
+        </span>
+        <a href="{{ url_for('lms_session_edit', sid=session.SessionID) }}" class="btn btn-sm btn-warning">
+            <i class="fa-solid fa-pen"></i> Edit
+        </a>
+    </div>
+</div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <strong>📅 Date:</strong> {{ session.SessionDate }}
+                </div>
+                <div class="col-md-3">
+                    <strong>⏰ Time:</strong> {{ session.StartTime }} - {{ session.EndTime }}
+                </div>
+                <div class="col-md-3">
+                    <strong>📍 Location:</strong> {{ session.Location }}
+                </div>
+                <div class="col-md-3">
+                    <strong>👨‍🏫 Trainers:</strong> 
+                    {% for t in trainers %}{{ t.TrainerName }}{% if not loop.last %}, {% endif %}{% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <ul class="nav nav-tabs" id="sessionTabs" role="tablist">
+        <li class="nav-item">
+            <a class="nav-link active" id="enroll-tab" data-bs-toggle="tab" href="#enroll" role="tab">👥 Enrollments</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="wait-tab" data-bs-toggle="tab" href="#wait" role="tab">⏳ Waitlist</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="attend-tab" data-bs-toggle="tab" href="#attend" role="tab">✅ Attendance</a>
+        </li>
+    </ul>
+
+    <div class="tab-content pt-3" id="sessionTabsContent">
+        
+        <div class="tab-pane fade show active" id="enroll" role="tabpanel">
+            <div class="d-flex justify-content-between mb-2">
+                <h5>Registered Employees ({{ enrolled|length }} / {{ session.MaxCapacity }})</h5>
+                <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addEmpModal">+ Add Employee</button>
+            </div>
+            <table class="table table-hover">
+                <thead>
+                    <tr><th>Name</th><th>Dept</th><th>Status</th><th>Actions</th></tr>
+                </thead>
+                <tbody>
+                    {% for e in enrolled %}
+                    <tr>
+                        <td>{{ e.Name }}</td>
+                        <td>{{ e.DEPTNAME }}</td>
+                        <td><span class="badge bg-success">{{ e.Status }}</span></td>
+                        <td>
+                            <a href="{{ url_for('lms_remove_enrollment', eid=e.EnrollmentID) }}" class="btn btn-danger btn-sm">Remove</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="tab-pane fade" id="wait" role="tabpanel">
+            <table class="table table-warning">
+                <thead>
+                    <tr><th>#</th><th>Name</th><th>Dept</th><th>Date Added</th><th>Action</th></tr>
+                </thead>
+                <tbody>
+                    {% for w in waitlist %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td>{{ w.Name }}</td>
+                        <td>{{ w.DEPTNAME }}</td>
+                        <td>{{ w.EnrollmentDate }}</td>
+                        <td>
+                            <a href="{{ url_for('lms_promote_waitlist', eid=w.EnrollmentID) }}" class="btn btn-success btn-sm">Promote to Registered</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="tab-pane fade" id="attend" role="tabpanel">
+    <div class="text-center py-4">
+        <h5 class="text-gray-800 mb-3">Manage Attendance for this Session</h5>
+        <p class="mb-4">Mark employees as Present, Absent, or Late.</p>
+        <a href="{{ url_for('lms_session_attendance', sid=session.SessionID) }}" class="btn btn-primary btn-lg">
+            📋 Open Attendance Sheet
+        </a>
+    </div>
+</div>
+    </div>
+</div>
+{% endblock %}

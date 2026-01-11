@@ -130,6 +130,7 @@
 
   .btn-success:hover {
       background-color: #005f2e;
+      color: #fff;
   }
 
   /* ===== الصف الفارغ ===== */
@@ -193,19 +194,27 @@
     <tbody>
       {% for u in users %}
       <tr>
-        <td>{{ u.USERID }}</td>
+        <td>{{ u.BADGENUMBER }}</td> 
         <td>{{ u.NAME }}</td>
         <td>{{ u.TITLE or u.PositionName or 'غير محدد' }}</td>
         <td>{{ u.DEPTNAME or 'غير محدد' }}</td>
         <td>
-          {% if role_id == 2 and u.IsManager %}
-            <a href="{{ url_for('new_evaluation', employee_id=u.USERID, is_manager='true') }}" class="btn btn-success">
-              ✏️ بدء التقييم
-            </a>
-          {% elif role_id == 3 %}
-            <a href="{{ url_for('new_evaluation', employee_id=u.USERID) }}" class="btn btn-success">
-              ✏️ بدء التقييم
-            </a>
+          {% if u.BADGENUMBER %}
+          
+              {% if role_id == 2 and u.IsManager %}
+                <a href="{{ url_for('new_evaluation', badgenumber_str=u.BADGENUMBER, is_manager='true') }}" class="btn btn-success">
+                  ✏️ بدء التقييم
+                </a>
+              {% elif role_id == 3 %}
+                <a href="{{ url_for('new_evaluation', badgenumber_str=u.BADGENUMBER) }}" class="btn btn-success">
+                  ✏️ بدء التقييم
+                </a>
+              {% endif %}
+
+          {% else %}
+              <span class="text-danger" style="font-size: 0.85rem;">
+                ⚠️ لا يوجد رقم وظيفي
+              </span>
           {% endif %}
         </td>
       </tr>
