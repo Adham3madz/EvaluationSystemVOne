@@ -1,0 +1,625 @@
+-- 1. Customer Table
+CREATE TABLE Customer (
+    CustomerID INT IDENTITY PRIMARY KEY,
+    Name NVARCHAR(100) NOT NULL,
+    PhoneNumber NVARCHAR(15) NOT NULL UNIQUE
+);
+
+-- 2. Restaurant Table
+CREATE TABLE Restaurant (
+    RestaurantID INT IDENTITY PRIMARY KEY,
+    Name NVARCHAR(100) NOT NULL,
+    FullCapacity INT NOT NULL CHECK (FullCapacity > 0)  -- Constant full capacity for each restaurant
+);
+
+-- 3. RestaurantDailyCapacity Table (Tracks remaining capacity for each day)
+CREATE TABLE RestaurantDailyCapacity (
+    RestaurantID INT NOT NULL FOREIGN KEY REFERENCES Restaurant(RestaurantID),
+    Date DATE NOT NULL,  -- Date for the capacity tracking
+    RemainingCapacity INT NOT NULL,  -- Remaining capacity for that day
+    PRIMARY KEY (RestaurantID, Date)
+);
+
+-- 4. Menu Table
+CREATE TABLE Menu (
+    MenuItemID INT IDENTITY PRIMARY KEY,
+    ItemName NVARCHAR(100) NOT NULL,
+    ItemPrice DECIMAL(10, 2) NOT NULL CHECK (ItemPrice > 0)
+);
+
+-- 5. Reservations Table
+CREATE TABLE Reservations (
+    ReservationID INT IDENTITY PRIMARY KEY,
+	CustomerID INT NOT NULL FOREIGN KEY REFERENCES Customer(CustomerID),
+    RestaurantID INT NOT NULL FOREIGN KEY REFERENCES Restaurant(RestaurantID),
+    ReservationDate DATE NOT NULL,
+    NumberOfGuests INT NOT NULL CHECK (NumberOfGuests > 0),
+    TotalPrice DECIMAL(10, 2) NULL;
+);
+
+-- 7. OrderDetails Table
+CREATE TABLE OrderDetails (
+    OrderDetailID INT IDENTITY PRIMARY KEY,
+    ReservationID INT NOT NULL FOREIGN KEY REFERENCES Reservations(ReservationID),
+    MenuItemID INT NOT NULL FOREIGN KEY REFERENCES Menu(MenuItemID),
+    Quantity INT NOT NULL CHECK (Quantity > 0),
+    ItemPrice DECIMAL(10, 2) NOT NULL CHECK (ItemPrice > 0),
+    SubTotal AS (Quantity * ItemPrice) PERSISTED
+);
+
+-- 8. Payments Table
+CREATE TABLE Payments (
+    PaymentID INT IDENTITY PRIMARY KEY,
+    CustomerID INT NOT NULL FOREIGN KEY REFERENCES Customer(CustomerID),
+    ReservationID INT NOT NULL FOREIGN KEY REFERENCES Reservations(ReservationID),
+    TotalAmount DECIMAL(10, 2) NOT NULL,
+    PaidAmount DECIMAL(10, 2) NOT NULL,
+    RemainingAmount AS (TotalAmount - PaidAmount) PERSISTED
+);
+
+
+
+-- Trigger for handling updates to RemainingCapacity after reservation insertions
+CREATE TRIGGER UpdateRemainingCapacityOnInsert
+ON Reservations
+AFTER INSERT
+AS
+BEGIN
+    UPDATE RestaurantDailyCapacity
+    SET RemainingCapacity = RemainingCapacity - (
+        SELECT SUM(NumberOfGuests)
+        FROM INSERTED
+        WHERE INSERTED.RestaurantID = RestaurantDailyCapacity.RestaurantID
+          AND INSERTED.ReservationDate = RestaurantDailyCapacity.Date
+    )
+    WHERE RestaurantDailyCapacity.RestaurantID IN (SELECT RestaurantID FROM INSERTED)
+      AND RestaurantDailyCapacity.Date IN (SELECT ReservationDate FROM INSERTED);
+END;
+
+-- Trigger for handling updates to RemainingCapacity after reservation deletions
+CREATE TRIGGER UpdateRemainingCapacityOnDelete
+ON Reservations
+AFTER DELETE
+AS
+BEGIN
+    UPDATE RestaurantDailyCapacity
+    SET RemainingCapacity = RemainingCapacity + (
+        SELECT SUM(NumberOfGuests)
+        FROM DELETED
+        WHERE DELETED.RestaurantID = RestaurantDailyCapacity.RestaurantID
+          AND DELETED.ReservationDate = RestaurantDailyCapacity.Date
+    )
+    WHERE RestaurantDailyCapacity.RestaurantID IN (SELECT RestaurantID FROM DELETED)
+      AND RestaurantDailyCapacity.Date IN (SELECT ReservationDate FROM DELETED);
+END;
+
+-- Trigger for initializing RemainingCapacity when a new restaurant is added
+CREATE TRIGGER InitializeRemainingCapacity
+ON Restaurant
+AFTER INSERT
+AS
+BEGIN
+    DECLARE @RestaurantID INT = (SELECT RestaurantID FROM INSERTED);
+    DECLARE @Date DATE = '2025-01-01';
+    DECLARE @EndDate DATE = '2025-12-31';
+
+    WHILE @Date <= @EndDate
+    BEGIN
+        INSERT INTO RestaurantDailyCapacity (RestaurantID, Date, RemainingCapacity)
+        VALUES (@RestaurantID, @Date, (SELECT FullCapacity FROM Restaurant WHERE RestaurantID = @RestaurantID));
+
+        SET @Date = DATEADD(DAY, 1, @Date);
+    END;
+END;
+
+
+
+
+-- Trigger for handling updates to TotalPrice in Reservations when OrderDetails are modified
+CREATE TRIGGER UpdateTotalPriceOnOrderDetailsChange
+ON OrderDetails
+AFTER INSERT, UPDATE, DELETE
+AS
+BEGIN
+    -- Update TotalPrice for the affected ReservationID(s)
+    UPDATE Reservations
+    SET TotalPrice = (
+        SELECT SUM(SubTotal)
+        FROM OrderDetails
+        WHERE OrderDetails.ReservationID = Reservations.ReservationID
+    )
+    FROM Reservations
+    INNER JOIN INSERTED ON Reservations.ReservationID = INSERTED.ReservationID
+    -- Handle delete case
+    INNER JOIN DELETED ON Reservations.ReservationID = DELETED.ReservationID
+    WHERE INSERTED.ReservationID IS NOT NULL OR DELETED.ReservationID IS NOT NULL;
+END;
+
+
+
+-- Trigger for automatically updating the TotalAmount in Reservations table
+CREATE TRIGGER UpdateTotalAmountOnOrderDetailsChange
+ON OrderDetails
+AFTER INSERT, UPDATE, DELETE
+AS
+BEGIN
+    -- Update the TotalAmount in the Reservations table
+    UPDATE Reservations
+    SET TotalPrice = (
+        SELECT SUM(Quantity * ItemPrice)
+        FROM OrderDetails
+        WHERE ReservationID = Reservations.ReservationID
+    )
+    WHERE ReservationID IN (
+        SELECT ReservationID
+        FROM INSERTED
+        UNION
+        SELECT ReservationID
+        FROM DELETED
+    );
+END;
+
+
+
+  ALTER TABLE [LOLY].[dbo].[Reservations]
+ADD DateSubmitted DATETIME DEFAULT GETDATE();
+
+
+
+
+
+
+
+
+CREATE VIEW View_ReservationsDetails AS
+SELECT 
+    r.ReservationID,                  -- معرف الحجز
+    c.Name AS CustomerName,           -- اسم العميل
+    c.PhoneNumber AS CustomerPhoneNumber, -- رقم هاتف العميل
+    res.Name AS RestaurantName,       -- اسم المطعم
+    r.NumberOfGuests,
+    r.important,          -- عدد الضيوف
+    r.ReservationDate,                -- تاريخ الحجز
+    r.DateSubmitted,                  -- تاريخ تقديم الحجز
+    p.TotalAmount,                    -- المبلغ الإجمالي
+    p.PaidAmount,                     -- المبلغ المدفوع
+    p.RemainingAmount,                -- المبلغ المتبقي
+    r.CashierName -- اسم الكاشير (لإضافة اسم الكاشير لاحقًا)
+FROM 
+    Reservations r
+INNER JOIN 
+    Customer c ON r.CustomerID = c.CustomerID -- ربط جدول العملاء مع جدول الحجوزات
+INNER JOIN 
+    Restaurant res ON r.RestaurantID = res.RestaurantID -- ربط جدول المطاعم مع جدول الحجوزات
+LEFT JOIN 
+    Payments p ON r.ReservationID = p.ReservationID -- ربط جدول المدفوعات مع جدول الحجوزات
+
+
+
+CREATE TABLE DailyPayments (
+    PaymentID INT IDENTITY PRIMARY KEY, -- Unique identifier for each payment
+    CustomerID INT NOT NULL FOREIGN KEY REFERENCES Customer(CustomerID), -- References the Customer table
+    ReservationID INT NOT NULL FOREIGN KEY REFERENCES Reservations(ReservationID), -- References the Reservations table
+    PaidAmount DECIMAL(10, 2) NOT NULL, -- Amount paid
+    PaymentDate DATETIME NOT NULL DEFAULT GETDATE() -- Date of the payment with default value as the current date
+);
+
+
+  ALTER TABLE DailyPayments
+ADD CashierName NVARCHAR(100) NOT NULL DEFAULT 'Unknown';
+
+
+
+CREATE TABLE Cashier (
+    CashierID INT IDENTITY(1,1) PRIMARY KEY,   -- Auto-incrementing primary key for the cashier
+    Username NVARCHAR(100) NOT NULL,           -- Username for the cashier
+    Password NVARCHAR(100) NOT NULL,           -- Password for the cashier
+    Role INT NOT NULL                          -- Role of the cashier (could represent different roles, e.g., 1 = Admin, 2 = Regular)
+);
+
+
+
+
+
+
+  Create VIEW View_ManageReservationsDetails AS
+SELECT 
+    r.ReservationID,
+    r.CustomerID,
+    c.Name AS CustomerName,
+    c.PhoneNumber AS CustomerPhoneNumber,
+    r.RestaurantID,
+    res.Name AS RestaurantName,
+    r.NumberOfGuests,
+	
+    r.ReservationDate,
+    r.DateSubmitted,
+    od.OrderDetailID,
+    od.MenuItemID,
+    m.ItemName AS MenuItemName,
+    od.Quantity,
+    od.ItemPrice,
+    od.SubTotal,
+    p.PaymentID,
+    p.TotalAmount,
+    p.PaidAmount,
+    p.RemainingAmount,
+    r.CashierName
+
+FROM 
+    Reservations r
+INNER JOIN 
+    Customer c ON r.CustomerID = c.CustomerID
+INNER JOIN 
+    Restaurant res ON r.RestaurantID = res.RestaurantID
+LEFT JOIN 
+    OrderDetails od ON r.ReservationID = od.ReservationID
+LEFT JOIN 
+    Menu m ON od.MenuItemID = m.MenuItemID
+LEFT JOIN 
+    Payments p ON r.ReservationID = p.ReservationID
+LEFT JOIN 
+    DailyPayments dp ON p.PaymentID = dp.PaymentID;
+
+
+
+
+
+CREATE PROCEDURE DeleteReservationAndRelatedData
+    @ReservationID INT
+AS
+BEGIN
+    BEGIN TRY
+        -- Begin the transaction
+        BEGIN TRANSACTION;
+
+        -- Delete related entries in DailyPayments
+        DELETE FROM DailyPayments
+        WHERE ReservationID = @ReservationID;
+
+        -- Delete related entries in Payments
+        DELETE FROM Payments
+        WHERE ReservationID = @ReservationID;
+
+        -- Delete related entries in OrderDetails
+        DELETE FROM OrderDetails
+        WHERE ReservationID = @ReservationID;
+
+        -- Delete the reservation itself
+        DELETE FROM Reservations
+        WHERE ReservationID = @ReservationID;
+
+        -- Commit the transaction
+        COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+        -- Rollback transaction in case of an error
+        ROLLBACK TRANSACTION;
+
+        -- Re-throw the error for debugging
+        THROW;
+    END CATCH;
+END;
+GO
+
+
+
+
+
+CREATE TRIGGER UpdatePaymentsOnOrderDetailsChange
+ON OrderDetails
+AFTER INSERT, UPDATE, DELETE
+AS
+BEGIN
+    -- Declare variable for ReservationID
+    DECLARE @ReservationID INT;
+
+    -- Get the affected ReservationID(s) from the inserted or deleted rows
+    IF EXISTS (SELECT * FROM INSERTED)
+    BEGIN
+        SELECT @ReservationID = ReservationID FROM INSERTED;
+    END
+    ELSE IF EXISTS (SELECT * FROM DELETED)
+    BEGIN
+        SELECT @ReservationID = ReservationID FROM DELETED;
+    END
+
+    -- Update the TotalAmount in the Payments table based on OrderDetails
+    UPDATE p
+    SET p.TotalAmount = (
+            SELECT SUM(Quantity * ItemPrice)
+            FROM OrderDetails
+            WHERE ReservationID = p.ReservationID
+        )
+    FROM Payments p
+    WHERE p.ReservationID = @ReservationID;
+
+    -- Optional: If you want to handle the PaidAmount separately (in case it's manually modified), you can do something similar for that column
+    -- UPDATE p
+    -- SET p.PaidAmount = <logic to calculate the PaidAmount, if applicable>
+    -- WHERE p.ReservationID = @ReservationID;
+END;
+
+
+
+CREATE TRIGGER UpdateRemainingCapacityOnUpdate
+ON Reservations
+AFTER UPDATE
+AS
+BEGIN
+    -- Increase capacity for the old reservation details
+    UPDATE RestaurantDailyCapacity
+    SET RemainingCapacity = RemainingCapacity + (
+        SELECT SUM(DELETED.NumberOfGuests)
+        FROM DELETED
+        WHERE DELETED.RestaurantID = RestaurantDailyCapacity.RestaurantID
+          AND DELETED.ReservationDate = RestaurantDailyCapacity.Date
+    )
+    WHERE RestaurantDailyCapacity.RestaurantID IN (SELECT RestaurantID FROM DELETED)
+      AND RestaurantDailyCapacity.Date IN (SELECT ReservationDate FROM DELETED);
+
+    -- Decrease capacity for the new reservation details
+    UPDATE RestaurantDailyCapacity
+    SET RemainingCapacity = RemainingCapacity - (
+        SELECT SUM(INSERTED.NumberOfGuests)
+        FROM INSERTED
+        WHERE INSERTED.RestaurantID = RestaurantDailyCapacity.RestaurantID
+          AND INSERTED.ReservationDate = RestaurantDailyCapacity.Date
+    )
+    WHERE RestaurantDailyCapacity.RestaurantID IN (SELECT RestaurantID FROM INSERTED)
+      AND RestaurantDailyCapacity.Date IN (SELECT ReservationDate FROM INSERTED);
+END;
+
+
+
+
+
+
+ ALTER TABLE Reservations
+ADD CashierName NVARCHAR(25) NULL;
+
+
+
+   ALTER TABLE Orderdetails
+ADD CashierName NVARCHAR(25) NULL;
+
+
+
+
+
+
+
+  CREATE TABLE UserLog (
+    LogID INT IDENTITY(1,1) PRIMARY KEY,    -- Auto-incrementing unique identifier for each log entry
+    CashierName NVARCHAR(25) NOT NULL,    -- Name of the cashier performing the action
+    Action NVARCHAR(MAX) NOT NULL,         -- Description of the action performed
+    DateAndTime DATETIME DEFAULT GETDATE() -- Timestamp of the action (defaults to current date and time)
+);
+
+
+
+
+
+  ALTER TABLE [Cashier]
+ADD [FullName] NVARCHAR(50);
+
+
+
+
+
+CREATE TABLE DeletedReservations (
+    DeletedReservationID INT IDENTITY(1,1) PRIMARY KEY,
+    ReservationID INT,
+    ReservationDetails NVARCHAR(MAX),
+    PaymentsDetails NVARCHAR(MAX),
+    OrderDetailsDetails NVARCHAR(MAX),
+    CashierName NVARCHAR(100),
+    Notes NVARCHAR(MAX),
+    DeletedAt DATETIME DEFAULT GETDATE()
+);
+
+
+
+ALTER PROCEDURE DeleteReservationAndRelatedData
+    @ReservationID INT,
+    @CashierName NVARCHAR(100),
+    @Notes NVARCHAR(MAX)
+AS
+BEGIN
+    BEGIN TRY
+        -- Begin the transaction
+        BEGIN TRANSACTION;
+
+        -- Step 1: Retrieve the related data to be deleted
+        DECLARE @ReservationDetails NVARCHAR(MAX);
+        DECLARE @PaymentsDetails NVARCHAR(MAX);
+        DECLARE @OrderDetailsDetails NVARCHAR(MAX);
+
+        -- Get Reservation Details
+        SELECT @ReservationDetails = CONCAT('Name: ', Customer.Name, ', RestaurantID: ', RestaurantID, ', ReservationDate: ', ReservationDate, ', Guests: ', NumberOfGuests)
+        FROM Reservations
+		JOIN Customer ON Reservations.CustomerID = Customer.CustomerID
+		
+        WHERE ReservationID = @ReservationID;        
+
+        -- Get Payments Details
+        SELECT @PaymentsDetails = CONCAT('PaymentID: ', PaymentID, ', TotalAmount: ', TotalAmount, ', PaidAmount: ', PaidAmount)
+        FROM Payments
+        WHERE ReservationID = @ReservationID;
+
+        -- Get OrderDetails Details (including Item names)
+			   -- Get OrderDetails Details (including Item names)
+		DECLARE @ItemNames NVARCHAR(MAX);
+		SET @ItemNames = '';
+		SELECT @ItemNames = CONCAT(@ItemNames, 'Item: (', Menu.ItemName,'x', OrderDetails.Quantity, ', ',')') 
+		FROM OrderDetails
+		JOIN Menu ON OrderDetails.MenuItemID = Menu.MenuItemID
+		WHERE OrderDetails.ReservationID = @ReservationID;
+
+
+        -- Step 2: Insert the data into the DeletedReservations table
+        INSERT INTO DeletedReservations (ReservationID, ReservationDetails, PaymentsDetails, OrderDetailsDetails, CashierName, Notes)
+        VALUES (@ReservationID, @ReservationDetails, @PaymentsDetails, @ItemNames, @CashierName, @Notes);
+
+        -- Step 3: Delete related entries in DailyPayments, Payments, and OrderDetails
+        DELETE FROM DailyPayments WHERE ReservationID = @ReservationID;
+        DELETE FROM Payments WHERE ReservationID = @ReservationID;
+        DELETE FROM OrderDetails WHERE ReservationID = @ReservationID;
+
+        -- Step 4: Delete the reservation itself
+        DELETE FROM Reservations WHERE ReservationID = @ReservationID;
+
+        -- Commit the transaction
+        COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+        -- Rollback transaction in case of an error
+        ROLLBACK TRANSACTION;
+
+        -- Re-throw the error for debugging
+        THROW;
+    END CATCH;
+END;
+GO
+
+CREATE FUNCTION dbo.NormalizeArabicText (@text NVARCHAR(MAX))
+RETURNS NVARCHAR(MAX)
+AS
+BEGIN
+    -- Replace different forms of Arabic characters with their normalized forms
+    RETURN REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+        @text,
+        N'أ', N'ا'),   -- Normalize 'أ' to 'ا'
+        N'إ', N'ا'),   -- Normalize 'إ' to 'ا'
+        N'آ', N'ا'),   -- Normalize 'آ' to 'ا'
+        N'ى', N'ي'),   -- Normalize 'ى' to 'ي'
+        N'ئ', N'ي'),   -- Normalize 'ئ' to 'ي'
+        N'ة', N'ه')    -- Normalize 'ة' to 'ه'
+END
+
+
+CREATE FUNCTION dbo.ReverseNormalizeArabicText (@text NVARCHAR(MAX))
+RETURNS NVARCHAR(MAX)
+AS
+BEGIN
+    -- Replace normalized characters with their original forms
+    RETURN REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+        @text,
+        N'ا', N'أ'),   -- Reverse normalize 'ا' to 'أ'
+        N'ا', N'إ'),   -- Reverse normalize 'ا' to 'إ'
+        N'ا', N'آ'),   -- Reverse normalize 'ا' to 'آ'
+        N'ي', N'ى'),   -- Reverse normalize 'ي' to 'ى'
+        N'ي', N'ئ'),   -- Reverse normalize 'ي' to 'ئ'
+        N'ه', N'ة')    -- Reverse normalize 'ه' to 'ة'
+END
+
+
+ Create VIEW vw_DailyPaymentsSummary AS
+SELECT 
+    dp.PaymentID,
+    c.Name, -- Assuming Customer table has a column for customer name
+    dp.ReservationID,
+    dp.PaidAmount,
+    dp.PaymentDate,
+    dp.CustomerID,
+    dp.Cashiername,
+	dp.PaymentMethod
+   
+   
+    
+FROM 
+    DailyPayments dp
+INNER JOIN 
+    Customer c ON dp.CustomerID = c.CustomerID
+INNER JOIN 
+    Reservations r ON dp.ReservationID = r.ReservationID;
+
+
+
+CREATE TRIGGER trg_CheckRemainingCapacity
+ON RestaurantDailyCapacity
+AFTER INSERT, UPDATE
+AS
+BEGIN
+    IF EXISTS (
+        SELECT 1 
+        FROM inserted 
+        WHERE RemainingCapacity < 0
+    )
+    BEGIN
+        RAISERROR ('No space available: RemainingCapacity cannot be negative.', 16, 1);
+        ROLLBACK TRANSACTION;
+    END
+END;
+
+
+
+
+  ALTER TABLE Reservations
+ADD 
+    Notes NVARCHAR(MAX) NULL,           -- Column for notes, allows longer text
+    Important NVARCHAR(50) NULL;        -- Column for importance as a string
+
+
+
+
+ ALTER TABLE [dbo].[DailyPayments]
+ADD [PaymentMethod] NVARCHAR(50) NOT NULL DEFAULT 'Cash';
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+Create TRIGGER trg_RestrictReservations
+ON Reservations
+AFTER INSERT
+AS
+BEGIN
+    DECLARE @CashierRole INT;
+    DECLARE @RestaurantID INT;
+    DECLARE @NumberOfGuests INT;
+    DECLARE @CashierName NVARCHAR(255);
+    DECLARE @RemainingCapacity INT;
+    DECLARE @FullCapacity INT;
+
+    -- Get values from the inserted row
+    SELECT 
+        @CashierName = i.CashierName,
+        @RestaurantID = i.RestaurantID,
+        @NumberOfGuests = i.NumberOfGuests
+    FROM inserted i;
+
+    -- Get Cashier Role from Cashier table
+    SELECT @CashierRole = Role 
+    FROM Cashier 
+    WHERE Username = @CashierName;
+
+    -- Get Remaining Capacity and Full Capacity of the restaurant
+    SELECT @RemainingCapacity = RDC.RemainingCapacity, 
+           @FullCapacity = R.FullCapacity
+    FROM RestaurantDailyCapacity RDC
+    INNER JOIN Restaurant R ON RDC.RestaurantID = R.RestaurantID
+    WHERE RDC.RestaurantID = @RestaurantID AND RDC.Date = (SELECT ReservationDate FROM inserted);
+
+    -- If cashier role is NOT 1 or 2, apply restrictions
+    IF @CashierRole NOT IN (1, 2)
+    BEGIN
+        -- Restrict cashier from reserving at restaurants with ID 3 or 5
+        IF @RestaurantID IN (3, 5)
+        BEGIN
+            RAISERROR ('You are not authorized to reserve at this restaurant.', 16, 1);
+            ROLLBACK TRANSACTION;
+            RETURN;
+        END
+
+        -- Restrict cashier from reserving if remaining capacity is less than (Full Capacity - 100) at restaurants 1 or 2
+        IF @RestaurantID IN (1, 2) AND @RemainingCapacity < (@FullCapacity - 100)
+        BEGIN
+            RAISERROR ('You cannot reserve more than 100 seats at this restaurant.', 16, 1);
+            ROLLBACK TRANSACTION;
+            RETURN;
+        END
+    END
+END;
+
+..................................................................
+

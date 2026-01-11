@@ -1,0 +1,830 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "D:\\evaluationSystem\\Reservation\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|d:\\evaluationsystem\\reservation\\reservation\\menuitemsform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|solutionrelative:reservation\\menuitemsform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|d:\\evaluationsystem\\reservation\\reservation\\menuitemsform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
+      "RelativeMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|solutionrelative:reservation\\menuitemsform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|d:\\evaluationsystem\\reservation\\reservation\\menuitemsform.designer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|solutionrelative:reservation\\menuitemsform.designer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|D:\\evaluationSystem\\Reservation\\reservation\\navigation.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
+      "RelativeMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|solutionrelative:reservation\\navigation.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|D:\\evaluationSystem\\Reservation\\reservation\\navigation.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|solutionrelative:reservation\\navigation.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|d:\\evaluationsystem\\reservation\\reservation\\deletedreservations.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|solutionrelative:reservation\\deletedreservations.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|D:\\evaluationSystem\\Reservation\\reservation\\editpayments.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|solutionrelative:reservation\\editpayments.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|D:\\evaluationSystem\\Reservation\\reservation\\editpayments.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
+      "RelativeMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|solutionrelative:reservation\\editpayments.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|D:\\evaluationSystem\\Reservation\\reservation\\home.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|solutionrelative:reservation\\home.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|D:\\evaluationSystem\\Reservation\\reservation\\home.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
+      "RelativeMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|solutionrelative:reservation\\home.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|D:\\evaluationSystem\\Reservation\\reservation\\deletedreservations.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
+      "RelativeMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|solutionrelative:reservation\\deletedreservations.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|D:\\evaluationSystem\\Reservation\\reservation\\monthlyreport.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|solutionrelative:reservation\\monthlyreport.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|d:\\evaluationsystem\\reservation\\reservation\\monthlyreport.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
+      "RelativeMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|solutionrelative:reservation\\monthlyreport.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|d:\\evaluationsystem\\reservation\\reservation\\monthlyreport.designer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|solutionrelative:reservation\\monthlyreport.designer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|d:\\evaluationsystem\\reservation\\reservation\\login.designer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|solutionrelative:reservation\\login.designer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|D:\\evaluationSystem\\Reservation\\reservation\\login.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
+      "RelativeMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|solutionrelative:reservation\\login.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|d:\\evaluationsystem\\reservation\\reservation\\navigation.designer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|solutionrelative:reservation\\navigation.designer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|D:\\evaluationSystem\\Reservation\\reservation\\home.designer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|solutionrelative:reservation\\home.designer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|D:\\evaluationSystem\\Reservation\\reservation\\databaseconfig.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|solutionrelative:reservation\\databaseconfig.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|d:\\evaluationsystem\\reservation\\reservation\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|solutionrelative:reservation\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|d:\\evaluationsystem\\reservation\\reservation\\editorder.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|solutionrelative:reservation\\editorder.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|D:\\evaluationSystem\\Reservation\\reservation\\editorder.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
+      "RelativeMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|solutionrelative:reservation\\editorder.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|D:\\evaluationSystem\\Reservation\\reservation\\editcustomerdata.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|solutionrelative:reservation\\editcustomerdata.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|D:\\evaluationSystem\\Reservation\\reservation\\editcustomerdata.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
+      "RelativeMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|solutionrelative:reservation\\editcustomerdata.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|D:\\evaluationSystem\\Reservation\\reservation\\singlereservationedit.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|solutionrelative:reservation\\singlereservationedit.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|D:\\evaluationSystem\\Reservation\\reservation\\singlereservationedit.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
+      "RelativeMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|solutionrelative:reservation\\singlereservationedit.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|D:\\evaluationSystem\\Reservation\\reservation\\monthlyspotcheck.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|solutionrelative:reservation\\monthlyspotcheck.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|D:\\evaluationSystem\\Reservation\\reservation\\monthlyspotcheck.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
+      "RelativeMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|solutionrelative:reservation\\monthlyspotcheck.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|D:\\evaluationSystem\\Reservation\\reservation\\editreservation.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
+      "RelativeMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|solutionrelative:reservation\\editreservation.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|D:\\evaluationSystem\\Reservation\\reservation\\editreservation.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|solutionrelative:reservation\\editreservation.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|D:\\evaluationSystem\\Reservation\\reservation\\globaluser.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|solutionrelative:reservation\\globaluser.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|D:\\evaluationSystem\\Reservation\\reservation\\reservationsreport.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
+      "RelativeMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|solutionrelative:reservation\\reservationsreport.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|D:\\evaluationSystem\\Reservation\\reservation\\singleorderedit.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|solutionrelative:reservation\\singleorderedit.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|D:\\evaluationSystem\\Reservation\\reservation\\singleorderedit.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
+      "RelativeMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|solutionrelative:reservation\\singleorderedit.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|D:\\evaluationSystem\\Reservation\\reservation\\reservationsreport.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|solutionrelative:reservation\\reservationsreport.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|D:\\evaluationSystem\\Reservation\\reservation\\addpayment.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|solutionrelative:reservation\\addpayment.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|D:\\evaluationSystem\\Reservation\\reservation\\addpayment.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
+      "RelativeMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|solutionrelative:reservation\\addpayment.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|D:\\evaluationSystem\\Reservation\\reservation\\addorders.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|solutionrelative:reservation\\addorders.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{00000000-0000-0000-0000-000000000000}|\u003CSolution\u003E|Reservation||{04B8AB82-A572-4FEF-95CE-5222444B6B64}|"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|D:\\evaluationSystem\\Reservation\\reservation\\signup.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
+      "RelativeMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|solutionrelative:reservation\\signup.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|D:\\evaluationSystem\\Reservation\\reservation\\signup.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|solutionrelative:reservation\\signup.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|D:\\evaluationSystem\\Reservation\\reservation\\signup.designer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|solutionrelative:reservation\\signup.designer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|D:\\evaluationSystem\\Reservation\\reservation\\login.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|solutionrelative:reservation\\login.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|D:\\evaluationSystem\\Reservation\\reservation\\userlog.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|solutionrelative:reservation\\userlog.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|D:\\evaluationSystem\\Reservation\\reservation\\userlog.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
+      "RelativeMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|solutionrelative:reservation\\userlog.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|D:\\evaluationSystem\\Reservation\\reservation\\dailyreports.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
+      "RelativeMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|solutionrelative:reservation\\dailyreports.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|D:\\evaluationSystem\\Reservation\\reservation\\dailyreports.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|solutionrelative:reservation\\dailyreports.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|D:\\evaluationSystem\\Reservation\\reservation\\monthlyspotcheck.designer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|solutionrelative:reservation\\monthlyspotcheck.designer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|D:\\evaluationSystem\\Reservation\\reservation\\properties\\resources.resx||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|",
+      "RelativeMoniker": "D:0:0:{4D4668B2-8E22-4CDC-AA3A-92EE302269F3}|Reservation\\Reservation.csproj|solutionrelative:reservation\\properties\\resources.resx||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 2,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{e5c86464-96be-4d7c-9a8b-abcb3bbf5f92}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{aa2115a1-9712-457b-9047-dbb71ca2cdd2}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "MenuItemsForm.cs",
+              "DocumentMoniker": "D:\\evaluationSystem\\Reservation\\Reservation\\MenuItemsForm.cs",
+              "RelativeDocumentMoniker": "Reservation\\MenuItemsForm.cs",
+              "ToolTip": "D:\\evaluationSystem\\Reservation\\Reservation\\MenuItemsForm.cs",
+              "RelativeToolTip": "Reservation\\MenuItemsForm.cs",
+              "ViewState": "AgIAAEcAAAAAAAAAAAAAwGEAAAAJAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-16T16:13:42.705Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "DeletedReservations.cs",
+              "DocumentMoniker": "D:\\evaluationSystem\\Reservation\\Reservation\\DeletedReservations.cs",
+              "RelativeDocumentMoniker": "Reservation\\DeletedReservations.cs",
+              "ToolTip": "D:\\evaluationSystem\\Reservation\\Reservation\\DeletedReservations.cs",
+              "RelativeToolTip": "Reservation\\DeletedReservations.cs",
+              "ViewState": "AgIAAJABAAAAAAAAAAAWwKoBAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-16T16:15:14.745Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "Navigation.cs [Design]",
+              "DocumentMoniker": "D:\\evaluationSystem\\Reservation\\Reservation\\Navigation.cs",
+              "RelativeDocumentMoniker": "Reservation\\Navigation.cs",
+              "ToolTip": "D:\\evaluationSystem\\Reservation\\Reservation\\Navigation.cs [Design]",
+              "RelativeToolTip": "Reservation\\Navigation.cs [Design]",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-01-26T19:52:51.844Z",
+              "EditorCaption": " [Design]"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "Home.cs [Design]",
+              "DocumentMoniker": "D:\\evaluationSystem\\Reservation\\Reservation\\Home.cs",
+              "RelativeDocumentMoniker": "Reservation\\Home.cs",
+              "ToolTip": "D:\\evaluationSystem\\Reservation\\Reservation\\Home.cs [Design]",
+              "RelativeToolTip": "Reservation\\Home.cs [Design]",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-01-26T19:52:40.858Z",
+              "EditorCaption": " [Design]"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "Navigation.cs",
+              "DocumentMoniker": "D:\\evaluationSystem\\Reservation\\Reservation\\Navigation.cs",
+              "RelativeDocumentMoniker": "Reservation\\Navigation.cs",
+              "ToolTip": "D:\\evaluationSystem\\Reservation\\Reservation\\Navigation.cs",
+              "RelativeToolTip": "Reservation\\Navigation.cs",
+              "ViewState": "AgIAAHsAAAAAAAAAAAAtwJMAAAAXAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-01-30T15:57:37.741Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "MenuItemsForm.Designer.cs",
+              "DocumentMoniker": "D:\\evaluationSystem\\Reservation\\Reservation\\MenuItemsForm.Designer.cs",
+              "RelativeDocumentMoniker": "Reservation\\MenuItemsForm.Designer.cs",
+              "ToolTip": "D:\\evaluationSystem\\Reservation\\Reservation\\MenuItemsForm.Designer.cs",
+              "RelativeToolTip": "Reservation\\MenuItemsForm.Designer.cs",
+              "ViewState": "AgIAAAkBAAAAAAAAAAAAwCoBAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-16T16:13:21.492Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "MenuItemsForm.cs [Design]",
+              "DocumentMoniker": "D:\\evaluationSystem\\Reservation\\Reservation\\MenuItemsForm.cs",
+              "RelativeDocumentMoniker": "Reservation\\MenuItemsForm.cs",
+              "ToolTip": "D:\\evaluationSystem\\Reservation\\Reservation\\MenuItemsForm.cs [Design]",
+              "RelativeToolTip": "Reservation\\MenuItemsForm.cs [Design]",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-16T16:13:18.762Z",
+              "EditorCaption": " [Design]"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{34e76e81-ee4a-11d0-ae2e-00a0c90fffc3}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "EditPayments.cs",
+              "DocumentMoniker": "D:\\evaluationSystem\\Reservation\\Reservation\\EditPayments.cs",
+              "RelativeDocumentMoniker": "Reservation\\EditPayments.cs",
+              "ToolTip": "D:\\evaluationSystem\\Reservation\\Reservation\\EditPayments.cs",
+              "RelativeToolTip": "Reservation\\EditPayments.cs",
+              "ViewState": "AgIAAPYAAAAAAAAAAAAjwA4BAAAZAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-02-24T12:11:55.64Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "EditPayments.cs [Design]",
+              "DocumentMoniker": "D:\\evaluationSystem\\Reservation\\Reservation\\EditPayments.cs",
+              "RelativeDocumentMoniker": "Reservation\\EditPayments.cs",
+              "ToolTip": "D:\\evaluationSystem\\Reservation\\Reservation\\EditPayments.cs [Design]",
+              "RelativeToolTip": "Reservation\\EditPayments.cs [Design]",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-01-27T11:20:10.054Z",
+              "EditorCaption": " [Design]"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "Home.cs",
+              "DocumentMoniker": "D:\\evaluationSystem\\Reservation\\Reservation\\Home.cs",
+              "RelativeDocumentMoniker": "Reservation\\Home.cs",
+              "ToolTip": "D:\\evaluationSystem\\Reservation\\Reservation\\Home.cs",
+              "RelativeToolTip": "Reservation\\Home.cs",
+              "ViewState": "AgIAAM0FAAAAAAAAAAAjwOoFAAAVAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-01-27T11:08:11.424Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 12,
+              "Title": "MonthlyReport.cs [Design]",
+              "DocumentMoniker": "D:\\evaluationSystem\\Reservation\\Reservation\\MonthlyReport.cs",
+              "RelativeDocumentMoniker": "Reservation\\MonthlyReport.cs",
+              "ToolTip": "D:\\evaluationSystem\\Reservation\\Reservation\\MonthlyReport.cs [Design]",
+              "RelativeToolTip": "Reservation\\MonthlyReport.cs [Design]",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-16T16:10:41.241Z",
+              "EditorCaption": " [Design]"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "DeletedReservations.cs [Design]",
+              "DocumentMoniker": "D:\\evaluationSystem\\Reservation\\Reservation\\DeletedReservations.cs",
+              "RelativeDocumentMoniker": "Reservation\\DeletedReservations.cs",
+              "ToolTip": "D:\\evaluationSystem\\Reservation\\Reservation\\DeletedReservations.cs [Design]",
+              "RelativeToolTip": "Reservation\\DeletedReservations.cs [Design]",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-03-10T22:07:10.477Z",
+              "EditorCaption": " [Design]"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 13,
+              "Title": "MonthlyReport.Designer.cs",
+              "DocumentMoniker": "D:\\evaluationSystem\\Reservation\\Reservation\\MonthlyReport.Designer.cs",
+              "RelativeDocumentMoniker": "Reservation\\MonthlyReport.Designer.cs",
+              "ToolTip": "D:\\evaluationSystem\\Reservation\\Reservation\\MonthlyReport.Designer.cs",
+              "RelativeToolTip": "Reservation\\MonthlyReport.Designer.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-16T16:10:38.788Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 14,
+              "Title": "Login.Designer.cs",
+              "DocumentMoniker": "D:\\evaluationSystem\\Reservation\\Reservation\\Login.Designer.cs",
+              "RelativeDocumentMoniker": "Reservation\\Login.Designer.cs",
+              "ToolTip": "D:\\evaluationSystem\\Reservation\\Reservation\\Login.Designer.cs",
+              "RelativeToolTip": "Reservation\\Login.Designer.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAOIAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-16T16:10:02.948Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 16,
+              "Title": "Navigation.Designer.cs",
+              "DocumentMoniker": "D:\\evaluationSystem\\Reservation\\Reservation\\Navigation.Designer.cs",
+              "RelativeDocumentMoniker": "Reservation\\Navigation.Designer.cs",
+              "ToolTip": "D:\\evaluationSystem\\Reservation\\Reservation\\Navigation.Designer.cs",
+              "RelativeToolTip": "Reservation\\Navigation.Designer.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAPwAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-16T16:09:54.965Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
+              "Title": "MonthlyReport.cs",
+              "DocumentMoniker": "D:\\evaluationSystem\\Reservation\\Reservation\\MonthlyReport.cs",
+              "RelativeDocumentMoniker": "Reservation\\MonthlyReport.cs",
+              "ToolTip": "D:\\evaluationSystem\\Reservation\\Reservation\\MonthlyReport.cs",
+              "RelativeToolTip": "Reservation\\MonthlyReport.cs",
+              "ViewState": "AgIAAHMAAAAAAAAAAAArwI0AAABbAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-01-27T11:24:56.305Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 23,
+              "Title": "EditCustomerData.cs [Design]",
+              "DocumentMoniker": "D:\\evaluationSystem\\Reservation\\Reservation\\EditCustomerData.cs",
+              "RelativeDocumentMoniker": "Reservation\\EditCustomerData.cs",
+              "ToolTip": "D:\\Github\\Reservation\\Reservation\\EditCustomerData.cs [Design]",
+              "RelativeToolTip": "..\\..\\Github\\Reservation\\Reservation\\EditCustomerData.cs [Design]",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-01-26T19:52:05.07Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 18,
+              "Title": "DatabaseConfig.cs",
+              "DocumentMoniker": "D:\\evaluationSystem\\Reservation\\Reservation\\DatabaseConfig.cs",
+              "RelativeDocumentMoniker": "Reservation\\DatabaseConfig.cs",
+              "ToolTip": "D:\\evaluationSystem\\Reservation\\Reservation\\DatabaseConfig.cs",
+              "RelativeToolTip": "Reservation\\DatabaseConfig.cs",
+              "ViewState": "AgIAAAQAAAAAAAAAAAAiwBQAAABLAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-01-26T19:56:23.436Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 19,
+              "Title": "Program.cs",
+              "DocumentMoniker": "D:\\evaluationSystem\\Reservation\\Reservation\\Program.cs",
+              "RelativeDocumentMoniker": "Reservation\\Program.cs",
+              "ToolTip": "D:\\evaluationSystem\\Reservation\\Reservation\\Program.cs",
+              "RelativeToolTip": "Reservation\\Program.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-16T15:09:30.265Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 22,
+              "Title": "EditCustomerData.cs",
+              "DocumentMoniker": "D:\\evaluationSystem\\Reservation\\Reservation\\EditCustomerData.cs",
+              "RelativeDocumentMoniker": "Reservation\\EditCustomerData.cs",
+              "ToolTip": "D:\\evaluationSystem\\Reservation\\Reservation\\EditCustomerData.cs",
+              "RelativeToolTip": "Reservation\\EditCustomerData.cs",
+              "ViewState": "AgIAAFAAAAAAAAAAAAAxwGIAAABkAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-02-24T12:12:15.209Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 15,
+              "Title": "Login.cs [Design]",
+              "DocumentMoniker": "D:\\evaluationSystem\\Reservation\\Reservation\\Login.cs",
+              "RelativeDocumentMoniker": "Reservation\\Login.cs",
+              "ToolTip": "D:\\evaluationSystem\\Reservation\\Reservation\\Login.cs [Design]",
+              "RelativeToolTip": "Reservation\\Login.cs [Design]",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-01-26T19:39:28.87Z",
+              "EditorCaption": " [Design]"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 20,
+              "Title": "Editorder.cs",
+              "DocumentMoniker": "D:\\evaluationSystem\\Reservation\\Reservation\\Editorder.cs",
+              "RelativeDocumentMoniker": "Reservation\\Editorder.cs",
+              "ToolTip": "D:\\evaluationSystem\\Reservation\\Reservation\\Editorder.cs",
+              "RelativeToolTip": "Reservation\\Editorder.cs",
+              "ViewState": "AgIAAFkAAAAAAAAAAAAmwF4AAAA1AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-01-29T12:00:34.554Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 17,
+              "Title": "Home.Designer.cs",
+              "DocumentMoniker": "D:\\evaluationSystem\\Reservation\\Reservation\\Home.Designer.cs",
+              "RelativeDocumentMoniker": "Reservation\\Home.Designer.cs",
+              "ToolTip": "D:\\evaluationSystem\\Reservation\\Reservation\\Home.Designer.cs",
+              "RelativeToolTip": "Reservation\\Home.Designer.cs",
+              "ViewState": "AgIAAFYDAAAAAAAAAAAAwH8DAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-02-17T11:12:31.688Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 21,
+              "Title": "Editorder.cs [Design]",
+              "DocumentMoniker": "D:\\evaluationSystem\\Reservation\\Reservation\\Editorder.cs",
+              "RelativeDocumentMoniker": "Reservation\\Editorder.cs",
+              "ToolTip": "D:\\evaluationSystem\\Reservation\\Reservation\\Editorder.cs [Design]",
+              "RelativeToolTip": "Reservation\\Editorder.cs [Design]",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-01-26T19:52:11.52Z",
+              "EditorCaption": " [Design]"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 24,
+              "Title": "SingleReservationEdit.cs",
+              "DocumentMoniker": "D:\\evaluationSystem\\Reservation\\Reservation\\SingleReservationEdit.cs",
+              "RelativeDocumentMoniker": "Reservation\\SingleReservationEdit.cs",
+              "ToolTip": "D:\\evaluationSystem\\Reservation\\Reservation\\SingleReservationEdit.cs",
+              "RelativeToolTip": "Reservation\\SingleReservationEdit.cs",
+              "ViewState": "AgIAAHYCAAAAAAAAAAAwwOQCAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-03-06T14:45:28.073Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 25,
+              "Title": "SingleReservationEdit.cs [Design]",
+              "DocumentMoniker": "D:\\evaluationSystem\\Reservation\\Reservation\\SingleReservationEdit.cs",
+              "RelativeDocumentMoniker": "Reservation\\SingleReservationEdit.cs",
+              "ToolTip": "D:\\Github\\Reservation\\Reservation\\SingleReservationEdit.cs [Design]",
+              "RelativeToolTip": "..\\..\\Github\\Reservation\\Reservation\\SingleReservationEdit.cs [Design]",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-03-06T14:45:26.619Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 27,
+              "Title": "MonthlySpotCheck.cs [Design]",
+              "DocumentMoniker": "D:\\evaluationSystem\\Reservation\\Reservation\\MonthlySpotCheck.cs",
+              "RelativeDocumentMoniker": "Reservation\\MonthlySpotCheck.cs",
+              "ToolTip": "D:\\Github\\Reservation\\Reservation\\MonthlySpotCheck.cs [Design]",
+              "RelativeToolTip": "..\\..\\Github\\Reservation\\Reservation\\MonthlySpotCheck.cs [Design]",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-01-30T12:28:12.254Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 28,
+              "Title": "EditReservation.cs [Design]",
+              "DocumentMoniker": "D:\\evaluationSystem\\Reservation\\Reservation\\EditReservation.cs",
+              "RelativeDocumentMoniker": "Reservation\\EditReservation.cs",
+              "ToolTip": "D:\\Github\\Reservation\\Reservation\\EditReservation.cs [Design]",
+              "RelativeToolTip": "..\\..\\Github\\Reservation\\Reservation\\EditReservation.cs [Design]",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-01-26T19:52:30.721Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 26,
+              "Title": "MonthlySpotCheck.cs",
+              "DocumentMoniker": "D:\\evaluationSystem\\Reservation\\Reservation\\MonthlySpotCheck.cs",
+              "RelativeDocumentMoniker": "Reservation\\MonthlySpotCheck.cs",
+              "ToolTip": "D:\\evaluationSystem\\Reservation\\Reservation\\MonthlySpotCheck.cs",
+              "RelativeToolTip": "Reservation\\MonthlySpotCheck.cs",
+              "ViewState": "AgIAAIIDAAAAAAAAAAAgwJgDAAAJAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-01-30T12:29:05.185Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 29,
+              "Title": "EditReservation.cs",
+              "DocumentMoniker": "D:\\evaluationSystem\\Reservation\\Reservation\\EditReservation.cs",
+              "RelativeDocumentMoniker": "Reservation\\EditReservation.cs",
+              "ToolTip": "D:\\evaluationSystem\\Reservation\\Reservation\\EditReservation.cs",
+              "RelativeToolTip": "Reservation\\EditReservation.cs",
+              "ViewState": "AgIAAC8CAAAAAAAAAAAgwGICAAAMAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-01-29T12:00:27.428Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 31,
+              "Title": "ReservationsReport.cs [Design]",
+              "DocumentMoniker": "D:\\evaluationSystem\\Reservation\\Reservation\\ReservationsReport.cs",
+              "RelativeDocumentMoniker": "Reservation\\ReservationsReport.cs",
+              "ToolTip": "D:\\Github\\Reservation\\Reservation\\ReservationsReport.cs [Design]",
+              "RelativeToolTip": "..\\..\\Github\\Reservation\\Reservation\\ReservationsReport.cs [Design]",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-01-26T19:52:56.98Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 33,
+              "Title": "SingleOrderEdit.cs [Design]",
+              "DocumentMoniker": "D:\\evaluationSystem\\Reservation\\Reservation\\SingleOrderEdit.cs",
+              "RelativeDocumentMoniker": "Reservation\\SingleOrderEdit.cs",
+              "ToolTip": "D:\\Github\\Reservation\\Reservation\\SingleOrderEdit.cs [Design]",
+              "RelativeToolTip": "..\\..\\Github\\Reservation\\Reservation\\SingleOrderEdit.cs [Design]",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-03-06T14:45:08.706Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 32,
+              "Title": "SingleOrderEdit.cs",
+              "DocumentMoniker": "D:\\evaluationSystem\\Reservation\\Reservation\\SingleOrderEdit.cs",
+              "RelativeDocumentMoniker": "Reservation\\SingleOrderEdit.cs",
+              "ToolTip": "D:\\evaluationSystem\\Reservation\\Reservation\\SingleOrderEdit.cs",
+              "RelativeToolTip": "Reservation\\SingleOrderEdit.cs",
+              "ViewState": "AgIAAJ8BAAAAAAAAAAAIwI8BAAAMAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-03-06T14:45:10.499Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 30,
+              "Title": "GlobalUser.cs",
+              "DocumentMoniker": "D:\\evaluationSystem\\Reservation\\Reservation\\GlobalUser.cs",
+              "RelativeDocumentMoniker": "Reservation\\GlobalUser.cs",
+              "ToolTip": "D:\\evaluationSystem\\Reservation\\Reservation\\GlobalUser.cs",
+              "RelativeToolTip": "Reservation\\GlobalUser.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA8AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-02-17T17:15:59.781Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 34,
+              "Title": "ReservationsReport.cs",
+              "DocumentMoniker": "D:\\evaluationSystem\\Reservation\\Reservation\\ReservationsReport.cs",
+              "RelativeDocumentMoniker": "Reservation\\ReservationsReport.cs",
+              "ToolTip": "D:\\evaluationSystem\\Reservation\\Reservation\\ReservationsReport.cs",
+              "RelativeToolTip": "Reservation\\ReservationsReport.cs",
+              "ViewState": "AgIAAP0FAAAAAAAAAAAUwBQGAAARAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-01-27T11:08:40.495Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 35,
+              "Title": "AddPayment.cs",
+              "DocumentMoniker": "D:\\evaluationSystem\\Reservation\\Reservation\\AddPayment.cs",
+              "RelativeDocumentMoniker": "Reservation\\AddPayment.cs",
+              "ToolTip": "D:\\evaluationSystem\\Reservation\\Reservation\\AddPayment.cs",
+              "RelativeToolTip": "Reservation\\AddPayment.cs",
+              "ViewState": "AgIAALcCAAAAAAAAAAAwwM4CAAANAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-01-27T10:53:13.431Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 36,
+              "Title": "AddPayment.cs [Design]",
+              "DocumentMoniker": "D:\\evaluationSystem\\Reservation\\Reservation\\AddPayment.cs",
+              "RelativeDocumentMoniker": "Reservation\\AddPayment.cs",
+              "ToolTip": "D:\\Github\\Reservation\\Reservation\\AddPayment.cs [Design]",
+              "RelativeToolTip": "..\\..\\Github\\Reservation\\Reservation\\AddPayment.cs [Design]",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-01-27T10:53:10.349Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 37,
+              "Title": "Addorders.cs",
+              "DocumentMoniker": "D:\\evaluationSystem\\Reservation\\Reservation\\Addorders.cs",
+              "RelativeDocumentMoniker": "Reservation\\Addorders.cs",
+              "ToolTip": "D:\\evaluationSystem\\Reservation\\Reservation\\Addorders.cs",
+              "RelativeToolTip": "Reservation\\Addorders.cs",
+              "ViewState": "AgIAAPQFAAAAAAAAAAAwwAIGAABgAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-01-27T10:39:32.107Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 38,
+              "Title": "Reservation",
+              "DocumentMoniker": "D:\\evaluationSystem\\Reservation\\Reservation\\Reservation.csproj",
+              "RelativeDocumentMoniker": "Reservation\\Reservation.csproj",
+              "ToolTip": "D:\\evaluationSystem\\Reservation\\Reservation\\Reservation.csproj",
+              "RelativeToolTip": "Reservation\\Reservation.csproj",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2025-02-16T20:21:12.994Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 40,
+              "Title": "SignUp.cs",
+              "DocumentMoniker": "D:\\evaluationSystem\\Reservation\\Reservation\\SignUp.cs",
+              "RelativeDocumentMoniker": "Reservation\\SignUp.cs",
+              "ToolTip": "D:\\evaluationSystem\\Reservation\\Reservation\\SignUp.cs",
+              "RelativeToolTip": "Reservation\\SignUp.cs",
+              "ViewState": "AgIAAFwAAAAAAAAAAAASwIAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-02-20T11:16:24.964Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 39,
+              "Title": "SignUp.cs [Design]",
+              "DocumentMoniker": "D:\\evaluationSystem\\Reservation\\Reservation\\SignUp.cs",
+              "RelativeDocumentMoniker": "Reservation\\SignUp.cs",
+              "ToolTip": "D:\\Github\\Reservation\\Reservation\\SignUp.cs [Design]",
+              "RelativeToolTip": "..\\..\\Github\\Reservation\\Reservation\\SignUp.cs [Design]",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-02-20T11:16:00.214Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 41,
+              "Title": "SignUp.Designer.cs",
+              "DocumentMoniker": "D:\\evaluationSystem\\Reservation\\Reservation\\SignUp.Designer.cs",
+              "RelativeDocumentMoniker": "Reservation\\SignUp.Designer.cs",
+              "ToolTip": "D:\\evaluationSystem\\Reservation\\Reservation\\SignUp.Designer.cs",
+              "RelativeToolTip": "Reservation\\SignUp.Designer.cs",
+              "ViewState": "AgIAAAIAAAAAAAAAAAA1wAoBAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-02-20T11:16:09.315Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 42,
+              "Title": "Login.cs",
+              "DocumentMoniker": "D:\\evaluationSystem\\Reservation\\Reservation\\Login.cs",
+              "RelativeDocumentMoniker": "Reservation\\Login.cs",
+              "ToolTip": "D:\\evaluationSystem\\Reservation\\Reservation\\Login.cs",
+              "RelativeToolTip": "Reservation\\Login.cs",
+              "ViewState": "AgIAAJgAAAAAAAAAAAAAwKoAAAAaAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-02-17T18:51:34.238Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 43,
+              "Title": "UserLog.cs",
+              "DocumentMoniker": "D:\\evaluationSystem\\Reservation\\Reservation\\UserLog.cs",
+              "RelativeDocumentMoniker": "Reservation\\UserLog.cs",
+              "ToolTip": "D:\\evaluationSystem\\Reservation\\Reservation\\UserLog.cs",
+              "RelativeToolTip": "Reservation\\UserLog.cs",
+              "ViewState": "AgIAAK4BAAAAAAAAAAAIwL4BAABDAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-01-27T11:24:26.771Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 44,
+              "Title": "UserLog.cs [Design]",
+              "DocumentMoniker": "D:\\evaluationSystem\\Reservation\\Reservation\\UserLog.cs",
+              "RelativeDocumentMoniker": "Reservation\\UserLog.cs",
+              "ToolTip": "D:\\Github\\Reservation\\Reservation\\UserLog.cs [Design]",
+              "RelativeToolTip": "..\\..\\Github\\Reservation\\Reservation\\UserLog.cs [Design]",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-01-26T19:53:13.625Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 45,
+              "Title": "DailyReports.cs [Design]",
+              "DocumentMoniker": "D:\\evaluationSystem\\Reservation\\Reservation\\DailyReports.cs",
+              "RelativeDocumentMoniker": "Reservation\\DailyReports.cs",
+              "ToolTip": "D:\\Github\\Reservation\\Reservation\\DailyReports.cs [Design]",
+              "RelativeToolTip": "..\\..\\Github\\Reservation\\Reservation\\DailyReports.cs [Design]",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-01-26T19:51:53.142Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 46,
+              "Title": "DailyReports.cs",
+              "DocumentMoniker": "D:\\evaluationSystem\\Reservation\\Reservation\\DailyReports.cs",
+              "RelativeDocumentMoniker": "Reservation\\DailyReports.cs",
+              "ToolTip": "D:\\evaluationSystem\\Reservation\\Reservation\\DailyReports.cs",
+              "RelativeToolTip": "Reservation\\DailyReports.cs",
+              "ViewState": "AgIAAKkBAAAAAAAAAAAMwMcBAAAZAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-01-27T11:24:59.902Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 47,
+              "Title": "MonthlySpotCheck.Designer.cs",
+              "DocumentMoniker": "D:\\evaluationSystem\\Reservation\\Reservation\\MonthlySpotCheck.Designer.cs",
+              "RelativeDocumentMoniker": "Reservation\\MonthlySpotCheck.Designer.cs",
+              "ToolTip": "D:\\evaluationSystem\\Reservation\\Reservation\\MonthlySpotCheck.Designer.cs",
+              "RelativeToolTip": "Reservation\\MonthlySpotCheck.Designer.cs",
+              "ViewState": "AgIAADEBAAAAAAAAAAAMwEsBAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-01-30T12:32:08.378Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 48,
+              "Title": "Resources.resx",
+              "DocumentMoniker": "D:\\evaluationSystem\\Reservation\\Reservation\\Properties\\Resources.resx",
+              "RelativeDocumentMoniker": "Reservation\\Properties\\Resources.resx",
+              "ToolTip": "D:\\evaluationSystem\\Reservation\\Reservation\\Properties\\Resources.resx",
+              "RelativeToolTip": "Reservation\\Properties\\Resources.resx",
+              "ViewState": "AgIAAGMAAAAAAAAAAAAgwIEAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001005|",
+              "WhenOpened": "2025-01-27T11:11:40.838Z",
+              "EditorCaption": ""
+            }
+          ]
+        },
+        {
+          "DockedWidth": 315,
+          "SelectedChildIndex": -1,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{b1e99781-ab81-11d0-b683-00aa00a3ee26}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
