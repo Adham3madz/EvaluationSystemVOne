@@ -5,441 +5,627 @@
 <script src="{{ url_for('static', filename='js/chart.min.js') }}"></script>
 
 <style>
-    /* === 1. Base Reset & Glass Background === */
-    * {
-        box-sizing: border-box;
+  /* === Premium Glassmorphism Dashboard === */
+
+  :root {
+    --glass-bg: rgba(15, 23, 42, 0.6);
+    /* Darker glass for better contrast against wallpaper */
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --glass-highlight: rgba(255, 255, 255, 0.05);
+    --accent-cyan: #00d2ff;
+    --accent-blue: #3a7bd5;
+    --text-primary: #ffffff;
+    --text-secondary: #94a3b8;
+    --card-radius: 24px;
+  }
+
+  /* Reset & Typography */
+  .dashboard-container {
+    padding: 20px;
+    direction: rtl;
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    font-family: 'Cairo', sans-serif;
+    color: var(--text-primary);
+    animation: fadeIn 0.8s ease-out;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
     }
 
-    body {
-        /* A soft gradient background is required for Glassmorphism to work */
-        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-        min-height: 100vh;
+    to {
+      opacity: 1;
+      transform: translateY(0);
     }
+  }
 
-    .dashboard-container {
-        padding: 25px;
-        direction: rtl;
-        width: 100%;
-        max-width: 1200px;
-        margin: 0 auto;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        color: #efefef; /* Dark text for contrast */
-    }
+  /* === Header Section === */
+  .dashboard-header {
+    background: rgba(15, 23, 42, 0.7);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--card-radius);
+    padding: 30px;
+    margin-bottom: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+    position: relative;
+    overflow: hidden;
+  }
 
-    /* === 2. Header Style (Glass Accent) === */
-    .dashboard-header {
-        /* Dark Glass Effect */
-        background: rgba(129, 163, 197, 0.85); 
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        color: #ffffff;
-        padding: 30px;
-        border-radius: 16px;
-        text-align: center;
-        margin-bottom: 35px;
-        border: 1px solid rgba(222, 217, 217, 0.2);
-        box-shadow: 0 8px 32px 0 rgba(236, 236, 236, 0.15);
-    }
-    
-    .dashboard-header h2 { margin: 0 0 10px 0; font-size: 2rem; font-weight: 700; }
-    .dashboard-header p { margin: 0; opacity: 0.8; font-size: 1.1rem; }
+  /* Glowing accent line */
+  .dashboard-header::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent-cyan), transparent);
+  }
 
-    /* === 3. Glass Panel Card (The Core Style) === */
-    .glass-panel {
-        /* Translucent White */
-        background: rgba(255, 255, 255, 0.65);
-        
-        /* The Blur Magic */
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        
-        /* Border and Shadow for Depth */
-        border: 1px solid rgba(255, 255, 255, 0.6);
-        border-radius: 16px;
-        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
-        
-        padding: 25px;
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-    
-    .glass-panel:hover {
-        transform: translateY(-5px);
-        background: rgba(255, 255, 255, 0.8); /* Slightly more opaque on hover */
-        box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.12);
-        border-color: #fff;
-    }
+  .header-content h2 {
+    margin: 0;
+    font-size: 2rem;
+    font-weight: 800;
+    color: #fff;
+  }
 
-    /* === 4. Stats Grid === */
-    .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-        gap: 25px;
-        margin-bottom: 40px;
-    }
+  .header-content h2 .gradient-text {
+    background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
 
-    .stat-card {
-        flex-direction: row;
-        align-items: center;
-        justify-content: space-between;
-    }
+  .header-content p {
+    margin: 5px 0 0 0;
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+  }
 
-    .stat-icon { 
-        font-size: 2.8rem; 
-        background: rgba(255,255,255,0.5);
-        border-radius: 50%;
-        width: 70px;
-        height: 70px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-    }
-    
-    .stat-info { text-align: left; }
-    .stat-info h5 { margin: 0 0 5px 0; font-size: 0.95rem; color: #5d6d7e; font-weight: 600; }
-    .stat-info p { margin: 0; font-size: 1.8rem; font-weight: 800; color: #2c3e50; }
+  .date-badge {
+    background: rgba(0, 210, 255, 0.1);
+    border: 1px solid rgba(0, 210, 255, 0.3);
+    color: var(--accent-cyan);
+    padding: 10px 20px;
+    border-radius: 50px;
+    font-weight: bold;
+    backdrop-filter: blur(5px);
+  }
 
-    /* === 5. Typography & Titles === */
-    .section-title {
-        font-size: 1.4rem;
-        font-weight: 800;
-        color: #fdfeff;
-        margin: 40px 0 20px 0;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        text-shadow: 0 1px 2px rgba(255,255,255,0.8);
-    }
+  /* === Stats Grid === */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 25px;
+    margin-bottom: 40px;
+  }
 
-    .panel-title {
-        font-size: 1.1rem;
-        color: #34495e;
-        font-weight: 700;
-        margin-bottom: 20px;
-        padding-bottom: 12px;
-        border-bottom: 2px solid rgba(0,0,0,0.05);
-        text-align: center;
-    }
+  .glass-stat-card {
+    background: rgba(30, 41, 59, 0.7);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    padding: 25px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+  }
 
-    /* === 6. Grids === */
-    .charts-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-        gap: 25px;
-        margin-bottom: 40px;
-    }
+  .glass-stat-card:hover {
+    transform: translateY(-5px);
+    background: rgba(30, 41, 59, 0.9);
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+  }
 
-    .tables-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(480px, 1fr));
-        gap: 25px;
-        margin-bottom: 40px;
-    }
+  /* Hover Glow Effect */
+  .glass-stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.03), transparent);
+    transform: translateX(-100%);
+    transition: 0.5s;
+  }
 
-    .chart-container {
-        position: relative;
-        height: 300px;
-        width: 100%;
-    }
+  .glass-stat-card:hover::before {
+    transform: translateX(100%);
+  }
 
-    /* === 7. Tables (Glass Style) === */
-    .table-responsive {
-        overflow-x: auto;
-        border-radius: 8px;
-    }
+  .stat-icon-box {
+    width: 60px;
+    height: 60px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    background: rgba(255, 255, 255, 0.05);
+    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    color: #fff;
+    /* Ensure emoji color is visible if not overridden */
+  }
 
-    .data-table {
-        width: 100%;
-        border-collapse: separate;
-        border-spacing: 0;
-        font-size: 0.95rem;
-    }
-    
-    .data-table th {
-        background-color: rgba(44, 62, 80, 0.08); /* Transparent dark header */
-        color: #2c3e50;
-        font-weight: 700;
-        padding: 15px;
-        text-align: right;
-    }
-    
-    .data-table td {
-        padding: 12px 15px;
-        border-bottom: 1px solid rgba(0,0,0,0.05);
-        color: #555;
-        background: transparent; /* Allows glass to show through */
-        transition: background 0.2s;
-    }
-    
-    .data-table tr:last-child td { border-bottom: none; }
-    
-    .data-table tr:hover td { 
-        background-color: rgba(255,255,255,0.4); /* Highlight row on hover */
-    }
+  .stat-info h5 {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
 
-    /* === 8. Badges === */
-    .badge {
-        padding: 6px 12px;
-        border-radius: 20px; /* Rounder badges for glass look */
-        font-size: 0.8rem;
-        font-weight: 700;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-    }
-    .badge-good { background: rgba(212, 237, 218, 0.8); color: #155724; border: 1px solid #c3e6cb; }
-    .badge-neutral { background: rgba(226, 227, 229, 0.8); color: #383d41; border: 1px solid #d6d8db; }
-    .badge-warn { background: rgba(255, 243, 205, 0.8); color: #856404; border: 1px solid #ffeeba; }
+  .stat-info p {
+    margin: 5px 0 0 0;
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: #fff;
+  }
 
-    /* === Mobile Fixes === */
-    @media (max-width: 768px) {
-        .charts-grid, .tables-grid { grid-template-columns: 1fr; }
-        .dashboard-container { padding: 15px; }
-        .glass-panel { padding: 15px; }
+  /* === Main Content Grid === */
+  .content-grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 25px;
+    margin-bottom: 40px;
+  }
+
+  .col-span-8 {
+    grid-column: span 8;
+  }
+
+  .col-span-4 {
+    grid-column: span 4;
+  }
+
+  .col-span-6 {
+    grid-column: span 6;
+  }
+
+  .col-span-12 {
+    grid-column: span 12;
+  }
+
+  /* === Glass Panels === */
+  .glass-panel {
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--card-radius);
+    padding: 25px;
+    height: 100%;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  .panel-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .chart-container {
+    position: relative;
+    flex-grow: 1;
+    min-height: 300px;
+    width: 100%;
+  }
+
+  /* === Tables === */
+  .custom-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 8px;
+    /* Spacing between rows */
+    font-size: 0.95rem;
+  }
+
+  .custom-table th {
+    text-align: right;
+    padding: 15px;
+    color: var(--text-secondary);
+    font-weight: 600;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .custom-table td {
+    background: rgba(255, 255, 255, 0.03);
+    padding: 16px;
+    color: #e2e8f0;
+    border: 1px solid transparent;
+    transition: all 0.2s;
+  }
+
+  .custom-table td:first-child {
+    border-radius: 0 12px 12px 0;
+  }
+
+  .custom-table td:last-child {
+    border-radius: 12px 0 0 12px;
+  }
+
+  .custom-table tr:hover td {
+    background: rgba(255, 255, 255, 0.08);
+    transform: scale(1.01);
+  }
+
+  .user-avatar {
+    width: 32px;
+    height: 32px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    margin-left: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    color: white;
+  }
+
+  /* Badges */
+  .status-badge {
+    padding: 6px 12px;
+    border-radius: 30px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    display: inline-block;
+  }
+
+  .badge-success {
+    background: rgba(16, 185, 129, 0.2);
+    color: #34d399;
+    border: 1px solid rgba(16, 185, 129, 0.2);
+  }
+
+  .badge-warning {
+    background: rgba(245, 158, 11, 0.2);
+    color: #fbbf24;
+    border: 1px solid rgba(245, 158, 11, 0.2);
+  }
+
+  .badge-info {
+    background: rgba(59, 130, 246, 0.2);
+    color: #60a5fa;
+    border: 1px solid rgba(59, 130, 246, 0.2);
+  }
+
+  /* Responsive */
+  @media (max-width: 1024px) {
+
+    .col-span-8,
+    .col-span-4,
+    .col-span-6 {
+      grid-column: span 12;
     }
+  }
 </style>
 
 <div class="dashboard-container">
-  
+
+  <!-- Header -->
   <div class="dashboard-header">
-    <h2>👋 مرحباً، {{ name or username }}</h2>
-    <p>نظام إدارة الموارد البشرية والتقييم</p>
+    <div class="header-content">
+      <h2><span class="gradient-text">مرحباً، {{ name or username }}</span> 👋</h2>
+      <p>نظرة عامة على أداء الموارد البشرية والتقييمات اليوم.</p>
+    </div>
+    <div class="date-badge">
+      📅 {{ "now" | date_format_arabic }}
+    </div>
   </div>
 
+  <!-- Stats Cards -->
   <div class="stats-grid">
-    <div class="glass-panel stat-card">
-      <div class="stat-icon">👥</div>
+    <div class="glass-stat-card">
+      <div class="stat-icon-box" style="color: #60a5fa;">👥</div>
       <div class="stat-info">
-        <h5>المستخدمين</h5>
+        <h5>إجمالي المستخدمين</h5>
         <p>{{ users_count }}</p>
       </div>
     </div>
-    <div class="glass-panel stat-card">
-      <div class="stat-icon">👔</div>
+    <div class="glass-stat-card">
+      <div class="stat-icon-box" style="color: #34d399;">👔</div>
       <div class="stat-info">
-        <h5>الموظفين</h5>
+        <h5>الموظفين النشطين</h5>
         <p>{{ employees_count }}</p>
       </div>
     </div>
-    <div class="glass-panel stat-card">
-      <div class="stat-icon">📝</div>
+    <div class="glass-stat-card">
+      <div class="stat-icon-box" style="color: #ef4444;">📂</div>
       <div class="stat-info">
-        <h5>التقييمات</h5>
+        <h5>الأرشيف (غير نشط)</h5>
+        <p>{{ archived_count }}</p>
+      </div>
+    </div>
+    <div class="glass-stat-card">
+      <div class="stat-icon-box" style="color: #f472b6;">📝</div>
+      <div class="stat-info">
+        <h5>التقييمات المنجزة</h5>
         <p>{{ evals_count }}</p>
       </div>
     </div>
-    <div class="glass-panel stat-card">
-      <div class="stat-icon">⭐</div>
+    <div class="glass-stat-card">
+      <div class="stat-icon-box" style="color: #fbbf24;">⭐</div>
       <div class="stat-info">
-        <h5>متوسط الأداء</h5>
+        <h5>متوسط الأداء العام</h5>
         <p>{{ "%.1f"|format(avg_score) if avg_score is not none else '0.0' }}%</p>
       </div>
     </div>
   </div>
 
-  <div class="section-title">📊 الرسوم البيانية</div>
-  <div class="charts-grid">
-    <div class="glass-panel">
-      <div class="panel-title">توزيع التقديرات</div>
-      <div class="chart-container">
-        <canvas id="ratingsChart"></canvas>
+  <!-- Charts Section -->
+  <div class="content-grid">
+
+    <!-- Pie Chart -->
+    <div class="col-span-4">
+      <div class="glass-panel">
+        <div class="panel-header">
+          <div class="panel-title">📊 توزيع التقديرات</div>
+        </div>
+        <div class="chart-container">
+          <canvas id="ratingsChart"></canvas>
+        </div>
       </div>
     </div>
-    <div class="glass-panel">
-      <div class="panel-title">أنواع التقييمات</div>
-      <div class="chart-container">
-        <canvas id="typesChart"></canvas>
+
+    <!-- Bar Chart -->
+    <div class="col-span-8">
+      <div class="glass-panel">
+        <div class="panel-header">
+          <div class="panel-title">📈 أنواع التقييمات</div>
+        </div>
+        <div class="chart-container">
+          <canvas id="typesChart"></canvas>
+        </div>
       </div>
     </div>
+
   </div>
 
-  <div class="section-title">🏆 الأداء والنشاط</div>
-  <div class="tables-grid">
-    
-    <div class="glass-panel">
-      <div class="panel-title">🌟 الأفضل أداءً (آخر 30 يوم)</div>
-      <div class="table-responsive">
-        <table class="data-table">
+  <!-- Tables Section -->
+  <div class="content-grid">
+
+    <!-- Top Performers -->
+    <div class="col-span-6">
+      <div class="glass-panel">
+        <div class="panel-header">
+          <div class="panel-title">🌟 الأفضل أداءً (آخر 30 يوم)</div>
+        </div>
+        <div style="overflow-x: auto;">
+          <table class="custom-table">
             <thead>
-            <tr>
+              <tr>
                 <th>الموظف</th>
                 <th>النتيجة</th>
                 <th>التقدير</th>
-            </tr>
+              </tr>
             </thead>
             <tbody>
-            {% for performer in top_performers %}
-            <tr>
-                <td style="font-weight: 600;">{{ performer.EmployeeName }}</td>
-                <td style="font-weight: 800; color: #27ae60;">{{ "%.1f"|format(performer.OverallScore) }}%</td>
+              {% for performer in top_performers %}
+              <tr>
                 <td>
-                    <span class="badge badge-good">{{ performer.OverallRating }}</span>
+                  <div style="display: flex; align-items: center;">
+                    <span class="user-avatar">{{ performer.EmployeeName[:1] }}</span>
+                    <span style="margin-right: 10px; font-weight: bold;">{{ performer.EmployeeName }}</span>
+                  </div>
                 </td>
-            </tr>
-            {% else %}
-            <tr><td colspan="3" style="text-align: center; padding: 20px;">لا توجد بيانات حديثة</td></tr>
-            {% endfor %}
+                <td style="color: #34d399; font-weight: bold;">{{ "%.1f"|format(performer.OverallScore) }}%</td>
+                <td><span class="status-badge badge-success">{{ performer.OverallRating }}</span></td>
+              </tr>
+              {% else %}
+              <tr>
+                <td colspan="3" style="text-align: center; color: var(--text-secondary);">لا توجد بيانات متاحة</td>
+              </tr>
+              {% endfor %}
             </tbody>
-        </table>
+          </table>
+        </div>
       </div>
     </div>
 
-    <div class="glass-panel">
-      <div class="panel-title">🕒 آخر التقييمات</div>
-      <div class="table-responsive">
-        <table class="data-table">
+    <!-- Recent Evaluations -->
+    <div class="col-span-6">
+      <div class="glass-panel">
+        <div class="panel-header">
+          <div class="panel-title">🕒 آخر النشاطات</div>
+        </div>
+        <div style="overflow-x: auto;">
+          <table class="custom-table">
             <thead>
-            <tr>
+              <tr>
                 <th>الموظف</th>
                 <th>المقيم</th>
                 <th>النوع</th>
                 <th>النتيجة</th>
-            </tr>
+              </tr>
             </thead>
             <tbody>
-            {% for eval in recent_evaluations %}
-            <tr>
+              {% for eval in recent_evaluations %}
+              <tr>
                 <td style="font-weight: 600;">{{ eval.EmployeeName }}</td>
-                <td style="font-size: 0.9rem; color: #7f8c8d;">{{ eval.EvaluatorName }}</td>
-                <td><span class="badge badge-neutral">{{ eval.EvaluationType }}</span></td>
-                <td style="font-weight: 800; color: #2980b9;">{{ "%.1f"|format(eval.OverallScore) }}%</td>
-            </tr>
-            {% else %}
-            <tr><td colspan="4" style="text-align: center; padding: 20px;">لا توجد تقييمات</td></tr>
-            {% endfor %}
+                <td style="color: var(--text-secondary);">{{ eval.EvaluatorName }}</td>
+                <td><span class="status-badge badge-info">{{ eval.EvaluationType }}</span></td>
+                <td style="color: #60a5fa; font-weight: bold;">{{ "%.1f"|format(eval.OverallScore) }}%</td>
+              </tr>
+              {% else %}
+              <tr>
+                <td colspan="4" style="text-align: center; color: var(--text-secondary);">لا توجد نشاطات حديثة</td>
+              </tr>
+              {% endfor %}
             </tbody>
-        </table>
+          </table>
+        </div>
       </div>
     </div>
 
   </div>
 
   {% if is_admin %}
-  <div class="section-title">🛡️ لوحة الإدارة</div>
-  <div class="tables-grid">
-      
-      <div class="glass-panel">
-        <div class="panel-title">💤 مدراء بلا نشاط</div>
-        <div class="table-responsive">
-            <table class="data-table">
-            <thead>
-                <tr>
-                <th>المدير</th>
-                <th>القسم</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for manager in inactive_managers %}
-                <tr>
-                <td style="font-weight: 600;">{{ manager.Name }}</td>
-                <td>{{ manager.DEPTNAME }}</td>
-                </tr>
-                {% else %}
-                <tr><td colspan="2" style="text-align: center; color: green; font-weight: bold;">الجميع نشط! ✅</td></tr>
-                {% endfor %}
-            </tbody>
-            </table>
+  <div class="content-grid">
+    <div class="col-span-12">
+      <div class="glass-panel" style="background: rgba(124, 58, 237, 0.1); border-color: rgba(139, 92, 246, 0.3);">
+        <div class="panel-header">
+          <div class="panel-title">🛡️ لوحة نشاط المدراء</div>
+        </div>
+        <div id="managers-content">
+          {% include 'partials/managers_table.html' %}
         </div>
       </div>
-  
-      <div class="glass-panel">
-        <div class="panel-title">🔥 الأكثر تقييماً</div>
-        <div class="table-responsive">
-            <table class="data-table">
-            <thead>
-                <tr>
-                <th>المقيم</th>
-                <th>عدد التقييمات</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for evaluator in active_evaluators %}
-                <tr>
-                <td style="font-weight: 600;">{{ evaluator.EvaluatorName }}</td>
-                <td style="text-align: center; font-weight: bold; color: #2c3e50;">{{ evaluator[1] }}</td> 
-                </tr>
-                {% else %}
-                <tr><td colspan="2" style="text-align: center;">لا توجد بيانات</td></tr>
-                {% endfor %}
-            </tbody>
-            </table>
-        </div>
-      </div>
-
+    </div>
   </div>
   {% endif %}
 
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-  try {
-    const chartData = JSON.parse('{{ chart_data|safe }}');
-    
-    if (typeof Chart === 'undefined') {
+  // AJAX Pagination function
+  function loadManagersPage(page) {
+    const container = document.getElementById('managers-content');
+    if (!container) return;
+
+    // Add loading opacity
+    container.style.opacity = '0.5';
+
+    fetch(`{{ url_for('dashboard_managers_partial') }}?page=${page}`)
+      .then(response => response.text())
+      .then(html => {
+        // Replace the content
+        container.innerHTML = html;
+
+        // Animate fade in
+        const newContainer = document.getElementById('managers-content');
+        if (newContainer) {
+          newContainer.style.opacity = '0';
+          newContainer.style.transition = 'opacity 0.3s';
+          requestAnimationFrame(() => newContainer.style.opacity = '1');
+        }
+      })
+      .catch(err => {
+        console.error('Error loading managers:', err);
+        container.style.opacity = '1';
+      });
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    try {
+      const chartData = JSON.parse('{{ chart_data|safe }}');
+
+      if (typeof Chart === 'undefined') {
         console.error('Chart.js is not loaded! Please download chart.min.js to static/js/');
         return;
-    }
+      }
 
-    // Set Global Chart Defaults to match Glassmorphism theme
-    Chart.defaults.font.family = "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
-    Chart.defaults.color = '#2c3e50'; // Dark text to match ordinary style
-    Chart.defaults.scale.grid.color = 'rgba(0, 0, 0, 0.05)'; // Subtle grid lines
+      // Modern Dark Mode Chart Defaults
+      Chart.defaults.font.family = "'Cairo', sans-serif";
+      Chart.defaults.color = '#94a3b8';
+      Chart.defaults.scale.grid.color = 'rgba(255, 255, 255, 0.05)';
+      Chart.defaults.plugins.tooltip.backgroundColor = 'rgba(15, 23, 42, 0.9)';
+      Chart.defaults.plugins.tooltip.padding = 12;
+      Chart.defaults.plugins.tooltip.cornerRadius = 12;
 
-    // 1. Ratings Chart (Pie)
-    if (chartData.rating_labels && document.getElementById('ratingsChart')) {
-      new Chart(document.getElementById('ratingsChart'), {
-        type: 'pie',
-        data: {
-          labels: chartData.rating_labels,
-          datasets: [{
-            data: chartData.rating_data,
-            // Ordinary, professional colors
-            backgroundColor: ['#2ecc71', '#3498db', '#f1c40f', '#e67e22', '#e74c3c'],
-            borderColor: '#ffffff',
-            borderWidth: 2
-          }]
-        },
-        options: { 
-            responsive: true, 
+      // 1. Ratings Chart (Pie)
+      if (chartData.rating_labels && document.getElementById('ratingsChart')) {
+        new Chart(document.getElementById('ratingsChart'), {
+          type: 'doughnut', /* Modern Doughnut instead of Pie */
+          data: {
+            labels: chartData.rating_labels,
+            datasets: [{
+              data: chartData.rating_data,
+              backgroundColor: [
+                '#10b981', // Emerald
+                '#3b82f6', // Blue
+                '#f59e0b', // Amber
+                '#f43f5e', // Rose
+                '#8b5cf6'  // Violet
+              ],
+              borderColor: 'rgba(15, 23, 42, 0.8)',
+              borderWidth: 4,
+              hoverOffset: 4
+            }]
+          },
+          options: {
+            responsive: true,
             maintainAspectRatio: false,
-            plugins: { 
-                legend: { 
-                    position: 'bottom',
-                    labels: { padding: 20, usePointStyle: true }
-                } 
+            cutout: '60%',
+            plugins: {
+              legend: {
+                position: 'bottom',
+                labels: { padding: 20, usePointStyle: true, boxWidth: 10 }
+              }
             }
-        }
-      });
-    }
-    
-    // 2. Types Chart (Bar)
-    if (chartData.type_labels && document.getElementById('typesChart')) {
-      new Chart(document.getElementById('typesChart'), {
-        type: 'bar',
-        data: {
-          labels: chartData.type_labels,
-          datasets: [{
-            label: 'عدد التقييمات',
-            data: chartData.type_data,
-            backgroundColor: 'rgba(52, 152, 219, 0.7)', // Semi-transparent blue
-            borderColor: '#2980b9',
-            borderWidth: 1,
-            borderRadius: 6
-          }]
-        },
-        options: { 
-            responsive: true, 
+          }
+        });
+      }
+
+      // 2. Types Chart (Bar)
+      if (chartData.type_labels && document.getElementById('typesChart')) {
+        const gradient = document.getElementById('typesChart').getContext('2d').createLinearGradient(0, 0, 0, 400);
+        gradient.addColorStop(0, '#00d2ff');
+        gradient.addColorStop(1, 'rgba(0, 210, 255, 0.1)');
+
+        new Chart(document.getElementById('typesChart'), {
+          type: 'bar',
+          data: {
+            labels: chartData.type_labels,
+            datasets: [{
+              label: 'عدد التقييمات',
+              data: chartData.type_data,
+              backgroundColor: gradient,
+              borderColor: '#00d2ff',
+              borderWidth: 1,
+              borderRadius: 8,
+              barThickness: 30
+            }]
+          },
+          options: {
+            responsive: true,
             maintainAspectRatio: false,
             scales: {
-                y: { beginAtZero: true }
+              y: {
+                beginAtZero: true,
+                grid: { borderDash: [5, 5] }
+              },
+              x: {
+                grid: { display: false }
+              }
             },
             plugins: { legend: { display: false } }
-        }
-      });
-    }
-  } catch (e) { console.error('Dashboard Script Error:', e); }
-});
+          }
+        });
+      }
+    } catch (e) { console.error('Dashboard Script Error:', e); }
+  });
 </script>
 {% endblock %}

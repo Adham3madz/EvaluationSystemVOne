@@ -1,234 +1,489 @@
 {% extends "layout.html" %}
-{% block title %}جدول التدريب{% endblock %}
+{% block title %}لوحة تحكم التدريب{% endblock %}
 
 {% block content %}
-<style>
-    /* === Header === */
-    .training-header {
-        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); /* Deep Blue */
-        color: white;
-        padding: 35px;
-        border-radius: 20px;
-        text-align: center;
-        margin-bottom: 40px;
-        box-shadow: 0 10px 30px rgba(30, 60, 114, 0.2);
-        position: relative;
-        overflow: hidden;
-    }
-    .training-header h2 { font-weight: 800; margin-bottom: 10px; letter-spacing: 0.5px; }
-    .training-header p { opacity: 0.85; font-size: 16px; max-width: 600px; margin: 0 auto; }
+<script src="{{ url_for('static', filename='js/chart.min.js') }}"></script>
 
-    /* === Add Button (Floating style) === */
-    .btn-add-floating {
-        background: rgba(255,255,255,0.2);
-        backdrop-filter: blur(5px);
-        border: 1px solid rgba(255,255,255,0.4);
+<style>
+    /* === Glassmorphism & Modern UI Theme === */
+    :root {
+        --glass-bg: rgba(255, 255, 255, 0.92);
+        --glass-border: 1px solid rgba(255, 255, 255, 0.5);
+        --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        --primary-gradient: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+        --card-radius: 16px;
+    }
+
+    /* === Header === */
+    .dashboard-header {
+        text-align: center;
+        margin-bottom: 30px;
+        padding: 20px;
+    }
+
+    .dashboard-title {
         color: white;
-        padding: 10px 25px;
+        font-weight: 800;
+        font-size: 2.5rem;
+        text-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    }
+
+    .dashboard-subtitle {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 1.1rem;
+        text-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+    }
+
+    /* === Glass Card === */
+    .glass-card {
+        background: var(--glass-bg);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: var(--glass-border);
+        border-radius: var(--card-radius);
+        box-shadow: var(--glass-shadow);
+        padding: 25px;
+        transition: transform 0.3s ease;
+        margin-bottom: 25px;
+    }
+
+    .glass-card:hover {
+        /* Slight lift on hover */
+        transform: translateY(-3px);
+    }
+
+    /* === KPI Stats === */
+    .kpi-box {
+        text-align: center;
+        padding: 15px;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.5);
+        border: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .kpi-icon {
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+        display: block;
+    }
+
+    .kpi-number {
+        font-size: 2rem;
+        font-weight: 900;
+        color: #2c3e50;
+        line-height: 1;
+    }
+
+    .kpi-label {
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: #636e72;
+        text-transform: uppercase;
+    }
+
+    /* === Action Buttons === */
+    .btn-morphism {
+        background: linear-gradient(135deg, #e0e0e0, #ffffff);
+        border: 1px solid rgba(255, 255, 255, 0.8);
         border-radius: 50px;
+        padding: 12px 30px;
+        color: #333;
         font-weight: bold;
+        box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.1), -5px -5px 10px rgba(255, 255, 255, 0.8);
+        transition: all 0.2s;
         text-decoration: none;
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        margin-top: 20px;
-        transition: all 0.3s ease;
     }
-    .btn-add-floating:hover {
+
+    .btn-morphism:hover {
+        transform: scale(1.05);
+        color: #000;
+        box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .btn-primary-soft {
+        background: #e3f2fd;
+        color: #0d47a1;
+        border: none;
+    }
+
+    /* === Search Bar === */
+    .search-glass {
+        background: rgba(255, 255, 255, 0.95);
+        border: none;
+        border-radius: 50px;
+        padding: 15px 25px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        width: 100%;
+        transition: 0.3s;
+    }
+
+    .search-glass:focus {
         background: white;
-        color: #1e3c72;
-        transform: translateY(-3px);
-        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        box-shadow: 0 4px 20px rgba(13, 110, 253, 0.25);
+        outline: none;
     }
 
-    /* === Grid Layout === */
-    .course-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-        gap: 25px;
-    }
-
-    /* === Modern Card === */
-    .course-card {
-        background: #fff;
+    /* === Session Card === */
+    .session-card {
+        background: white;
         border-radius: 16px;
         overflow: hidden;
-        border: none;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.04);
-        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        position: relative;
+        transition: 0.3s;
+        height: 100%;
         display: flex;
         flex-direction: column;
-        height: 100%;
-        position: relative;
-    }
-    
-    .course-card:hover {
-        transform: translateY(-7px);
-        box-shadow: 0 15px 35px rgba(0,0,0,0.08);
+        border: 1px solid rgba(0, 0, 0, 0.05);
     }
 
-    /* Status Strip (Top Border) */
-    .status-strip { height: 6px; width: 100%; }
-    .strip-open { background: linear-gradient(to right, #2ecc71, #27ae60); }
-    .strip-full { background: linear-gradient(to right, #e74c3c, #c0392b); }
-
-    /* Card Content */
-    .card-content { padding: 25px; flex: 1; }
-    
-    .card-meta {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 15px;
-    }
-    
-    .session-id { font-size: 13px; color: #95a5a6; font-weight: 600; }
-    
-    /* Badges */
-    .badge-status {
-        padding: 6px 12px;
-        border-radius: 8px;
-        font-size: 11px;
-        font-weight: 800;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-    .status-open { background-color: #e8f8f5; color: #27ae60; }
-    .status-full { background-color: #fdedec; color: #c0392b; }
-
-    .course-title {
-        font-size: 18px;
-        font-weight: 800;
-        color: #2c3e50;
-        margin-bottom: 20px;
-        line-height: 1.4;
-    }
-
-    /* Info Rows with Icons */
-    .info-item {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        margin-bottom: 12px;
-        font-size: 14px;
-        color: #555;
-    }
-    .info-icon {
-        width: 30px;
-        height: 30px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 14px;
-    }
-    .icon-date { background: #e3f2fd; color: #0984e3; }
-    .icon-user { background: #f3e5f5; color: #8e44ad; }
-    .icon-loc  { background: #fff3e0; color: #e67e22; }
-
-    /* Card Footer */
-    .card-footer {
-        padding: 20px 25px;
-        border-top: 1px solid #f5f6fa;
-        background: #fff;
-    }
-    
-    .btn-action {
+    .session-status-bar {
+        height: 6px;
         width: 100%;
-        padding: 12px;
-        border-radius: 10px;
-        background-color: #f8f9fa;
-        color: #2d3436;
-        font-weight: 700;
-        border: 1px solid #dfe6e9;
-        text-decoration: none;
+    }
+
+    .bar-green {
+        background: #2ecc71;
+    }
+
+    .bar-red {
+        background: #e74c3c;
+    }
+
+    .session-body {
+        padding: 20px;
+        flex-grow: 1;
+    }
+
+    .session-title {
+        font-weight: 800;
+        font-size: 1.1rem;
+        color: #34495e;
+        margin-bottom: 10px;
+    }
+
+    .info-row {
         display: flex;
-        justify-content: center;
         align-items: center;
         gap: 8px;
-        transition: 0.2s;
-    }
-    .btn-action:hover {
-        background-color: #004d7a;
-        color: white;
-        border-color: #004d7a;
+        margin-bottom: 8px;
+        color: #555;
+        font-size: 0.9rem;
     }
 
-    /* Empty State */
-    .empty-state {
-        grid-column: 1 / -1;
-        text-align: center;
-        padding: 60px;
-        background: #fff;
-        border-radius: 16px;
-        color: #95a5a6;
+    .session-footer {
+        padding: 15px;
+        background: #f8f9fa;
+        border-top: 1px solid #eee;
     }
-    .empty-icon { font-size: 60px; margin-bottom: 15px; opacity: 0.5; }
+
+    /* Helpers */
+    .text-shadow-sm {
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    }
 </style>
 
-<div class="training-header">
-    <h2>🎓 لوحة تحكم التدريب</h2>
-    <p>نظرة عامة على الجلسات الحالية والقادمة</p>
-    
-    <div class="d-flex gap-2 justify-content-center mt-3">
-        <a href="{{ url_for('training_session_add') }}" class="btn-add-floating">
-            <i class="fa-solid fa-plus"></i> جدولة جلسة
-        </a>
-        <a href="{{ url_for('training_history_add') }}" class="btn-add-floating" style="background: rgba(255,255,255,0.1);">
-            <i class="fa-solid fa-clock-rotate-left"></i> سجل سابق
-        </a>
-    </div>
-</div>
+<div class="container-fluid py-4">
 
-<div class="course-grid">
-    {% for s in sessions %}
-    <div class="course-card">
-        <div class="status-strip {{ 'strip-full' if s.EnrolledCount >= (s.MaxSeats or 100) else 'strip-open' }}"></div>
-        
-        <div class="card-content">
-            <div class="card-meta">
-                <span class="session-id">#{{ s.SessionID }}</span>
-                {% if s.EnrolledCount >= (s.MaxSeats or 100) %}
-                    <span class="badge-status status-full">
-                        <i class="fa-solid fa-lock"></i> ممتلئ
-                    </span>
-                {% else %}
-                    <span class="badge-status status-open">
-                        <i class="fa-solid fa-door-open"></i> متاح ({{ s.EnrolledCount }}/{{ s.MaxSeats or '∞' }})
-                    </span>
-                {% endif %}
-            </div>
+    <!-- Header Section -->
+    <div class="dashboard-header">
+        <h1 class="dashboard-title">🎓 لوحة تحكم التدريب</h1>
+        <p class="dashboard-subtitle">إدارة الجلسات، التوصيات، والتحليلات</p>
 
-            <div class="course-title">{{ s.TrainingCourseText }}</div>
-
-            <div class="info-item">
-                <div class="info-icon icon-date"><i class="fa-regular fa-calendar-days"></i></div>
-                <span>{{ s.SessionDate }}</span>
-            </div>
-            <div class="info-item">
-                <div class="info-icon icon-user"><i class="fa-solid fa-chalkboard-user"></i></div>
-                <span>
-                    {% if s.IsExternal %}{{ s.ExternalTrainerName }} (Ext){% else %}{{ s.InstructorName }}{% endif %}
-                </span>
-            </div>
-            <div class="info-item">
-                <div class="info-icon icon-loc"><i class="fa-solid fa-location-dot"></i></div>
-                <span>{{ s.Location or 'Online' }}</span>
-            </div>
-        </div>
-
-        <div class="card-footer">
-            <a href="{{ url_for('training_session_detail', sid=s.SessionID) }}" class="btn-action">
-                إدارة الجلسة <i class="fa-solid fa-arrow-left"></i>
+        <div class="d-flex justify-content-center gap-3 mt-4">
+            <a href="{{ url_for('training_session_add') }}" class="btn-morphism">
+                ➕ جدولة جلسة جديدة
+            </a>
+            <a href="{{ url_for('training_history_add') }}" class="btn-morphism">
+                📜 إضافة سجل سابق
             </a>
         </div>
     </div>
-    {% else %}
-    <div class="empty-state">
-        <i class="fa-solid fa-clipboard-list empty-icon"></i>
-        <h3>لا توجد جلسات مجدولة</h3>
-        <p>ابدأ بجدولة جلسة تدريبية جديدة.</p>
+
+    <!-- Analytics & Stats (Offline Chart.js) -->
+    <div class="row g-4 mb-5">
+        <!-- KPI Cards -->
+        <div class="col-md-5">
+            <div class="glass-card h-100 d-flex flex-column justify-content-center">
+                <div class="row g-3">
+                    <div class="col-6">
+                        <div class="kpi-box">
+                            <span class="kpi-icon">📅</span>
+                            <div class="kpi-number" id="statTotalSessions">0</div>
+                            <div class="kpi-label">إجمالي الجلسات</div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="kpi-box">
+                            <span class="kpi-icon">👥</span>
+                            <div class="kpi-number" id="statTotalEnroll">0</div>
+                            <div class="kpi-label">المسجلين</div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="kpi-box">
+                            <span class="kpi-icon">⏳</span>
+                            <div class="kpi-number" id="statPending">0</div>
+                            <div class="kpi-label">قيد الانتظار</div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="kpi-box">
+                            <span class="kpi-icon">✅</span>
+                            <div class="kpi-number text-success" id="statPassed">0%</div>
+                            <div class="kpi-label">نسبة الإكمال</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chart Section -->
+        <div class="col-md-7">
+            <div class="glass-card h-100">
+                <h5 class="fw-bold mb-3">📊 إحصائيات التدريب (شهرياً)</h5>
+                <div style="height: 250px;">
+                    <canvas id="trainingChart"></canvas>
+                </div>
+            </div>
+        </div>
     </div>
-    {% endfor %}
+
+    <!-- 1. Pending Recommendations Section -->
+    {% if recommendations %}
+    <div class="glass-card mb-5">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4 class="fw-bold m-0"><span class="me-2">📋</span> توصيات الدورات المعلقة (Waiting List)</h4>
+            <span class="badge bg-warning text-dark fs-6">{{ recommendations|length }} توصية</span>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>👤 الموظف</th>
+                        <th>🎓 الدورة المقترحة</th>
+                        <th>📅 تاريخ التوصية</th>
+                        <th>طالِب التوصية</th>
+                        <th>الإجراء</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for rec in recommendations %}
+                    <tr class="rec-row">
+                        <td class="fw-bold text-primary">{{ rec.EmployeeName }}</td>
+                        <td class="fw-bold">{{ rec.CourseName }}</td>
+                        <td>{{ rec.EvaluationDate.strftime('%Y-%m-%d') }}</td>
+                        <td class="small text-muted">{{ rec.ManagerName }}</td>
+                        <td>
+                            <button class="btn btn-sm btn-primary-soft rounded-pill fw-bold px-3"
+                                onclick="filterSessionsForCourse('{{ rec.CourseName }}')">
+                                🔍 بحث عن جلسة
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <p class="text-muted small mt-2 mb-0">💡 اضغط "بحث عن جلسة" لفلترة الجلسات المتاحة بالأسفل وتسجيل الموظف.</p>
+    </div>
+    {% endif %}
+
+    <!-- 2. Filters Bar -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="fw-bold text-white mb-0 text-shadow-sm">🗂️ الجلسات التدريبية</h3>
+
+        <div class="d-flex gap-2" style="width: 50%;">
+            <input type="text" id="sessionSearch" class="search-glass"
+                placeholder="🔍 ابحث عن اسم الدورة، المدرب، أو المكان...">
+            <select id="statusFilter" class="form-select search-glass w-auto" style="border-radius: 50px;">
+                <option value="all">الكل</option>
+                <option value="open">🔓 متاح</option>
+                <option value="full">🔒 ممتلئ</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- 3. Sessions Grid -->
+    <div class="row g-4" id="sessionsContainer">
+        {% for s in sessions %}
+        <div class="col-md-4 col-lg-3 session-item" data-name="{{ s.TrainingCourseText }}"
+            data-trainer="{{ s.InstructorName or s.ExternalTrainerName }}"
+            data-status="{{ 'full' if s.EnrolledCount >= (s.MaxSeats or 100) else 'open' }}"
+            data-date="{{ s.SessionDate }}">
+
+            <div class="session-card shadow-sm h-100">
+                <!-- Status Strip -->
+                <div
+                    class="session-status-bar {{ 'bar-red' if s.EnrolledCount >= (s.MaxSeats or 100) else 'bar-green' }}">
+                </div>
+
+                <div class="session-body d-flex flex-column">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <span class="badge bg-light text-dark border">#{{ s.SessionID }}</span>
+                        {% if s.EnrolledCount >= (s.MaxSeats or 100) %}
+                        <span class="badge bg-danger">🔒 ممتلئ</span>
+                        {% else %}
+                        <span class="badge bg-success">🔓 متاح</span>
+                        {% endif %}
+                    </div>
+
+                    <h5 class="session-title">{{ s.TrainingCourseText }}</h5>
+
+                    <div class="mt-auto">
+                        <div class="info-row">
+                            <span>📅</span> <span>{{ s.SessionDate }}</span>
+                        </div>
+                        <div class="info-row">
+                            <span>👨‍🏫</span> <span>{{ s.InstructorName or s.ExternalTrainerName or 'غير محدد'
+                                }}</span>
+                        </div>
+                        <div class="info-row">
+                            <span>📍</span> <span>{{ s.Location or 'Online' }}</span>
+                        </div>
+                        <div class="info-row">
+                            <span>👥</span>
+                            <span>
+                                <strong>{{ s.EnrolledCount }}</strong> / {{ s.MaxSeats or '∞' }} مسجل
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="session-footer">
+                    <a href="{{ url_for('training_session_detail', sid=s.SessionID) }}"
+                        class="btn btn-primary w-100 rounded-pill fw-bold">
+                        ⚙️ إدارة الجلسة
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-12 text-center py-5">
+            <div class="glass-card d-inline-block px-5">
+                <div style="font-size: 60px;">📭</div>
+                <h3 class="mt-3">لا توجد جلسات حالياً</h3>
+                <p>ابدأ بجدولة جلسة جديدة من الزر في الأعلى.</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
 </div>
+
+<!-- Scripts for Interaction & Analytics -->
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // --- 1. Calculate Analytics from DOM ---
+        const sessions = document.querySelectorAll('.session-item');
+        const sessionCount = sessions.length;
+
+        let totalEnroll = 0;
+        let months = {};
+
+        sessions.forEach(card => {
+            // Extract Enrollment Count (Dirty parsing from text, but works offline w/o backend logic)
+            // Text: "5 / 20" -> extract 5
+            const enrollText = card.querySelector('.info-row:last-child strong').innerText;
+            totalEnroll += parseInt(enrollText) || 0;
+
+            // Extract Month for Chart
+            const dateStr = card.getAttribute('data-date'); // YYYY-MM-DD
+            if (dateStr) {
+                const month = dateStr.substring(0, 7); // YYYY-MM
+                months[month] = (months[month] || 0) + 1;
+            }
+        });
+
+        // Pending Count
+        const pendingRows = document.querySelectorAll('.rec-row');
+        const pendingCount = pendingRows.length;
+
+        // Update UI stats
+        document.getElementById('statTotalSessions').innerText = sessionCount;
+        document.getElementById('statTotalEnroll').innerText = totalEnroll;
+        document.getElementById('statPending').innerText = pendingCount;
+
+        // --- 2. Render Chart (Chart.js) ---
+        const ctx = document.getElementById('trainingChart').getContext('2d');
+
+        // Sort months
+        const labels = Object.keys(months).sort();
+        const data = labels.map(m => months[m]);
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'عدد الجلسات',
+                    data: data,
+                    borderColor: '#0d6efd',
+                    backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: '#fff',
+                    pointBorderColor: '#0d6efd',
+                    pointRadius: 5
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: { beginAtZero: true, ticks: { stepSize: 1 } },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+
+        // --- 3. Filter Logic ---
+        const searchInput = document.getElementById('sessionSearch');
+        const statusFilter = document.getElementById('statusFilter');
+
+        function filterGrid() {
+            const query = searchInput.value.toLowerCase();
+            const status = statusFilter.value;
+
+            sessions.forEach(item => {
+                const name = item.getAttribute('data-name').toLowerCase();
+                const trainer = item.getAttribute('data-trainer').toLowerCase();
+                const itemStatus = item.getAttribute('data-status');
+
+                const matchesSearch = name.includes(query) || trainer.includes(query);
+                const matchesStatus = (status === 'all') || (status === itemStatus);
+
+                if (matchesSearch && matchesStatus) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        searchInput.addEventListener('keyup', filterGrid);
+        statusFilter.addEventListener('change', filterGrid);
+    });
+
+    // Helper to auto-fill search when clicking "Enroll" on a recommendation
+    function filterSessionsForCourse(courseName) {
+        const searchInput = document.getElementById('sessionSearch');
+        searchInput.value = courseName;
+        searchInput.focus();
+        // Trigger search
+        const event = new Event('keyup');
+        searchInput.dispatchEvent(event);
+
+        // Scroll to grid
+        document.getElementById('sessionsContainer').scrollIntoView({ behavior: 'smooth' });
+    }
+</script>
+
 {% endblock %}

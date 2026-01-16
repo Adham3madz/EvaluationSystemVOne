@@ -31,18 +31,34 @@
         justify-content: center;
         align-items: center;
     }
+
     .kpi-card:hover {
         transform: translateY(-5px);
-        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
     }
-    .kpi-icon { font-size: 2.5rem; margin-bottom: 10px; }
-    .kpi-value { font-size: 2rem; font-weight: 800; color: #333; line-height: 1; }
-    .kpi-label { font-size: 0.9rem; font-weight: 600; color: #666; }
+
+    .kpi-icon {
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+    }
+
+    .kpi-value {
+        font-size: 2rem;
+        font-weight: 800;
+        color: #333;
+        line-height: 1;
+    }
+
+    .kpi-label {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #666;
+    }
 
     /* === Chart Containers === */
     .chart-container {
-        position: relative; 
-        height: 200px; 
+        position: relative;
+        height: 200px;
         width: 100%;
         display: flex;
         justify-content: center;
@@ -57,7 +73,7 @@
         background: rgba(255, 255, 255, 0.9);
         padding: 6px 12px;
         border-radius: 30px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         display: flex;
         align-items: center;
         gap: 8px;
@@ -65,7 +81,10 @@
         font-weight: 600;
         color: #495057;
     }
-    .form-check-input { cursor: pointer; }
+
+    .form-check-input {
+        cursor: pointer;
+    }
 
     /* === Job Card Styles === */
     .job-card.closed .card {
@@ -73,11 +92,14 @@
         opacity: 0.9;
         background-color: #f8f9fa !important;
     }
-    .job-card .card { transition: all 0.3s ease; }
+
+    .job-card .card {
+        transition: all 0.3s ease;
+    }
 </style>
 
 <div class="container py-4">
-    
+
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h2 class="fw-bold text-white mb-1">📊 لوحة التوظيف</h2>
@@ -96,7 +118,7 @@
                 <div class="kpi-label">إجمالي الوظائف</div>
             </div>
         </div>
-        
+
         <div class="col-md-3 col-6">
             <div class="kpi-card">
                 <div class="kpi-icon">🔥</div>
@@ -130,7 +152,8 @@
             <div class="row g-3 align-items-end">
                 <div class="col-md-4">
                     <label class="form-label fw-semibold text-muted small">🔍 البحث بالمسمى الوظيفي</label>
-                    <input type="text" id="searchInput" class="form-control" placeholder="اكتب اسم الوظيفة..." onkeyup="applyFilters()">
+                    <input type="text" id="searchInput" class="form-control" placeholder="اكتب اسم الوظيفة..."
+                        onkeyup="applyFilters()">
                 </div>
                 <div class="col-md-3">
                     <label class="form-label fw-semibold text-muted small">القسم</label>
@@ -138,12 +161,12 @@
                         <option value="">🏢 كل الأقسام</option>
                         {% set depts_list = [] %}
                         {% for job in jobs %}
-                            {% if job.DEPTNAME and job.DEPTNAME not in depts_list %}
-                                {% set _ = depts_list.append(job.DEPTNAME) %}
-                            {% endif %}
+                        {% if job.DEPTNAME and job.DEPTNAME not in depts_list %}
+                        {% set _ = depts_list.append(job.DEPTNAME) %}
+                        {% endif %}
                         {% endfor %}
                         {% for dept in depts_list | sort %}
-                            <option value="{{ dept }}">{{ dept }}</option>
+                        <option value="{{ dept }}">{{ dept }}</option>
                         {% endfor %}
                     </select>
                 </div>
@@ -164,57 +187,53 @@
 
     <div class="row mb-2">
         <div class="col-md-12">
-            <h6 class="text-white opacity-75 small fw-bold">نتائج البحث: <span id="jobsCount" class="text-white fs-5">{{ jobs|length }}</span> وظيفة</h6>
+            <h6 class="text-white opacity-75 small fw-bold">نتائج البحث: <span id="jobsCount" class="text-white fs-5">{{
+                    jobs|length }}</span> وظيفة</h6>
         </div>
     </div>
 
-    <div class="row g-4" id="jobsGrid">
+    <div class="row g-4 overflow-auto" id="jobsGrid" style="height: calc(100vh - 360px);">
         {% for job in jobs %}
-        <div class="col-md-6 col-lg-4 job-card {{ 'closed' if job.Status == 'Closed' else '' }}" 
-             id="job-card-{{ job.JobID }}"
-             data-title="{{ job.JobTitle|lower }}" 
-             data-dept="{{ job.DEPTNAME|default('') }}" 
-             data-status="{{ job.Status }}">
-             
-            <div class="card h-100 border-0 shadow position-relative bg-body" 
-                 style="border-radius: 12px;"
-                 onmouseover="this.style.transform='translateY(-8px)'; this.style.boxShadow='0 12px 24px rgba(0,0,0,0.12)'"
-                 onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 6px 16px rgba(0,0,0,0.08)'">
+        <div class="col-md-6 col-lg-4 job-card {{ 'closed' if job.Status == 'Closed' else '' }}"
+            id="job-card-{{ job.JobID }}" style="min-height: 480px;" data-title="{{ job.JobTitle|lower }}"
+            data-dept="{{ job.DEPTNAME|default('') }}" data-status="{{ job.Status }}">
+
+            <div class="card h-100 border-0 shadow position-relative bg-body" style="border-radius: 12px;"
+                onmouseover="this.style.transform='translateY(-8px)'; this.style.boxShadow='0 12px 24px rgba(0,0,0,0.12)'"
+                onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 6px 16px rgba(0,0,0,0.08)'">
 
                 <div class="toggle-container">
                     <span class="toggle-label">الحالة:</span>
                     <div class="form-check form-switch">
-                        <input class="form-check-input" type="checkbox" role="switch" 
-                               id="toggle-{{ job.JobID }}" 
-                               onchange="toggleJobStatus({{ job.JobID }})"
-                               {{ 'checked' if job.Status == 'Open' else '' }}>
+                        <input class="form-check-input" type="checkbox" role="switch" id="toggle-{{ job.JobID }}"
+                            onchange="toggleJobStatus({{ job.JobID }})" {{ 'checked' if job.Status=='Open' else '' }}>
                     </div>
                 </div>
 
-                <button type="button" 
-                        class="btn btn-danger position-absolute bottom-0 end-0 mb-3 me-3 rounded-circle shadow"
-                        style="width: 44px; height: 44px; z-index: 10;"
-                        data-bs-toggle="modal" 
-                        data-bs-target="#deleteModal{{ job.JobID }}"
-                        title="حذف الوظيفة">
+                <button type="button"
+                    class="btn btn-danger position-absolute bottom-0 end-0 mb-3 me-3 rounded-circle shadow"
+                    style="width: 44px; height: 44px; z-index: 10;" data-bs-toggle="modal"
+                    data-bs-target="#deleteModal{{ job.JobID }}" title="حذف الوظيفة">
                     🗑️
                 </button>
 
                 <div class="card-body pt-4 pb-5">
                     <div class="d-flex justify-content-between mb-3">
-                        <span class="badge bg-secondary-subtle text-dark border px-3 py-2">{{ job.DEPTNAME or 'عام' }}</span>
-                        <span id="status-badge-{{ job.JobID }}" class="badge {{ 'bg-success' if job.Status == 'Open' else 'bg-secondary' }} px-3 py-2">
+                        <span class="badge bg-secondary-subtle text-dark border px-3 py-2">{{ job.DEPTNAME or 'عام'
+                            }}</span>
+                        <span id="status-badge-{{ job.JobID }}"
+                            class="badge {{ 'bg-success' if job.Status == 'Open' else 'bg-secondary' }} px-3 py-2">
                             {{ 'نشط' if job.Status == 'Open' else 'مغلق' }}
                         </span>
                     </div>
-                    
+
                     <h4 class="card-title fw-bold mb-3 text-dark">
-                        <a href="{{ url_for('job_pipeline', job_id=job.JobID) }}" 
-                           class="text-decoration-none text-dark stretched-link">
+                        <a href="{{ url_for('job_pipeline', job_id=job.JobID) }}"
+                            class="text-decoration-none text-dark stretched-link">
                             {{ job.JobTitle }}
                         </a>
                     </h4>
-                    
+
                     <p class="text-muted small mb-4">
                         👤 مدير التوظيف: <span class="fw-semibold text-dark">{{ job.HiringManager }}</span>
                     </p>
@@ -226,9 +245,9 @@
                             <span class="d-block fw-bold fs-4 text-primary">{{ job.TotalCandidates }}</span>
                             <small class="text-muted fw-medium">متقدمين</small>
                         </div>
-                        
-                        <a href="{{ url_for('job_pipeline', job_id=job.JobID) }}" 
-                           class="btn btn-outline-primary rounded-pill btn-sm px-4 shadow-sm">
+
+                        <a href="{{ url_for('job_pipeline', job_id=job.JobID) }}"
+                            class="btn btn-outline-primary rounded-pill btn-sm px-4 shadow-sm">
                             عرض المراحل →
                         </a>
                     </div>
@@ -251,12 +270,14 @@
                         <p class="fs-5 mb-3">هل أنت متأكد من حذف الوظيفة؟</p>
                         <p class="fw-bold fs-4 text-dark mb-4">"{{ job.JobTitle }}"</p>
                         <p class="text-muted">سيتم حذف جميع المتقدمين والمراحل نهائياً.<br>
-                           <strong class="text-danger">لا يمكن التراجع عن هذا الإجراء.</strong>
+                            <strong class="text-danger">لا يمكن التراجع عن هذا الإجراء.</strong>
                         </p>
                     </div>
                     <div class="modal-footer border-0 justify-content-center gap-3 pb-4">
-                        <button type="button" class="btn btn-secondary px-5 py-2" data-bs-dismiss="modal">🔙 إلغاء</button>
-                        <form method="POST" action="{{ url_for('job_delete', job_id=job.JobID) }}" style="display:inline;">
+                        <button type="button" class="btn btn-secondary px-5 py-2" data-bs-dismiss="modal">🔙
+                            إلغاء</button>
+                        <form method="POST" action="{{ url_for('job_delete', job_id=job.JobID) }}"
+                            style="display:inline;">
                             <button type="submit" class="btn btn-danger px-5 py-2">🗑️ نعم، احذفها</button>
                         </form>
                     </div>
@@ -274,12 +295,12 @@
 </div>
 
 <script>
-// === 1. PREPARE DATA FOR ANALYTICS (From Jinja to JS) ===
-document.addEventListener('DOMContentLoaded', function() {
-    
-    // Extracting simple stats from the rendered DOM or Jinja variables
-    const openJobs = {{ active_jobs }};
-    const closedJobs = {{ jobs|length }} - openJobs;
+    // === 1. PREPARE DATA FOR ANALYTICS (From Jinja to JS) ===
+    document.addEventListener('DOMContentLoaded', function () {
+
+        // Extracting simple stats from the rendered DOM or Jinja variables
+        const openJobs = {{ active_jobs }};
+    const closedJobs = {{ jobs| length }} - openJobs;
 
     // --- Status Chart (Doughnut) ---
     const ctxStatus = document.getElementById('statusChart').getContext('2d');
@@ -305,101 +326,101 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// === 2. EXISTING FUNCTIONS (Toggle & Filters) ===
+    // === 2. EXISTING FUNCTIONS (Toggle & Filters) ===
 
-function toggleJobStatus(jobId) {
-    const cardDiv = document.getElementById(`job-card-${jobId}`);
-    const badgeSpan = document.getElementById(`status-badge-${jobId}`);
-    const toggleInput = document.getElementById(`toggle-${jobId}`);
+    function toggleJobStatus(jobId) {
+        const cardDiv = document.getElementById(`job-card-${jobId}`);
+        const badgeSpan = document.getElementById(`status-badge-${jobId}`);
+        const toggleInput = document.getElementById(`toggle-${jobId}`);
 
-    fetch(`/recruitment/job/toggle/${jobId}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            if (data.new_status === 'Open') {
-                cardDiv.classList.remove('closed');
-                cardDiv.setAttribute('data-status', 'Open');
-                badgeSpan.classList.remove('bg-secondary');
-                badgeSpan.classList.add('bg-success');
-                badgeSpan.textContent = 'نشط';
+        fetch(`/recruitment/job/toggle/${jobId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    if (data.new_status === 'Open') {
+                        cardDiv.classList.remove('closed');
+                        cardDiv.setAttribute('data-status', 'Open');
+                        badgeSpan.classList.remove('bg-secondary');
+                        badgeSpan.classList.add('bg-success');
+                        badgeSpan.textContent = 'نشط';
+                    } else {
+                        cardDiv.classList.add('closed');
+                        cardDiv.setAttribute('data-status', 'Closed');
+                        badgeSpan.classList.remove('bg-success');
+                        badgeSpan.classList.add('bg-secondary');
+                        badgeSpan.textContent = 'مغلق';
+                    }
+                    applyFilters();
+                    // Optional: You could reload the page to update the Charts at the top
+                } else {
+                    alert('حدث خطأ: ' + (data.error || 'غير معروف'));
+                    toggleInput.checked = !toggleInput.checked;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('فشل الاتصال بالسيرفر');
+                toggleInput.checked = !toggleInput.checked;
+            });
+    }
+
+    function applyFilters() {
+        const search = document.getElementById('searchInput').value.toLowerCase().trim();
+        const dept = document.getElementById('deptFilter').value;
+        const status = getSelectedStatus();
+
+        let visibleCount = 0;
+
+        document.querySelectorAll('.job-card').forEach(card => {
+            const title = card.getAttribute('data-title');
+            const cardDept = card.getAttribute('data-dept');
+            const cardStatus = card.getAttribute('data-status');
+
+            const matchesSearch = title.includes(search);
+            const matchesDept = dept === '' || cardDept === dept;
+            const matchesStatus = status === '' || cardStatus === status;
+
+            if (matchesSearch && matchesDept && matchesStatus) {
+                card.style.display = '';
+                visibleCount++;
             } else {
-                cardDiv.classList.add('closed');
-                cardDiv.setAttribute('data-status', 'Closed');
-                badgeSpan.classList.remove('bg-success');
-                badgeSpan.classList.add('bg-secondary');
-                badgeSpan.textContent = 'مغلق';
+                card.style.display = 'none';
             }
-            applyFilters();
-            // Optional: You could reload the page to update the Charts at the top
-        } else {
-            alert('حدث خطأ: ' + (data.error || 'غير معروف'));
-            toggleInput.checked = !toggleInput.checked;
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('فشل الاتصال بالسيرفر');
-        toggleInput.checked = !toggleInput.checked;
-    });
-}
+        });
 
-function applyFilters() {
-    const search = document.getElementById('searchInput').value.toLowerCase().trim();
-    const dept = document.getElementById('deptFilter').value;
-    const status = getSelectedStatus();
+        document.getElementById('jobsCount').textContent = visibleCount;
+        document.getElementById('noResults').classList.toggle('d-none', visibleCount > 0);
+    }
 
-    let visibleCount = 0;
+    function getSelectedStatus() {
+        const activeBtn = document.querySelector('#statusFilterGroup .btn.active');
+        return activeBtn ? activeBtn.getAttribute('data-status') : '';
+    }
 
-    document.querySelectorAll('.job-card').forEach(card => {
-        const title = card.getAttribute('data-title');
-        const cardDept = card.getAttribute('data-dept');
-        const cardStatus = card.getAttribute('data-status');
+    function clearFilters() {
+        document.getElementById('searchInput').value = '';
+        document.getElementById('deptFilter').value = '';
 
-        const matchesSearch = title.includes(search);
-        const matchesDept = dept === '' || cardDept === dept;
-        const matchesStatus = status === '' || cardStatus === status;
+        document.querySelectorAll('#statusFilterGroup .btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        document.querySelector('#statusFilterGroup .btn[data-status=""]').classList.add('active');
 
-        if (matchesSearch && matchesDept && matchesStatus) {
-            card.style.display = '';
-            visibleCount++;
-        } else {
-            card.style.display = 'none';
-        }
-    });
-
-    document.getElementById('jobsCount').textContent = visibleCount;
-    document.getElementById('noResults').classList.toggle('d-none', visibleCount > 0);
-}
-
-function getSelectedStatus() {
-    const activeBtn = document.querySelector('#statusFilterGroup .btn.active');
-    return activeBtn ? activeBtn.getAttribute('data-status') : '';
-}
-
-function clearFilters() {
-    document.getElementById('searchInput').value = '';
-    document.getElementById('deptFilter').value = '';
+        applyFilters();
+    }
 
     document.querySelectorAll('#statusFilterGroup .btn').forEach(btn => {
-        btn.classList.remove('active');
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('#statusFilterGroup .btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            applyFilters();
+        });
     });
-    document.querySelector('#statusFilterGroup .btn[data-status=""]').classList.add('active');
 
-    applyFilters();
-}
-
-document.querySelectorAll('#statusFilterGroup .btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-        document.querySelectorAll('#statusFilterGroup .btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        applyFilters();
-    });
-});
-
-// Initial Run
-document.addEventListener('DOMContentLoaded', applyFilters);
+    // Initial Run
+    document.addEventListener('DOMContentLoaded', applyFilters);
 </script>
 {% endblock %}

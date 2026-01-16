@@ -1,0 +1,59 @@
+Backup every 2 weeks Employee HR trainng system 
+
+1.
+ALTER TABLE Zktime_Copy.dbo.UserPlaces NOCHECK CONSTRAINT ALL;
+
+2.
+DELETE FROM Zktime_Copy.dbo.USERINFO;
+
+3.
+ALTER TABLE Zktime_Copy.dbo.UserPlaces
+WITH CHECK CHECK CONSTRAINT ALL;
+
+4.
+SET IDENTITY_INSERT Zktime_Copy.dbo.USERINFO ON;
+
+5.
+INSERT INTO Zktime_Copy.dbo.USERINFO (
+    USERID, BADGENUMBER, SSN, NAME, GENDER, TITLE, PAGER,
+    BIRTHDAY, HIREDDAY, STREET, OPHONE, VERIFICATIONMETHOD,
+    DEFAULTDEPTID, ATT, INLATE, OUTEARLY, OVERTIME, SEP,
+    HOLIDAY, MINZU, LUNCHDURATION, privilege, InheritDeptSch,
+    InheritDeptSchClass, AutoSchPlan, MinAutoSchInterval,
+    RegisterOT, InheritDeptRule, EMPRIVILEGE, CardNo,
+    FaceGroup, AccGroup, UseAccGroupTZ, VerifyCode, Expires,
+    ValidCount, ValidTimeBegin, ValidTimeEnd,
+    TimeZone1, TimeZone2, TimeZone3, SECURITYFLAGS, PASSWORD,
+    STATE, ZIP, CITY, MVerifyPass, PHOTO, NOTES, IDCardNo,
+    Pin1, FPHONE, InheritDeptId, IDCardValidTime,
+    OvertimeDailyEligible, MaxOvertimeDailyHours,
+    OvertimeMonthlyEligible, MaxOvertimeMonthlyHours,
+    WorkShiftHours, PositionID, pic, employee_class,
+    IsActive, Comsys_Employee_Code
+)
+SELECT
+    USERID, BADGENUMBER, SSN, NAME, GENDER, TITLE, PAGER,
+    BIRTHDAY, HIREDDAY, STREET, OPHONE, VERIFICATIONMETHOD,
+    DEFAULTDEPTID, ATT, INLATE, OUTEARLY, OVERTIME, SEP,
+    HOLIDAY, MINZU, LUNCHDURATION, privilege, InheritDeptSch,
+    InheritDeptSchClass, AutoSchPlan, MinAutoSchInterval,
+    RegisterOT, InheritDeptRule, EMPRIVILEGE, CardNo,
+    FaceGroup, AccGroup, UseAccGroupTZ, VerifyCode, Expires,
+    ValidCount, ValidTimeBegin, ValidTimeEnd,
+    TimeZone1, TimeZone2, TimeZone3, SECURITYFLAGS, PASSWORD,
+    STATE, ZIP, CITY, MVerifyPass, PHOTO, NOTES, IDCardNo,
+    Pin1, FPHONE, InheritDeptId, IDCardValidTime,
+    OvertimeDailyEligible, MaxOvertimeDailyHours,
+    OvertimeMonthlyEligible, MaxOvertimeMonthlyHours,
+    WorkShiftHours, PositionID, pic, employee_class,
+    IsActive, Comsys_Employee_Code
+FROM Zktime.dbo.USERINFO;
+
+6.
+SET IDENTITY_INSERT Zktime_Copy.dbo.USERINFO OFF;
+
+7.
+SELECT COUNT(*) FROM Zktime.dbo.USERINFO;
+SELECT COUNT(*) FROM Zktime_Copy.dbo.USERINFO;
+
+

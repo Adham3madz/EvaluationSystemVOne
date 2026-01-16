@@ -11,15 +11,17 @@
     <!-- فلاتر -->
     <div class="card mb-4">
         <div class="card-body">
-            <form method="GET" class="row g-3">
+            <form id="filtersForm" method="GET" class="row g-3">
                 <div class="col-md-3">
-                    <input type="text" name="search" class="form-control" placeholder="بحث بالاسم أو الهاتف" value="{{ filters.search }}">
+                    <input type="text" name="search" class="form-control" placeholder="بحث بالاسم أو الهاتف"
+                        value="{{ filters.search }}">
                 </div>
                 <div class="col-md-2">
                     <select name="dept_id" class="form-select">
                         <option value="">كل الأقسام</option>
                         {% for d in depts %}
-                            <option value="{{ d.DEPTID }}" {% if filters.dept_id == d.DEPTID|string %}selected{% endif %}>{{ d.DEPTNAME }}</option>
+                        <option value="{{ d.DEPTID }}" {% if filters.dept_id==d.DEPTID|string %}selected{% endif %}>{{
+                            d.DEPTNAME }}</option>
                         {% endfor %}
                     </select>
                 </div>
@@ -27,7 +29,8 @@
                     <select name="pos_id" class="form-select">
                         <option value="">كل الوظائف</option>
                         {% for p in positions %}
-                            <option value="{{ p.PositionID }}" {% if filters.pos_id == p.PositionID|string %}selected{% endif %}>{{ p.PositionName }}</option>
+                        <option value="{{ p.PositionID }}" {% if filters.pos_id==p.PositionID|string %}selected{% endif
+                            %}>{{ p.PositionName }}</option>
                         {% endfor %}
                     </select>
                 </div>
@@ -37,8 +40,9 @@
                         <!-- أضف خيارات الحالات من الداتابيز -->
                     </select>
                 </div>
-                <div class="col-md-1">
-                    <button type="submit" class="btn btn-success w-100">🔍 بحث</button>
+                <div class="col-md-2 d-flex gap-2">
+                    <button type="submit" class="btn btn-success flex-grow-1">🔍 بحث</button>
+                    <button type="button" onclick="clearFilters()" class="btn btn-secondary">❌</button>
                 </div>
             </form>
         </div>
@@ -73,8 +77,11 @@
                             <span class="badge bg-primary">{{ c.Status }}</span>
                         </td>
                         <td>
-                            <a href="{{ url_for('recruitment_edit', cid=c.CandidateID) }}" class="btn btn-sm btn-warning">✏️ تعديل</a>
-                            <form method="POST" action="{{ url_for('recruitment_delete', cid=c.CandidateID) }}" style="display:inline;" onsubmit="return confirm('🗑️ هل أنت متأكد من حذف هذا المرشح؟');">
+                            <a href="{{ url_for('recruitment_edit', cid=c.CandidateID) }}"
+                                class="btn btn-sm btn-warning">✏️ تعديل</a>
+                            <form method="POST" action="{{ url_for('recruitment_delete', cid=c.CandidateID) }}"
+                                style="display:inline;"
+                                onsubmit="return confirm('🗑️ هل أنت متأكد من حذف هذا المرشح؟');">
                                 <button type="submit" class="btn btn-sm btn-danger">🗑️ حذف</button>
                             </form>
                         </td>
@@ -85,4 +92,30 @@
         </div>
     </div>
 </div>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // === Sticky Filters Logic ===
+        const filterKey = 'recruitmentListFilters';
+
+        // 1. Check if we should restore filters
+        if (!window.location.search && localStorage.getItem(filterKey)) {
+            window.location.search = localStorage.getItem(filterKey);
+            return;
+        }
+
+        // 2. Save current filters if they exist
+        if (window.location.search) {
+            localStorage.setItem(filterKey, window.location.search);
+        }
+    });
+
+    function clearFilters() {
+        localStorage.removeItem('recruitmentListFilters');
+        const form = document.getElementById('filtersForm');
+        form.querySelectorAll('input, select').forEach(el => {
+            el.value = '';
+        });
+        form.submit();
+    }
+</script>
 {% endblock %}

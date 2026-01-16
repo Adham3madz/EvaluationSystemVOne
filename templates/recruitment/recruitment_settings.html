@@ -5,7 +5,8 @@
 <style>
     /* === Global Glass Theme === */
     body {
-        background: linear-gradient(135deg, #1e1e24, #2a2a35); /* Dark background */
+        background: linear-gradient(135deg, #1e1e24, #2a2a35);
+        /* Dark background */
         color: white;
     }
 
@@ -34,7 +35,11 @@
         color: white !important;
         border-radius: 10px;
     }
-    .form-control-glass::placeholder { color: rgba(255, 255, 255, 0.5); }
+
+    .form-control-glass::placeholder {
+        color: rgba(255, 255, 255, 0.5);
+    }
+
     .form-control-glass:focus {
         background: rgba(255, 255, 255, 0.2);
         box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
@@ -48,17 +53,21 @@
         color: white;
         margin-bottom: 0;
     }
+
     .table-glass th {
         background: rgba(255, 255, 255, 0.1);
-        color: #ffc107; /* Gold color for headers */
+        color: #ffc107;
+        /* Gold color for headers */
         border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         font-weight: bold;
     }
+
     .table-glass td {
         background: transparent;
         border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         color: white;
     }
+
     .table-glass tr:hover td {
         background: rgba(255, 255, 255, 0.05);
     }
@@ -69,6 +78,7 @@
         border: 1px solid rgba(255, 255, 255, 0.2);
         color: white;
     }
+
     .btn-glass-back:hover {
         background: rgba(255, 255, 255, 0.2);
         color: white;
@@ -76,7 +86,7 @@
 </style>
 
 <div class="container-fluid py-4" style="min-height: 100vh;">
-    
+
     <div class="container" style="max-width: 800px;">
 
         <div class="d-flex justify-content-between align-items-center mb-4">
@@ -89,62 +99,123 @@
             </a>
         </div>
 
-        <div class="glass-panel mb-4">
-            <div class="glass-header">
-                <h5 class="mb-0 fw-bold text-warning">➕ إضافة سبب جديد</h5>
-            </div>
-            <div class="p-4">
-                <form method="POST" class="row g-3 align-items-center">
-                    <div class="col-md-9">
-                        <label class="visually-hidden">نص السبب</label>
-                        <input type="text" name="new_reason" class="form-control form-control-lg form-control-glass" placeholder="مثال: الراتب غير مناسب، بعد المسافة..." required>
+        <div class="row g-4">
+            <!-- === COLUMN 1: Termination TYPES === -->
+            <div class="col-md-5">
+                <div class="glass-panel h-100">
+                    <div class="glass-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0 fw-bold text-info">📌 أنواع إنهاء الخدمة</h5>
                     </div>
-                    <div class="col-md-3">
-                        <button type="submit" class="btn btn-success btn-lg w-100 fw-bold shadow-lg">
-                            💾 حفظ
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
 
-        <div class="glass-panel">
-            <div class="glass-header">
-                <h5 class="mb-0 fw-bold text-white">📋 القائمة الحالية</h5>
+                    <!-- Add Type Form -->
+                    <div class="p-4 border-bottom border-secondary">
+                        <form method="POST" class="d-flex gap-2">
+                            <input type="text" name="new_type" class="form-control form-control-glass"
+                                placeholder="مثال: استقالة، فصل..." required>
+                            <button type="submit" class="btn btn-info fw-bold shadow-sm">
+                                ➕
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- List Types -->
+                    <div class="p-0">
+                        <table class="table table-glass align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th class="ps-4">النوع</th>
+                                    <th class="text-end pe-4">إجراء</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for type in types %}
+                                <tr>
+                                    <td class="ps-4 fw-bold">{{ type.TypeText }}</td>
+                                    <td class="text-end pe-4">
+                                        <form method="POST"
+                                            onsubmit="return confirm('هل أنت متأكد؟ قد يؤثر هذا على الأسباب المرتبطة.');">
+                                            <input type="hidden" name="delete_type_id" value="{{ type.TypeID }}">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger border-0"
+                                                title="حذف">
+                                                ❌
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="2" class="text-center py-4 text-muted">لا توجد أنواع مضافة.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
-            <div class="p-0">
-                <table class="table table-glass align-middle mb-0">
-                    <thead>
-                        <tr>
-                            <th class="ps-4 py-3">السبب</th>
-                            <th class="text-end pe-4 py-3">إجراءات</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for reason in reasons %}
-                        <tr>
-                            <td class="ps-4 fw-bold">
-                                {{ reason.ReasonText }}
-                            </td>
-                            <td class="text-end pe-4">
-                                <form method="POST" onsubmit="return confirm('هل أنت متأكد من الحذف؟');">
-                                    <input type="hidden" name="delete_id" value="{{ reason.ReasonID }}">
-                                    <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-3">
-                                        🗑️ حذف
-                                    </button>
-                                </form>
-                            </td>
-                        </tr>
-                        {% else %}
-                        <tr>
-                            <td colspan="2" class="text-center py-5 text-white-50">
-                                <div class="fs-2 mb-2">📂</div>
-                                لا توجد أسباب مضافة حالياً.
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+
+            <!-- === COLUMN 2: Termination REASONS === -->
+            <div class="col-md-7">
+                <div class="glass-panel h-100">
+                    <div class="glass-header">
+                        <h5 class="mb-0 fw-bold text-warning">📝 أسباب إنهاء الخدمة</h5>
+                    </div>
+
+                    <!-- Add Reason Form -->
+                    <div class="p-4 border-bottom border-secondary">
+                        <form method="POST" class="row g-2">
+                            <div class="col-md-4">
+                                <select name="type_id" class="form-select form-control-glass text-white" required>
+                                    <option value="" selected disabled>-- اختر النوع --</option>
+                                    {% for type in types %}
+                                    <option value="{{ type.TypeID }}" class="text-dark">{{ type.TypeText }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <input type="text" name="new_reason" class="form-control form-control-glass"
+                                    placeholder="السبب (مثال: راتب غير مناسب)" required>
+                            </div>
+                            <div class="col-md-2">
+                                <button type="submit" class="btn btn-success w-100 fw-bold shadow-sm">
+                                    💾
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- List Reasons -->
+                    <div class="p-0" style="max-height: 500px; overflow-y: auto;">
+                        <table class="table table-glass align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th class="ps-4">النوع</th>
+                                    <th class="">السبب</th>
+                                    <th class="text-end pe-4">إجراء</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for reason in reasons %}
+                                <tr>
+                                    <td class="ps-4 text-info small">{{ reason.TypeText }}</td>
+                                    <td class="fw-bold">{{ reason.ReasonText }}</td>
+                                    <td class="text-end pe-4">
+                                        <form method="POST" onsubmit="return confirm('حذف هذا السبب؟');">
+                                            <input type="hidden" name="delete_reason_id" value="{{ reason.ReasonID }}">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger border-0">
+                                                🗑️
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="3" class="text-center py-5 text-muted">لا توجد أسباب مضافة.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
 

@@ -4,78 +4,208 @@
 {% block content %}
 <style>
     /* ====== Page Styling ====== */
-    .page-header { text-align: center; margin: 30px 0 20px; }
-    .page-header h2 { color: #ebeff2; font-weight: bold; margin-bottom: 5px; }
-    .page-header .subtitle { color: #ffffff; font-size: 15px; }
+    .page-header {
+        text-align: center;
+        margin: 30px 0 20px;
+    }
+
+    .page-header h2 {
+        color: #ebeff2;
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+
+    .page-header .subtitle {
+        color: #ffffff;
+        font-size: 15px;
+    }
 
     /* ====== Alerts ====== */
-    .alert { margin: 15px auto; width: 90%; padding: 12px 15px; border-radius: 8px; font-size: 15px; text-align: center; }
-    .alert-success { background-color: #d1e7dd; color: #0f5132; border: 1px solid #badbcc; }
-    .alert-danger { background-color: #f8d7da; color: #842029; border: 1px solid #f5c2c7; }
-    .alert-warning { background-color: #fff3cd; color: #664d03; border: 1px solid #ffecb5; }
+    .alert {
+        margin: 15px auto;
+        width: 90%;
+        padding: 12px 15px;
+        border-radius: 8px;
+        font-size: 15px;
+        text-align: center;
+    }
+
+    .alert-success {
+        background-color: #d1e7dd;
+        color: #0f5132;
+        border: 1px solid #badbcc;
+    }
+
+    .alert-danger {
+        background-color: #f8d7da;
+        color: #842029;
+        border: 1px solid #f5c2c7;
+    }
+
+    .alert-warning {
+        background-color: #fff3cd;
+        color: #664d03;
+        border: 1px solid #ffecb5;
+    }
 
     /* ====== Card Container ====== */
-    .card { background: #fff; width: 100%; margin: 0 auto 40px; border-radius: 10px; box-shadow: 0 0 8px rgba(0,0,0,0.08); overflow-x: auto; border: 1px solid #e0e0e0; }
-    .card-header { background-color: #004d7a; color: #fff; padding: 15px 20px; border-top-right-radius: 10px; border-top-left-radius: 10px; display: flex; justify-content: space-between; align-items: center; }
-    .card-header h3 { margin: 0; font-size: 18px; font-weight: 600; }
-    .card-header .btn { background-color: #0b9444; color: #fff; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-size: 14px; transition: background 0.3s; }
-    .card-header .btn:hover { background-color: #087938; }
+    .card {
+        background: #fff;
+        width: 100%;
+        margin: 0 auto 40px;
+        border-radius: 10px;
+        box-shadow: 0 0 8px rgba(0, 0, 0, 0.08);
+        overflow-x: auto;
+        border: 1px solid #e0e0e0;
+    }
+
+    .card-header {
+        background-color: #004d7a;
+        color: #fff;
+        padding: 15px 20px;
+        border-top-right-radius: 10px;
+        border-top-left-radius: 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .card-header h3 {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 600;
+    }
+
+    .card-header .btn {
+        background-color: #0b9444;
+        color: #fff;
+        padding: 8px 16px;
+        border-radius: 6px;
+        text-decoration: none;
+        font-size: 14px;
+        transition: background 0.3s;
+    }
+
+    .card-header .btn:hover {
+        background-color: #087938;
+    }
 
     /* ====== Table Styling ====== */
-    table { width: 100%; border-collapse: collapse; text-align: center; border-radius: 0 0 10px 10px; }
-    thead { background-color: #e9ecef; color: #333; }
-    thead th { padding: 12px; font-weight: 600; font-size: 15px; border-bottom: 2px solid #dee2e6; }
-    tbody td { padding: 10px; border-top: 1px solid #dee2e6; font-size: 14px; }
-    tbody tr:nth-child(even) { background-color: #f9fafb; }
-    tbody tr:hover { background-color: #f1f3f4; }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: center;
+        border-radius: 0 0 10px 10px;
+    }
+
+    thead {
+        background-color: #e9ecef;
+        color: #333;
+    }
+
+    thead th {
+        padding: 12px;
+        font-weight: 600;
+        font-size: 15px;
+        border-bottom: 2px solid #dee2e6;
+    }
+
+    tbody td {
+        padding: 10px;
+        border-top: 1px solid #dee2e6;
+        font-size: 14px;
+    }
+
+    tbody tr:nth-child(even) {
+        background-color: #f9fafb;
+    }
+
+    tbody tr:hover {
+        background-color: #f1f3f4;
+    }
 
     /* ====== Buttons ====== */
-    .btn-sm { padding: 6px 12px; font-size: 13px; border: none; border-radius: 5px; cursor: pointer; text-decoration: none; transition: 0.3s; }
-    .btn-warning { background-color: #ffc107; color: #212529; }
-    .btn-warning:hover { background-color: #e0a800; }
-    .btn-danger { background-color: #dc3545; color: #fff; }
-    .btn-danger:hover { background-color: #bb2d3b; }
+    .btn-sm {
+        padding: 6px 12px;
+        font-size: 13px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        text-decoration: none;
+        transition: 0.3s;
+    }
+
+    .btn-warning {
+        background-color: #ffc107;
+        color: #212529;
+    }
+
+    .btn-warning:hover {
+        background-color: #e0a800;
+    }
+
+    .btn-danger {
+        background-color: #dc3545;
+        color: #fff;
+    }
+
+    .btn-danger:hover {
+        background-color: #bb2d3b;
+    }
 
     /* ====== Footer ====== */
-    .footer-note { text-align: center; color: #666; font-size: 13px; margin-top: 40px; margin-bottom: 10px; }
+    .footer-note {
+        text-align: center;
+        color: #666;
+        font-size: 13px;
+        margin-top: 40px;
+        margin-bottom: 10px;
+    }
 
     /* --- NEW: Styles for Filter Section --- */
     .filters-section {
         background: #fff;
         padding: 20px;
         border-radius: 10px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         margin-bottom: 20px;
         border: 1px solid #e0e0e0;
     }
+
     .filters-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
         gap: 15px;
     }
+
     .filter-group {
         display: flex;
         flex-direction: column;
     }
+
     .filter-label {
         font-weight: 600;
         margin-bottom: 5px;
         color: #333;
         font-size: 14px;
     }
-    .filter-select, .filter-input {
+
+    .filter-select,
+    .filter-input {
         padding: 8px 12px;
         border: 1px solid #ddd;
         border-radius: 6px;
         font-size: 14px;
         background: #fff;
     }
+
     .filter-actions {
         display: flex;
         gap: 10px;
         justify-content: flex-end;
         margin-top: 15px;
     }
+
     .btn-primary {
         background-color: #004d7a;
         color: white;
@@ -86,6 +216,7 @@
         font-weight: bold;
         cursor: pointer;
     }
+
     .btn-clear {
         background-color: #6c757d;
         color: white;
@@ -99,11 +230,40 @@
 
     /* ====== Responsive ====== */
     @media (max-width: 768px) {
-        table, thead, tbody, th, td, tr { display: block; }
-        thead { display: none; }
-        tbody tr { margin-bottom: 10px; border: 1px solid #ddd; border-radius: 8px; padding: 10px; }
-        tbody td { text-align: right; border: none; display: flex; justify-content: space-between; padding: 8px; }
-        tbody td::before { content: attr(data-label); font-weight: bold; color: #004d7a; }
+
+        table,
+        thead,
+        tbody,
+        th,
+        td,
+        tr {
+            display: block;
+        }
+
+        thead {
+            display: none;
+        }
+
+        tbody tr {
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+        }
+
+        tbody td {
+            text-align: right;
+            border: none;
+            display: flex;
+            justify-content: space-between;
+            padding: 8px;
+        }
+
+        tbody td::before {
+            content: attr(data-label);
+            font-weight: bold;
+            color: #004d7a;
+        }
     }
 </style>
 
@@ -113,29 +273,29 @@
 </div>
 
 {% with messages = get_flashed_messages(with_categories=true) %}
-  {% if messages %}
-    {% for category, message in messages %}
-      <div class="alert alert-{{ category }}">{{ message }}</div>
-    {% endfor %}
-  {% endif %}
+{% if messages %}
+{% for category, message in messages %}
+<div class="alert alert-{{ category }}">{{ message }}</div>
+{% endfor %}
+{% endif %}
 {% endwith %}
 
 <div class="filters-section">
     <form id="filtersForm" method="GET" action="{{ url_for('users') }}">
         <div class="filters-grid">
-            
+
             <div class="filter-group">
                 <label class="filter-label" for="search">اسم المستخدم / الاسم الكامل:</label>
-                <input type="text" name="search" id="search" class="filter-input" 
-                       placeholder="ابحث..." value="{{ filters.get('search', '') }}">
+                <input type="text" name="search" id="search" class="filter-input" placeholder="ابحث..."
+                    value="{{ filters.get('search', '') }}">
             </div>
-            
+
             <div class="filter-group">
                 <label class="filter-label" for="role_id">الدور:</label>
                 <select name="role_id" id="role_id" class="filter-select">
                     <option value="">كل الأدوار</option>
                     {% for r in roles %}
-                    <option value="{{ r.RoleID }}" {% if filters.get('role_id') == r.RoleID|string %}selected{% endif %}>
+                    <option value="{{ r.RoleID }}" {% if filters.get('role_id')==r.RoleID|string %}selected{% endif %}>
                         {{ r.RoleName }}
                     </option>
                     {% endfor %}
@@ -147,7 +307,7 @@
                 <select name="dept_id" id="dept_id" class="filter-select">
                     <option value="">كل الأقسام</option>
                     {% for d in depts %}
-                    <option value="{{ d.DEPTID }}" {% if filters.get('dept_id') == d.DEPTID|string %}selected{% endif %}>
+                    <option value="{{ d.DEPTID }}" {% if filters.get('dept_id')==d.DEPTID|string %}selected{% endif %}>
                         {{ d.DEPTNAME }}
                     </option>
                     {% endfor %}
@@ -171,7 +331,7 @@
     <table>
         <thead>
             <tr>
-                <th scope="col">الصورة</th> 
+                <th scope="col">الصورة</th>
                 <th scope="col">رقم المستخدم</th>
                 <th scope="col">اسم المستخدم</th>
                 <th scope="col">الاسم الكامل</th>
@@ -184,30 +344,28 @@
             {% for u in users %}
             <tr>
                 <td data-label="الصورة">
-                    <img src="{{ url_for('user_pic', user_id=u.UserID) }}" 
-                         alt="User Picture" 
-                         width="50" 
-                         height="50"
-                         style="border-radius: 50%; object-fit: cover;">
+                    <img src="{{ url_for('user_pic', user_id=u.UserID) }}" alt="User Picture" width="50" height="50"
+                        style="border-radius: 50%; object-fit: cover;">
                 </td>
                 <td data-label="رقم المستخدم">{{ u.UserID }}</td>
                 <td data-label="اسم المستخدم">{{ u.Username }}</td>
                 <td data-label="الاسم الكامل">{{ u.FullName or '-' }}</td>
-                
+
                 <td data-label="القسم">{{ u.DEPTNAME or '-' }}</td>
                 <td data-label="الدور">{{ u.RoleName or '-' }}</td>
-                
+
                 <td data-label="الإجراءات">
                     <a href="{{ url_for('edit_user', user_id=u.UserID) }}" class="btn-sm btn-warning">تعديل</a>
                     <form action="{{ url_for('delete_user', user_id=u.UserID) }}" method="POST"
-                          onsubmit="return confirm('هل أنت متأكد من حذف هذا المستخدم؟');"
-                          style="display:inline;">
+                        onsubmit="return confirm('هل أنت متأكد من حذف هذا المستخدم؟');" style="display:inline;">
                         <button type="submit" class="btn-sm btn-danger">حذف</button>
                     </form>
                 </td>
             </tr>
             {% else %}
-            <tr><td colspan="7" style="color:#777; text-align: center;">لا يوجد مستخدمون مطابقون للبحث</td></tr>
+            <tr>
+                <td colspan="7" style="color:#777; text-align: center;">لا يوجد مستخدمون مطابقون للبحث</td>
+            </tr>
             {% endfor %}
         </tbody>
     </table>
@@ -216,7 +374,28 @@
 <p class="footer-note">© 2025 نظام إدارة الموارد البشرية - يعمل بدون اتصال بالإنترنت</p>
 
 <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // === Sticky Filters Logic ===
+        const filterKey = 'usersPageFilters';
+
+        // 1. Check if we should restore filters
+        // Condition: No query params in URL AND we have saved filters
+        if (!window.location.search && localStorage.getItem(filterKey)) {
+            window.location.search = localStorage.getItem(filterKey);
+            return; // Stop execution to allow redirect
+        }
+
+        // 2. Save current filters if they exist
+        // If the URL has query parameters, save them as the new "last state"
+        if (window.location.search) {
+            localStorage.setItem(filterKey, window.location.search);
+        }
+    });
+
     function clearFilters() {
+        // Clear saved state from localStorage
+        localStorage.removeItem('usersPageFilters');
+
         // Find all inputs and selects in the form and clear them
         const form = document.getElementById('filtersForm');
         form.querySelectorAll('input, select').forEach(element => {

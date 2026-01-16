@@ -20,7 +20,7 @@
     /* === Header === */
     .page-title {
         color: #fff;
-        text-shadow: 0 2px 5px rgba(0,0,0,0.4);
+        text-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
         font-weight: 800;
     }
 
@@ -37,44 +37,72 @@
         flex-direction: column;
         justify-content: center;
         align-items: center;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
     }
+
     .kpi-card:hover {
         transform: translateY(-5px);
-        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
     }
-    .kpi-icon { font-size: 2rem; margin-bottom: 5px; }
-    .kpi-value { font-size: 1.8rem; font-weight: 800; color: #333; }
-    .kpi-label { font-size: 0.85rem; font-weight: 600; color: #666; }
 
-    /* === Form Inputs === */
-    .form-control, .form-select, .input-group-text {
-        background: rgba(255, 255, 255, 0.6);
-        border: 1px solid rgba(0,0,0,0.1);
+    .kpi-icon {
+        font-size: 2rem;
+        margin-bottom: 5px;
+    }
+
+    .kpi-value {
+        font-size: 1.8rem;
+        font-weight: 800;
         color: #333;
     }
-    .form-control:focus, .form-select:focus {
+
+    .kpi-label {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #666;
+    }
+
+    /* === Form Inputs === */
+    .form-control,
+    .form-select,
+    .input-group-text {
+        background: rgba(255, 255, 255, 0.6);
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        color: #333;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
         background: #fff;
         box-shadow: 0 0 0 3px rgba(11, 102, 178, 0.2);
         border-color: #0b66b2;
     }
-    
+
     /* === Buttons === */
     .btn-glass-primary {
         background: linear-gradient(135deg, #004d7a, #0b66b2);
         color: white;
         border: none;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
     }
-    .btn-glass-primary:hover { background: #003d6a; color: white; transform: translateY(-2px); }
+
+    .btn-glass-primary:hover {
+        background: #003d6a;
+        color: white;
+        transform: translateY(-2px);
+    }
 
     .btn-glass-secondary {
         background: rgba(108, 117, 125, 0.8);
         color: white;
-        border: 1px solid rgba(255,255,255,0.2);
+        border: 1px solid rgba(255, 255, 255, 0.2);
         backdrop-filter: blur(4px);
     }
-    .btn-glass-secondary:hover { background: #5a6268; color: white; }
+
+    .btn-glass-secondary:hover {
+        background: #5a6268;
+        color: white;
+    }
 
     /* === Table Styling === */
     .table-custom {
@@ -92,19 +120,26 @@
         font-weight: 600;
         text-align: center;
     }
-    .table-custom thead th:first-child { border-top-right-radius: 10px; }
-    .table-custom thead th:last-child { border-top-left-radius: 10px; }
+
+    .table-custom thead th:first-child {
+        border-top-right-radius: 10px;
+    }
+
+    .table-custom thead th:last-child {
+        border-top-left-radius: 10px;
+    }
 
     .table-custom tbody td {
         background-color: transparent;
         padding: 12px;
-        border-bottom: 1px solid rgba(0,0,0,0.05);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
         color: #333;
         vertical-align: middle;
     }
 
     .table-custom tbody tr:hover td {
-        background-color: rgba(11, 102, 178, 0.08); /* Light Blue Highlight */
+        background-color: rgba(11, 102, 178, 0.08);
+        /* Light Blue Highlight */
         transition: background-color 0.2s;
     }
 
@@ -112,9 +147,9 @@
     .modal-content.glass-modal {
         background: rgba(255, 255, 255, 0.95);
         backdrop-filter: blur(20px);
-        border: 1px solid rgba(255,255,255,0.4);
+        border: 1px solid rgba(255, 255, 255, 0.4);
         border-radius: 20px;
-        box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
     }
 </style>
 
@@ -143,7 +178,7 @@
                 <div class="kpi-label">إجمالي السجلات</div>
             </div>
         </div>
-        
+
         <div class="col-md-2">
             <div class="kpi-card" style="border-color: rgba(25, 135, 84, 0.3);">
                 <div class="kpi-icon">✅</div>
@@ -192,7 +227,8 @@
             <div class="col-md-8">
                 <div class="input-group">
                     <span class="input-group-text border-end-0">🔍</span>
-                    <input type="text" id="historySearch" class="form-control border-start-0 ps-0" placeholder="ابحث باسم المرشح، الوظيفة، أو الملاحظات...">
+                    <input type="text" id="historySearch" class="form-control border-start-0 ps-0"
+                        placeholder="ابحث باسم المرشح، الوظيفة، أو الملاحظات...">
                 </div>
             </div>
             <div class="col-md-4">
@@ -206,26 +242,24 @@
         </div>
     </div>
 
-    <div class="glass-panel p-0 overflow-hidden">
-        <div class="table-responsive">
+    <div class="glass-panel p-0 overflow-hidden d-flex flex-column" style="height: calc(100vh - 350px);">
+        <div class="table-responsive flex-grow-1" style="overflow-y: auto;">
             <table class="table table-custom text-center" id="historyTable">
-                <thead>
+                <thead style="position: sticky; top: 0; z-index: 10;">
                     <tr>
-                        <th class="py-3">التاريخ</th>
-                        <th>المرشح</th>
-                        <th>الوظيفة</th>
-                        <th>القسم</th> 
-                        <th>الإجراء (الحالة)</th>
-                        <th>ملاحظات</th>
-                        <th>إجراءات</th>
+                        <th class="py-3 shadow-sm">التاريخ</th>
+                        <th class="shadow-sm">المرشح</th>
+                        <th class="shadow-sm">الوظيفة</th>
+                        <th class="shadow-sm">القسم</th>
+                        <th class="shadow-sm">الإجراء (الحالة)</th>
+                        <th class="shadow-sm">ملاحظات</th>
+                        <th class="shadow-sm">إجراءات</th>
                     </tr>
                 </thead>
                 <tbody id="tableBody">
                     {% for log in logs %}
-                    <tr class="history-row" 
-                        data-status="{{ log.ToStage }}" 
-                        data-job="{{ log.JobTitle }}">
-                        
+                    <tr class="history-row" data-status="{{ log.ToStage }}" data-job="{{ log.JobTitle }}">
+
                         <td class="small text-muted">
                             <div class="fw-bold text-dark">📅 {{ log.ActionDate.strftime('%Y-%m-%d') }}</div>
                             <div>🕒 {{ log.ActionDate.strftime('%H:%M') }}</div>
@@ -249,45 +283,47 @@
                             <span class="badge bg-secondary opacity-50 text-white">{{ log.FromStage }}</span>
                             <span class="mx-1 text-muted">⬅️</span>
                             {% if log.ToStage == 'Rejected' %}
-                                <span class="badge bg-danger">❌ مرفوض</span>
+                            <span class="badge bg-danger">❌ مرفوض</span>
                             {% elif log.ToStage == 'Hired' %}
-                                <span class="badge bg-success">✅ تم التعيين</span>
+                            <span class="badge bg-success">✅ تم التعيين</span>
                             {% elif log.ToStage == 'Resigned' %}
-                                <span class="badge bg-warning text-dark border border-warning">🚪 استقالة</span>
+                            <span class="badge bg-warning text-dark border border-warning">🚪 استقالة</span>
                             {% else %}
-                                <span class="badge bg-primary">{{ log.ToStage }}</span>
+                            <span class="badge bg-primary">{{ log.ToStage }}</span>
                             {% endif %}
                         </td>
 
                         <td class="text-start search-term" style="max-width: 250px;">
                             {% if log.Note %}
-                                <div class="p-1 small text-truncate" style="max-width: 250px;" title="{{ log.Note }}">
-                                    📝 {{ log.Note }}
-                                </div>
+                            <div class="p-1 small text-truncate" style="max-width: 250px;" title="{{ log.Note }}">
+                                📝 {{ log.Note }}
+                            </div>
                             {% else %}
-                                <span class="text-muted small">-</span>
+                            <span class="text-muted small">-</span>
                             {% endif %}
                         </td>
 
                         <td>
                             <div class="btn-group shadow-sm" style="border-radius: 6px; overflow: hidden;">
-                                <button class="btn btn-sm btn-light border" 
-                                        onclick="openDetailsModal('{{ log.FullName }}', '{{ log.Phone }}', '{{ log.Email }}', '{{ log.JobTitle }}', '{{ log.DEPTNAME or 'عام' }}')"
-                                        title="التفاصيل">
+                                <button class="btn btn-sm btn-light border"
+                                    onclick="openDetailsModal('{{ log.FullName }}', '{{ log.Phone }}', '{{ log.Email }}', '{{ log.JobTitle }}', '{{ log.DEPTNAME or 'عام' }}')"
+                                    title="التفاصيل">
                                     👁️
                                 </button>
 
-                                <button class="btn btn-sm btn-light border text-danger" 
-                                        onclick="openResignModal('{{ log.CandidateID }}', '{{ log.FullName }}')"
-                                        title="تسجيل استقالة">
+                                <button class="btn btn-sm btn-light border text-danger"
+                                    onclick="openResignModal('{{ log.CandidateID }}', '{{ log.FullName }}')"
+                                    title="تسجيل استقالة">
                                     🚪
                                 </button>
 
                                 {% if log.CurrentStatus != 'Archived' %}
-                                <form action="{{ url_for('archive_candidate') }}" method="POST" class="d-inline" onsubmit="return confirm('أرشفة هذا المرشح؟');">
+                                <form action="{{ url_for('archive_candidate') }}" method="POST" class="d-inline"
+                                    onsubmit="return confirm('أرشفة هذا المرشح؟');">
                                     <input type="hidden" name="candidate_id" value="{{ log.CandidateID }}">
                                     <input type="hidden" name="note" value="Archived from History List">
-                                    <button type="submit" class="btn btn-sm btn-light border text-secondary" title="أرشفة">
+                                    <button type="submit" class="btn btn-sm btn-light border text-secondary"
+                                        title="أرشفة">
                                         📦
                                     </button>
                                 </form>
@@ -319,12 +355,13 @@
             </div>
             <div class="modal-body p-4">
                 <div class="text-center mb-4">
-                    <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center shadow-sm" style="width: 80px; height: 80px;">
+                    <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center shadow-sm"
+                        style="width: 80px; height: 80px;">
                         <span class="fs-1">👤</span>
                     </div>
                     <h4 id="detailName" class="fw-bold mt-2 text-dark"></h4>
                 </div>
-                
+
                 <ul class="list-group list-group-flush bg-transparent">
                     <li class="list-group-item d-flex justify-content-between bg-transparent border-bottom">
                         <span class="text-muted">💼 الوظيفة:</span>
@@ -358,41 +395,94 @@
             <div class="modal-body p-4">
                 <input type="hidden" name="candidate_id" id="resignCandidateId">
                 <div class="alert alert-warning border-0 text-center shadow-sm mb-4">
-                    هل أنت متأكد من تغيير حالة <strong id="resignName"></strong> إلى <strong>مستقيل</strong>؟
+                    هل أنت متأكد من إنهاء خدمات <strong id="resignName"></strong>؟
                 </div>
+
                 <div class="mb-3">
-                    <label class="fw-bold mb-2">📌 سبب الاستقالة</label>
-                    <select name="reason_id" class="form-select" required>
-                        <option value="" selected disabled>-- اختر السبب --</option>
-                        {% for reason in reasons %}
-                        <option value="{{ reason.ReasonID }}">{{ reason.ReasonText }}</option>
+                    <label class="fw-bold mb-2">📌 نوع إنهاء الخدمة</label>
+                    <select name="termination_type_id" id="resignTypeSelect" class="form-select" required
+                        onchange="filterReasons()">
+                        <option value="" selected disabled>-- اختر النوع --</option>
+                        {% for type in types %}
+                        <option value="{{ type.TypeID }}">{{ type.TypeText }}</option>
                         {% endfor %}
                     </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="fw-bold mb-2">📝 السبب التفصيلي</label>
+                    <select name="termination_reason_id" id="resignReasonSelect" class="form-select" required disabled>
+                        <option value="" selected disabled>-- اختر النوع أولاً --</option>
+                        <!-- Options populated by JS -->
+                    </select>
                     <div class="form-text">
-                        <a href="{{ url_for('recruitment_settings') }}" target="_blank" class="text-decoration-none">➕ إدارة قائمة الأسباب</a>
+                        <a href="{{ url_for('recruitment_settings') }}" target="_blank" class="text-decoration-none">➕
+                            إدارة المسميات والأسباب</a>
                     </div>
                 </div>
+
                 <div class="mb-3">
                     <label class="fw-bold mb-2">📝 ملاحظات إضافية</label>
-                    <textarea name="notes" class="form-control" rows="3" placeholder="تفاصيل إضافية (اختياري)..."></textarea>
+                    <textarea name="notes" class="form-control" rows="3"
+                        placeholder="تفاصيل إضافية (اختياري)..."></textarea>
                 </div>
             </div>
             <div class="modal-footer border-0 justify-content-center pb-4">
                 <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">إلغاء</button>
-                <button type="submit" class="btn btn-danger px-4 fw-bold">تأكيد الاستقالة</button>
+                <button type="submit" class="btn btn-danger px-4 fw-bold">تأكيد الإجراء</button>
             </div>
         </form>
     </div>
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    // Embed reasons data for JS filtering
+    const allReasons = [
+        {% for reason in reasons %}
+    { id: "{{ reason.ReasonID }}", typeId: "{{ reason.TypeID }}", text: "{{ reason.ReasonText }}" },
+    {% endfor %}
+    ];
+
+    function filterReasons() {
+        const typeId = document.getElementById('resignTypeSelect').value;
+        const reasonSelect = document.getElementById('resignReasonSelect');
+
+        // Clear current options
+        reasonSelect.innerHTML = '<option value="" selected disabled>-- اختر السبب --</option>';
+
+        if (!typeId) {
+            reasonSelect.disabled = true;
+            return;
+        }
+
+        // Filter reasons
+        const filtered = allReasons.filter(r => r.typeId === typeId);
+
+        if (filtered.length > 0) {
+            filtered.forEach(r => {
+                const opt = document.createElement('option');
+                opt.value = r.id;
+                opt.textContent = r.text;
+                reasonSelect.appendChild(opt);
+            });
+            reasonSelect.disabled = false;
+        } else {
+            const opt = document.createElement('option');
+            opt.textContent = "لا توجد أسباب مسجلة لهذا النوع";
+            reasonSelect.appendChild(opt);
+            reasonSelect.disabled = true;
+        }
+    }
+</script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
         // === 1. Calculate Analytics from Table ===
         let total = 0, hired = 0, rejected = 0, resigned = 0;
         const jobCounts = {};
 
         const rows = document.querySelectorAll('.history-row');
-        
+
         rows.forEach(row => {
             total++;
             const status = row.getAttribute('data-status');
@@ -434,7 +524,7 @@
         });
 
         // --- Chart 2: Jobs (Bar - Top 5) ---
-        const sortedJobs = Object.entries(jobCounts).sort((a,b) => b[1] - a[1]).slice(0, 5);
+        const sortedJobs = Object.entries(jobCounts).sort((a, b) => b[1] - a[1]).slice(0, 5);
         new Chart(document.getElementById('jobsChart'), {
             type: 'bar',
             data: {
@@ -450,9 +540,9 @@
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: { legend: { display: false } },
-                scales: { 
-                    x: { display: false }, 
-                    y: { display: false, beginAtZero: true } 
+                scales: {
+                    x: { display: false },
+                    y: { display: false, beginAtZero: true }
                 }
             }
         });
@@ -470,8 +560,8 @@
         tableRows.forEach(row => {
             const textContent = row.innerText.toLowerCase();
             const matchesSearch = textContent.includes(searchText);
-            const rowStatus = row.getAttribute('data-status'); 
-            
+            const rowStatus = row.getAttribute('data-status');
+
             let matchesStatus = true;
             if (statusValue === 'Rejected') matchesStatus = (rowStatus === 'Rejected');
             else if (statusValue === 'Hired') matchesStatus = (rowStatus === 'Hired');

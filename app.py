@@ -26,7 +26,40 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True) # Create folder if not exists
 def get_db_connection():
     return pyodbc.connect(CONNECTION_STRING)
 
+def log_system_action(module, action_type, description, user_id=None, username=None):
+    """
+    Helper to log actions to AppLogs table.
+    """
+    try:
+        if not user_id and 'user_id' in session:
+            user_id = session['user_id']
+        if not username and 'username' in session:
+            username = session['username']
+            
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO AppLogs (UserID, Username, Module, ActionType, Description, Timestamp)
+            VALUES (?, ?, ?, ?, ?, GETDATE())
+        """, (user_id, username, module, action_type, description))
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print(f"Logging Error: {e}")
+
 # ========== AUTH HELPERS ==========
+
+def log_system_action(module, action_type, description, user_id=None, username=None):
+    """ Helper to log actions to AppLogs table. """
+    try:
+        if not user_id and 'user_id' in session: user_id = session['user_id']
+        if not username and 'username' in session: username = session['username']
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("INSERT INTO AppLogs (UserID, Username, Module, ActionType, Description, Timestamp) VALUES (?, ?, ?, ?, ?, GETDATE())", (user_id, username, module, action_type, description))
+        conn.commit()
+        conn.close()
+    except Exception as e: print(f"Logging Error: {e}")
 
 def is_admin():
     return session.get('role_id') in [1, 2]  # Admin + Police Officer يشوفوا كل شيء
@@ -100,7 +133,6 @@ def resize_logo(input_path, output_path, max_size=(250, 250)):
         print(f"Error: {e}")
 
 # Usage
-resize_logo('Sugar RR.png', 'Sugar_RR_Optimized.png')
 
 # ========== EVALUATION LOGIC ==========
 
@@ -207,6 +239,45 @@ def get_employee_class(user_id):
     conn.close()
     return result.employee_class if result and result.employee_class else 'لم تضاف'
 
+def get_all_classes():
+    """Helper to fetch all employee classes from DB"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT ClassID, ClassName, DisplayName FROM [Zktime_Copy].[dbo].[EmployeeClasses] ORDER BY ClassName")
+        classes = cursor.fetchall()
+        conn.close()
+        return classes
+    except Exception as e:
+        print(f"Error fetching classes: {e}")
+        return []
+
+# ========== FILTERS ==========
+
+@app.template_filter('date_format_arabic')
+def date_format_arabic(value, format='%Y-%m-%d'):
+    if value == 'now':
+        date_obj = datetime.now()
+    elif isinstance(value, str):
+        try:
+            date_obj = datetime.strptime(value, '%Y-%m-%d')
+        except ValueError:
+            return value
+    else:
+        date_obj = value
+
+    months = {
+        1: "يناير", 2: "فبراير", 3: "مارس", 4: "أبريل",
+        5: "مايو", 6: "يونيو", 7: "يوليو", 8: "أغسطس",
+        9: "سبتمبر", 10: "أكتوبر", 11: "نوفمبر", 12: "ديسمبر"
+    }
+
+    day = date_obj.day
+    month = months[date_obj.month]
+    year = date_obj.year
+
+    return f"{day} {month} {year}"
+
 # ========== ROUTES ==========
 
 @app.route('/', methods=['GET', 'POST'])
@@ -239,6 +310,7 @@ def login():
             session['name'] = user.Name
 
             flash('✅ تم تسجيل الدخول بنجاح!', 'success')
+            log_system_action('Access', 'Login', 'تم تسجيل الدخول بنجاح', user_id=user.UserID, username=user.Username)
 
             # توجيه حسب الدور (تم حذف Role 5 الخاص بالتوظيف)
             if user.RoleID == 6:
@@ -263,7 +335,7 @@ def dashboard():
         'role_id': session.get('role_id'),
         'is_admin': is_admin(),
         # Default values to prevent Jinja errors if DB fails
-        'users_count': 0, 'employees_count': 0, 'evals_count': 0, 'avg_score': 0,
+        'users_count': 0, 'employees_count': 0, 'archived_count': 0, 'evals_count': 0, 'avg_score': 0,
         'rating_distribution': [], 'eval_type_distribution': [], 
         'top_performers': [], 'recent_evaluations': [], 'score_ranges': [],
         'active_evaluators': [], 'inactive_managers': [],
@@ -290,8 +362,9 @@ def dashboard():
             sql_kpis = """
                 SELECT 
                     (SELECT COUNT(*) FROM [Zktime_Copy].[dbo].[Users]) as UsersCount,
-                    (SELECT COUNT(*) FROM [Zktime_Copy].[dbo].[USERINFO] WHERE DEFAULTDEPTID <> -1) as EmpCount,
-                    (SELECT COUNT(*) FROM [Zktime_Copy].[dbo].[Evaluations]) as EvalsCount,
+                    (SELECT COUNT(*) FROM [Zktime_Copy].[dbo].[USERINFO] WHERE (IsActive = 1 OR IsActive IS NULL)) as ActiveCount,
+                    (SELECT COUNT(*) FROM [Zktime_Copy].[dbo].[USERINFO] WHERE IsActive = 0) as ArchivedCount,
+                    (SELECT COUNT(*) FROM [Zktime_Copy].[dbo].[Evaluations] WHERE OverallScore IS NOT NULL) as EvalsCount,
                     (SELECT AVG(OverallScore) FROM [Zktime_Copy].[dbo].[Evaluations] WHERE OverallScore IS NOT NULL) as AvgScore
             """
         else:
@@ -308,14 +381,15 @@ def dashboard():
             kpi_where = "DepartmentID = ?"
             chart_where = "UI.DEFAULTDEPTID = ?"
             # We need to pass the parameter multiple times for the subqueries
-            kpi_params = [dept_id, dept_id, dept_id, dept_id]
+            kpi_params = [dept_id, dept_id, dept_id, dept_id, dept_id]
             chart_params = [] # We will fill this when building the chart query
 
             sql_kpis = """
                 SELECT 
                     (SELECT COUNT(*) FROM [Zktime_Copy].[dbo].[Users] WHERE DepartmentID = ?) as UsersCount,
-                    (SELECT COUNT(*) FROM [Zktime_Copy].[dbo].[USERINFO] WHERE DEFAULTDEPTID = ?) as EmpCount,
-                    (SELECT COUNT(*) FROM [Zktime_Copy].[dbo].[Evaluations] E JOIN [Zktime_Copy].[dbo].[USERINFO] UI ON E.EmployeeUserID = UI.USERID WHERE UI.DEFAULTDEPTID = ?) as EvalsCount,
+                    (SELECT COUNT(*) FROM [Zktime_Copy].[dbo].[USERINFO] WHERE DEFAULTDEPTID = ? AND (IsActive = 1 OR IsActive IS NULL)) as ActiveCount,
+                    (SELECT COUNT(*) FROM [Zktime_Copy].[dbo].[USERINFO] WHERE DEFAULTDEPTID = ? AND IsActive = 0) as ArchivedCount,
+                    (SELECT COUNT(*) FROM [Zktime_Copy].[dbo].[Evaluations] E JOIN [Zktime_Copy].[dbo].[USERINFO] UI ON E.EmployeeUserID = UI.USERID WHERE UI.DEFAULTDEPTID = ? AND E.OverallScore IS NOT NULL) as EvalsCount,
                     (SELECT AVG(E.OverallScore) FROM [Zktime_Copy].[dbo].[Evaluations] E JOIN [Zktime_Copy].[dbo].[USERINFO] UI ON E.EmployeeUserID = UI.USERID WHERE UI.DEFAULTDEPTID = ? AND E.OverallScore IS NOT NULL) as AvgScore
             """
 
@@ -326,7 +400,8 @@ def dashboard():
         kpi_row = cursor.fetchone()
         if kpi_row:
             ctx['users_count'] = kpi_row.UsersCount
-            ctx['employees_count'] = kpi_row.EmpCount
+            ctx['employees_count'] = kpi_row.ActiveCount
+            ctx['archived_count'] = kpi_row.ArchivedCount
             ctx['evals_count'] = kpi_row.EvalsCount
             ctx['avg_score'] = kpi_row.AvgScore if kpi_row.AvgScore else 0
 
@@ -417,16 +492,34 @@ def dashboard():
         # PART 4: ADMIN ONLY EXTRAS (Trip #3 - Optional)
         # ==========================================
         if is_admin():
+            # -- Inactive Managers Pagination Logic --
+            managers_page = 1
+            managers_limit = 5
+            managers_offset = 0
+
+            # 1. Get Total Count
+            cursor.execute("""
+                SELECT COUNT(*) 
+                FROM [Zktime_Copy].[dbo].[Users] U
+                WHERE U.RoleID = 3 
+                AND U.UserID NOT IN (SELECT DISTINCT EvaluatorUserID FROM [Zktime_Copy].[dbo].[Evaluations] WHERE EvaluatorUserID IS NOT NULL)
+            """)
+            managers_count = cursor.fetchone()[0]
+            managers_total_pages = (managers_count + managers_limit - 1) // managers_limit
+            ctx['managers_page'] = managers_page
+            ctx['managers_total_pages'] = managers_total_pages
+
             sql_admin = """
-            -- Inactive Managers
+            -- Inactive Managers (Paginated)
             SELECT U.UserID, U.Name, D.DEPTNAME,
                 (SELECT COUNT(*) FROM [Zktime_Copy].[dbo].[USERINFO] WHERE DEFAULTDEPTID = U.DepartmentID AND IsActive = 1) as TotalEmployees
             FROM [Zktime_Copy].[dbo].[Users] U
             LEFT JOIN [Zktime_Copy].[dbo].[DEPARTMENTS] D ON U.DepartmentID = D.DEPTID
             WHERE U.RoleID = 3 AND U.UserID NOT IN (SELECT DISTINCT EvaluatorUserID FROM [Zktime_Copy].[dbo].[Evaluations] WHERE EvaluatorUserID IS NOT NULL)
-            ORDER BY U.Name;
+            ORDER BY U.Name
+            OFFSET 0 ROWS FETCH NEXT 5 ROWS ONLY;
 
-            -- Active Evaluators (ADDED ALIAS BELOW)
+            -- Active Evaluators
             SELECT TOP 5 
                 COALESCE(Mgr.Name, Mgr.Username) AS EvaluatorName, 
                 COUNT(E.EvaluationID) as evaluation_count, 
@@ -518,6 +611,52 @@ def dashboard():
         if conn: conn.close()
     
     return render_template('dashboard.html', **ctx)
+
+@app.route('/dashboard/managers-partial')
+@admin_required
+def dashboard_managers_partial():
+    page = request.args.get('page', 1, type=int)
+    limit = 5
+    offset = (page - 1) * limit
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    try:
+        # 1. Get Total Count
+        cursor.execute("""
+            SELECT COUNT(*) 
+            FROM [Zktime_Copy].[dbo].[Users] U
+            WHERE U.RoleID = 3 
+            AND U.UserID NOT IN (SELECT DISTINCT EvaluatorUserID FROM [Zktime_Copy].[dbo].[Evaluations] WHERE EvaluatorUserID IS NOT NULL)
+        """)
+        total_count = cursor.fetchone()[0]
+        total_pages = (total_count + limit - 1) // limit
+        
+        # 2. Get Paginated Data
+        sql = """
+            SELECT U.UserID, U.Name, D.DEPTNAME,
+                (SELECT COUNT(*) FROM [Zktime_Copy].[dbo].[USERINFO] WHERE DEFAULTDEPTID = U.DepartmentID AND IsActive = 1) as TotalEmployees
+            FROM [Zktime_Copy].[dbo].[Users] U
+            LEFT JOIN [Zktime_Copy].[dbo].[DEPARTMENTS] D ON U.DepartmentID = D.DEPTID
+            WHERE U.RoleID = 3 
+            AND U.UserID NOT IN (SELECT DISTINCT EvaluatorUserID FROM [Zktime_Copy].[dbo].[Evaluations] WHERE EvaluatorUserID IS NOT NULL)
+            ORDER BY U.Name
+            OFFSET ? ROWS FETCH NEXT ? ROWS ONLY
+        """
+        cursor.execute(sql, (offset, limit))
+        managers = cursor.fetchall()
+        
+        return render_template('partials/managers_table.html', 
+                             inactive_managers=managers, 
+                             managers_page=page, 
+                             managers_total_pages=total_pages)
+                             
+    except Exception as e:
+        print(f"Error in partial: {e}")
+        return f"<div class='alert alert-danger'>Error loading data: {e}</div>"
+    finally:
+        conn.close()
 
 
 
@@ -622,14 +761,24 @@ def delete_user(user_id):
 @app.route('/userinfo')
 @login_required 
 def userinfo_list():
-    # 1. Collect Filters
+    # 1. Collect Filters & Pagination
     search = request.args.get('search', '').strip()
     employee_class_filter = request.args.get('employee_class', '')
     gender = request.args.get('gender', '')
     department = request.args.get('department', '')
-    title = request.args.get('title', '').strip() # Added Title filter capture
+    title = request.args.get('title', '').strip() 
     sort = request.args.get('sort', 'USERID')
     order = request.args.get('order', 'asc')
+    
+    # Pagination
+    try:
+        page = int(request.args.get('page', 1))
+        if page < 1: page = 1
+    except ValueError:
+        page = 1
+        
+    limit = 50 
+    offset = (page - 1) * limit
     
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -637,14 +786,13 @@ def userinfo_list():
     user_id = session.get('user_id')
     role_id = session.get('role_id')
     
-    # 2. Security & Global Filters (Same logic as before)
-    where_clauses = ["UI.DEFAULTDEPTID <> -1"] 
+    # 2. Security & Global Filters
+    where_clauses = ["1=1"] 
     params = []
     
     if is_admin():
-        where_clauses.append("1=1")
+        where_clauses.append("(UI.IsActive = 1 OR UI.IsActive IS NULL)")
     elif role_id == 3:
-        # Manager Hierarchy Logic
         cursor.execute("SELECT DepartmentID FROM [Zktime_Copy].[dbo].[Users] WHERE UserID = ?", (user_id,))
         user_row = cursor.fetchone()
         dept_id = user_row.DepartmentID if user_row and user_row.DepartmentID else None
@@ -673,7 +821,7 @@ def userinfo_list():
         else:
             where_clauses.append("1=0") 
 
-    # 3. Apply Filters
+    # 3. Apply User Filters
     if search:
         where_clauses.append("(UI.NAME LIKE ? OR UI.BADGENUMBER LIKE ? OR UI.SSN LIKE ?)")
         params.extend([f"%{search}%", f"%{search}%", f"%{search}%"])
@@ -681,8 +829,15 @@ def userinfo_list():
         where_clauses.append("UI.employee_class LIKE ?")
         params.append(f"%{employee_class_filter}%")
     if gender:
-        where_clauses.append("UI.GENDER = ?")
-        params.append(gender)
+        if gender == 'M':
+            where_clauses.append("UI.GENDER IN (?, ?, ?)")
+            params.extend(['M', 'ذكر', 'Male'])
+        elif gender == 'F':
+            where_clauses.append("UI.GENDER IN (?, ?, ?, ?)")
+            params.extend(['F', 'انثى', 'أنثى', 'Female'])
+        else:
+            where_clauses.append("UI.GENDER = ?")
+            params.append(gender)
     if is_admin():
         if department:
             where_clauses.append("UI.DEFAULTDEPTID = ?")
@@ -691,90 +846,123 @@ def userinfo_list():
             where_clauses.append("UI.TITLE LIKE ?")
             params.append(f"%{title}%")
 
-    # Construct the WHERE string
     where_sql = ' AND '.join(where_clauses)
-
-    # 4. === OPTIMIZATION: Calculate Analytics in SQL ===
-    # We run specific GROUP BY queries using the EXACT SAME filters
     
-    analytics = {'total': 0, 'males': 0, 'females': 0, 'classes': {}, 'depts': {}}
+    # Clone params for analytics since they use the same WHERE clause
+    analytics_params = list(params) 
 
-    # A. Total & Gender
-    stats_query = f"""
+    # 4. === BATCH EXECUTION ===
+    sort_field = {
+        'USERID': 'UI.USERID', 'NAME': 'UI.NAME', 'HIREDDAY': 'UI.HIREDDAY',
+        'BADGENUMBER': 'UI.BADGENUMBER', 'SSN': 'UI.SSN', 'employee_class': 'UI.employee_class',
+        'GENDER': 'UI.GENDER', 'DEFAULTDEPTID': 'UI.DEFAULTDEPTID', 'TITLE': 'UI.TITLE'
+    }.get(sort, 'UI.USERID')
+    order_sql = 'ASC' if order.lower() == 'asc' else 'DESC'
+
+    batch_sql = f"""
+        -- 1. Gender Stats
         SELECT UI.GENDER, COUNT(*) 
         FROM [Zktime_Copy].[dbo].[USERINFO] UI
         LEFT JOIN DEPARTMENTS D ON UI.DEFAULTDEPTID = D.DEPTID
         WHERE {where_sql}
-        GROUP BY UI.GENDER
-    """
-    cursor.execute(stats_query, params)
-    for row in cursor.fetchall():
-        count = row[1]
-        analytics['total'] += count
-        if row[0] == 'M': analytics['males'] = count
-        elif row[0] == 'F': analytics['females'] = count
+        GROUP BY UI.GENDER;
 
-    # B. Class Distribution
-    # Note: SQL handles the splitting of comma-separated values poorly, 
-    # so we group by the raw string and process simple cases here.
-    class_query = f"""
+        -- 2. Class Stats
         SELECT UI.employee_class, COUNT(*) 
         FROM [Zktime_Copy].[dbo].[USERINFO] UI
         LEFT JOIN DEPARTMENTS D ON UI.DEFAULTDEPTID = D.DEPTID
         WHERE {where_sql}
-        GROUP BY UI.employee_class
-    """
-    cursor.execute(class_query, params)
-    for row in cursor.fetchall():
-        cls_str = row[0] or "غير محدد"
-        count = row[1]
-        # Simple logic: just take the whole string as a key for chart
-        analytics['classes'][cls_str] = analytics['classes'].get(cls_str, 0) + count
+        GROUP BY UI.employee_class;
 
-    # C. Top Departments
-    dept_query = f"""
+        -- 3. Top Depts
         SELECT TOP 5 D.DEPTNAME, COUNT(*) as cnt
         FROM [Zktime_Copy].[dbo].[USERINFO] UI
         LEFT JOIN DEPARTMENTS D ON UI.DEFAULTDEPTID = D.DEPTID
         WHERE {where_sql}
         GROUP BY D.DEPTNAME
-        ORDER BY cnt DESC
-    """
-    cursor.execute(dept_query, params)
-    for row in cursor.fetchall():
-        dname = row[0] or "غير محدد"
-        analytics['depts'][dname] = row[1]
+        ORDER BY cnt DESC;
 
-    # 5. Fetch Table Data (Limit to 500 for speed if needed, or paginate)
-    sort_field = {
-        'USERID': 'UI.USERID', 'NAME': 'UI.NAME', 'HIREDDAY': 'UI.HIREDDAY'
-    }.get(sort, 'UI.USERID')
-    order_sql = 'ASC' if order.lower() == 'asc' else 'DESC'
-
-    full_query = f"""
+        -- 4. Paged Data
         SELECT UI.USERID, UI.BADGENUMBER, UI.SSN, UI.NAME, UI.GENDER, UI.TITLE, UI.HIREDDAY,
-               UI.DEFAULTDEPTID, UI.employee_class, D.DEPTNAME
+               UI.DEFAULTDEPTID, UI.employee_class, D.DEPTNAME, UI.IsActive
         FROM [Zktime_Copy].[dbo].[USERINFO] AS UI
         LEFT JOIN DEPARTMENTS D ON UI.DEFAULTDEPTID = D.DEPTID
         WHERE {where_sql}
         ORDER BY {sort_field} {order_sql}
+        OFFSET ? ROWS FETCH NEXT ? ROWS ONLY;
+
+        -- 5. All Departments
+        SELECT DEPTID, DEPTNAME FROM DEPARTMENTS ORDER BY DEPTID;
     """
     
-    cursor.execute(full_query, params)
-    rows = cursor.fetchall()
+    # Params: Analytics (x3) + Data + Pagination + Lookup (0)
+    full_params = analytics_params + analytics_params + analytics_params + params + [offset, limit]
     
-    # 6. Fetch Dropdowns
-    cursor.execute("SELECT DEPTID, DEPTNAME FROM DEPARTMENTS ORDER BY DEPTID")
-    all_departments = cursor.fetchall()
+    cursor.execute(batch_sql, full_params)
     
+    # --- Process Results ---
+    analytics = {'total': 0, 'males': 0, 'females': 0, 'classes': {}, 'depts': {}}
+
+    # 1. Gender Stats
+    gender_rows = cursor.fetchall()
+    for row in gender_rows:
+        g_val = row[0].strip() if row[0] else ''
+        count = row[1]
+        analytics['total'] += count
+        if g_val in ['M', 'ذكر', 'Male']: 
+            analytics['males'] += count
+        elif g_val in ['F', 'انثى', 'أنثى', 'Female']: 
+            analytics['females'] += count
+
+    # 2. Class Stats
+    if cursor.nextset():
+        class_rows = cursor.fetchall()
+        for row in class_rows:
+            cls_str = row[0] or "غير محدد"
+            count = row[1]
+            analytics['classes'][cls_str] = analytics['classes'].get(cls_str, 0) + count
+
+    # 3. Top Depts
+    if cursor.nextset():
+        dept_rows = cursor.fetchall()
+        for row in dept_rows:
+            dname = row[0] or "غير محدد"
+            analytics['depts'][dname] = row[1]
+
+    # 4. Paged Users
+    users_rows = []
+    if cursor.nextset():
+        users_rows = cursor.fetchall()
+
+    # 5. All Depts
+    all_departments = []
+    if cursor.nextset():
+        all_departments = cursor.fetchall()
+
+    archive_reasons = []
+    if is_admin():
+        cursor.execute("SELECT R.ReasonID, R.ReasonText, T.TypeText FROM TerminationReasons R LEFT JOIN TerminationTypes T ON R.TypeID = T.TypeID ORDER BY T.TypeText, R.ReasonText")
+        archive_reasons = cursor.fetchall()
+
     conn.close()
     
+    total_records = analytics['total']
+    total_pages = (total_records + limit - 1) // limit
+    
+    # 6. Get All Classes
+    classes = get_all_classes()
+
     return render_template('userinfo.html', 
-                           users=rows, 
-                           analytics=analytics,  # <--- Pass the calculated stats here
+                           users=users_rows, 
+                           analytics=analytics,
                            is_admin=is_admin(), 
                            role_id=role_id, 
-                           departments=all_departments)
+                           departments=all_departments,
+                           current_page=page,
+                           total_pages=total_pages,
+                           limit=limit,
+                           classes=classes,
+                           archive_reasons=archive_reasons)
 
 @app.route('/userinfo/add', methods=['GET', 'POST'])
 @admin_required
@@ -786,6 +974,9 @@ def userinfo_add():
     cursor.execute("SELECT PositionID, PositionName, DeptID FROM [Zktime_Copy].[dbo].[POSITIONS] ORDER BY PositionName")
     positions_rows = cursor.fetchall()
     positions_list = [{'PositionID': p.PositionID, 'PositionName': p.PositionName, 'DeptID': p.DeptID} for p in positions_rows]
+    
+    classes = get_all_classes() # Get dynamic classes
+    
     if request.method == 'POST':
         badge = request.form.get('badgenumber') or None
         ssn = request.form.get('ssn') or None
@@ -806,7 +997,7 @@ def userinfo_add():
         flash('Employee added successfully!', 'success')
         return redirect(url_for('userinfo_list'))
     conn.close()
-    return render_template('userinfo_form.html', depts=depts, positions=positions_list, action='Add')
+    return render_template('userinfo_form.html', depts=depts, positions=positions_list, classes=classes, action='Add')
 
 @app.route('/userinfo/edit/<int:uid>', methods=['GET', 'POST'])
 @admin_required
@@ -820,6 +1011,9 @@ def userinfo_edit(uid):
     positions_list = [{'PositionID': p.PositionID, 'PositionName': p.PositionName, 'DeptID': p.DeptID} for p in positions_rows]
     cursor.execute("SELECT USERID, BADGENUMBER, SSN, NAME, GENDER, TITLE, DEFAULTDEPTID, PositionID, employee_class FROM [Zktime_Copy].[dbo].[USERINFO] WHERE USERID = ?", (uid,))
     user = cursor.fetchone()
+    
+    classes = get_all_classes()
+
     if request.method == 'POST':
         badge = request.form.get('badgenumber') or None
         ssn = request.form.get('ssn') or None
@@ -840,13 +1034,279 @@ def userinfo_edit(uid):
         flash('Employee updated successfully!', 'success')
         return redirect(url_for('userinfo_list'))
     conn.close()
-    return render_template('userinfo_form.html', user=user, depts=depts, positions=positions_list, action='Edit')
+    return render_template('userinfo_form.html', user=user, depts=depts, positions=positions_list, classes=classes, action='Edit')
 
 @app.route('/userinfo/view/<int:uid>')
 @login_required
 def userinfo_view(uid):
     conn = get_db_connection()
     cursor = conn.cursor()
+    # Fetch user data (basic info)
+    cursor.execute("SELECT * FROM [Zktime_Copy].[dbo].[USERINFO] WHERE USERID = ?", (uid,))
+    user = cursor.fetchone()
+    
+    # Fetch department name
+    dept_name = "N/A"
+    if user and user.DEFAULTDEPTID:
+         cursor.execute("SELECT DEPTNAME FROM [Zktime_Copy].[dbo].[DEPARTMENTS] WHERE DEPTID = ?", (user.DEFAULTDEPTID,))
+         d_row = cursor.fetchone()
+         if d_row: dept_name = d_row[0]
+
+    # Fetch Evaluations
+    cursor.execute("""
+        SELECT E.*, U.Name as EvaluatorName, C.CycleName
+        FROM [Zktime_Copy].[dbo].[Evaluations] E
+        LEFT JOIN [Zktime_Copy].[dbo].[Users] U ON E.EvaluatorUserID = U.UserID
+        LEFT JOIN [Zktime_Copy].[dbo].[EvaluationCycles] C ON E.CycleID = C.CycleID
+        WHERE E.EmployeeUserID = ?
+        ORDER BY E.EvaluationDate DESC
+    """, (uid,))
+    evaluations = cursor.fetchall()
+    
+    conn.close()
+    return render_template('userinfo_view.html', user=user, dept_name=dept_name, evaluations=evaluations)
+
+
+@app.route('/userinfo/archive/<int:uid>', methods=['POST'])
+@admin_required
+def userinfo_archive(uid):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        # Get current info
+        cursor.execute("SELECT BADGENUMBER, NAME, SSN, DEFAULTDEPTID, HIREDDAY FROM [Zktime_Copy].[dbo].[USERINFO] WHERE USERID = ?", (uid,))
+        row = cursor.fetchone()
+        if not row:
+            flash('User not found', 'danger')
+            return redirect(url_for('userinfo_list'))
+            
+        old_badge = row.BADGENUMBER
+        
+        # Append _A to free up the badge
+        new_badge_candidate = f"{old_badge}_A"
+        if len(new_badge_candidate) > 24:
+             new_badge_candidate = new_badge_candidate[:24]
+
+        # Update UserInfo
+        cursor.execute("UPDATE [Zktime_Copy].[dbo].[USERINFO] SET IsActive = 0, BADGENUMBER = ? WHERE USERID = ?", (new_badge_candidate, uid))
+        
+        # Insert into EmployeeArchive
+        reason_id = request.form.get('reason_id')
+        note = request.form.get('note')
+        
+        if reason_id:
+             cursor.execute("""
+                 INSERT INTO [Zktime_Copy].[dbo].[EmployeeArchive]
+                 (UserID, Name, ArchivedSSN, ArchivedDeptID, HiredDay, EndDay, ArchiveReasonID, ArchiveComment, AdminUserID)
+                 VALUES (?, ?, ?, ?, ?, GETDATE(), ?, ?, ?)
+             """, (uid, row.NAME, row.SSN, row.DEFAULTDEPTID, row.HIREDDAY, reason_id, note, session.get('user_id')))
+
+        conn.commit()
+        log_system_action('Users', 'Archive', f'Archived User ID {uid}. Badge changed from {old_badge} to {new_badge_candidate}. ReasonID: {reason_id}')
+        flash(f'✅ User archived successfully! Badge changed to {new_badge_candidate}', 'success')
+    except Exception as e:
+        conn.rollback()
+        flash(f'❌ Error archiving user: {e}', 'danger')
+    finally:
+        conn.close()
+    return redirect(url_for('userinfo_list'))
+
+@app.route('/userinfo/restore/<int:uid>', methods=['POST'])
+@admin_required
+def userinfo_restore(uid):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT BADGENUMBER FROM [Zktime_Copy].[dbo].[USERINFO] WHERE USERID = ?", (uid,))
+        row = cursor.fetchone()
+        current_badge = row.BADGENUMBER # e.g. "100_A"
+        
+        # Try to restore original badge if it ends with _A
+        new_badge = current_badge
+        if current_badge.endswith('_A'):
+            possible_original = current_badge[:-2]
+            
+            # Check if this original badge is taken
+            cursor.execute("SELECT COUNT(*) FROM [Zktime_Copy].[dbo].[USERINFO] WHERE BADGENUMBER = ?", (possible_original,))
+            if cursor.fetchone()[0] == 0:
+                new_badge = possible_original
+            else:
+                flash(f'⚠️ Original badge "{possible_original}" is taken. Restoring with current badge "{current_badge}". Please update manually.', 'warning')
+        
+        cursor.execute("UPDATE [Zktime_Copy].[dbo].[USERINFO] SET IsActive = 1, BADGENUMBER = ? WHERE USERID = ?", (new_badge, uid))
+        conn.commit()
+        log_system_action('Users', 'Restore', f'Restored User ID {uid}. Badge updated to {new_badge}')
+        flash('✅ User restored successfully!', 'success')
+    except Exception as e:
+        conn.rollback()
+        flash(f'❌ Error restoring user: {e}', 'danger')
+    finally:
+        conn.close()
+    return redirect(url_for('userinfo_archived_list'))
+
+@app.route('/userinfo/archived')
+@admin_required
+def userinfo_archived_list():
+    # 1. Collect Filters & Pagination
+    search = request.args.get('search', '').strip()
+    employee_class_filter = request.args.get('employee_class', '')
+    gender = request.args.get('gender', '')
+    department = request.args.get('department', '')
+    title = request.args.get('title', '').strip() 
+    sort = request.args.get('sort', 'USERID')
+    order = request.args.get('order', 'asc')
+    
+    # Pagination
+    try:
+        page = int(request.args.get('page', 1))
+        if page < 1: page = 1
+    except ValueError:
+        page = 1
+        
+    limit = 50 
+    offset = (page - 1) * limit
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    # 2. Base Filter (IsActive = 0)
+    where_clauses = ["(UI.IsActive = 0)"] 
+    params = []
+    
+    # 3. Apply Filters
+    if search:
+        where_clauses.append("(UI.NAME LIKE ? OR UI.BADGENUMBER LIKE ? OR UI.SSN LIKE ?)")
+        params.extend([f"%{search}%", f"%{search}%", f"%{search}%"])
+    if employee_class_filter:
+        where_clauses.append("UI.employee_class LIKE ?")
+        params.append(f"%{employee_class_filter}%")
+    if gender:
+        if gender == 'M':
+            where_clauses.append("UI.GENDER IN (?, ?, ?)")
+            params.extend(['M', 'ذكر', 'Male'])
+        elif gender == 'F':
+            where_clauses.append("UI.GENDER IN (?, ?, ?, ?)")
+            params.extend(['F', 'انثى', 'أنثى', 'Female'])
+        else:
+            where_clauses.append("UI.GENDER = ?")
+            params.append(gender)
+    if department:
+        where_clauses.append("UI.DEFAULTDEPTID = ?")
+        params.append(department)
+    if title:
+        where_clauses.append("UI.TITLE LIKE ?")
+        params.append(f"%{title}%")
+
+    where_sql = ' AND '.join(where_clauses)
+    
+    # Clone params for analytics
+    analytics_params = list(params) 
+
+    # 4. === BATCH EXECUTION ===
+    sort_field = {
+        'USERID': 'UI.USERID', 'NAME': 'UI.NAME', 'HIREDDAY': 'UI.HIREDDAY',
+        'BADGENUMBER': 'UI.BADGENUMBER', 'SSN': 'UI.SSN', 'employee_class': 'UI.employee_class',
+        'GENDER': 'UI.GENDER', 'DEFAULTDEPTID': 'UI.DEFAULTDEPTID', 'TITLE': 'UI.TITLE'
+    }.get(sort, 'UI.USERID')
+    order_sql = 'ASC' if order.lower() == 'asc' else 'DESC'
+
+    batch_sql = f"""
+        -- 1. Gender Stats
+        SELECT UI.GENDER, COUNT(*) 
+        FROM [Zktime_Copy].[dbo].[USERINFO] UI
+        LEFT JOIN DEPARTMENTS D ON UI.DEFAULTDEPTID = D.DEPTID
+        WHERE {where_sql}
+        GROUP BY UI.GENDER;
+
+        -- 2. Class Stats
+        SELECT UI.employee_class, COUNT(*) 
+        FROM [Zktime_Copy].[dbo].[USERINFO] UI
+        LEFT JOIN DEPARTMENTS D ON UI.DEFAULTDEPTID = D.DEPTID
+        WHERE {where_sql}
+        GROUP BY UI.employee_class;
+
+        -- 3. Top Depts (Archived Users per Dept)
+        SELECT TOP 5 D.DEPTNAME, COUNT(*) as cnt
+        FROM [Zktime_Copy].[dbo].[USERINFO] UI
+        LEFT JOIN DEPARTMENTS D ON UI.DEFAULTDEPTID = D.DEPTID
+        WHERE {where_sql}
+        GROUP BY D.DEPTNAME
+        ORDER BY cnt DESC;
+
+        -- 4. Paged Data
+        SELECT UI.USERID, UI.BADGENUMBER, UI.SSN, UI.NAME, UI.GENDER, UI.TITLE, UI.HIREDDAY,
+               UI.DEFAULTDEPTID, UI.employee_class, D.DEPTNAME, UI.IsActive,
+               EA.EndDay, TR.ReasonText, EA.ArchiveComment
+        FROM [Zktime_Copy].[dbo].[USERINFO] AS UI
+        LEFT JOIN DEPARTMENTS D ON UI.DEFAULTDEPTID = D.DEPTID
+        LEFT JOIN [Zktime_Copy].[dbo].[EmployeeArchive] EA ON UI.USERID = EA.UserID
+        LEFT JOIN [Zktime_Copy].[dbo].[TerminationReasons] TR ON EA.ArchiveReasonID = TR.ReasonID
+        WHERE {where_sql}
+        ORDER BY {sort_field} {order_sql}
+        OFFSET ? ROWS FETCH NEXT ? ROWS ONLY;
+
+        -- 5. All Departments (For Filter)
+        SELECT DEPTID, DEPTNAME FROM DEPARTMENTS ORDER BY DEPTID;
+    """
+    
+    # Params: Analytics (x3) + Data + Pagination + Lookup (0)
+    full_params = analytics_params + analytics_params + analytics_params + params + [offset, limit]
+    
+    cursor.execute(batch_sql, full_params)
+    
+    # --- Process Results ---
+    analytics = {'total': 0, 'males': 0, 'females': 0, 'classes': {}, 'depts': {}}
+
+    # 1. Gender Stats
+    gender_rows = cursor.fetchall()
+    for row in gender_rows:
+        g_val = row[0].strip() if row[0] else ''
+        count = row[1]
+        analytics['total'] += count
+        if g_val in ['M', 'ذكر', 'Male']: 
+            analytics['males'] += count
+        elif g_val in ['F', 'انثى', 'أنثى', 'Female']: 
+            analytics['females'] += count
+
+    # 2. Class Stats
+    if cursor.nextset():
+        class_rows = cursor.fetchall()
+        for row in class_rows:
+            cls_str = row[0] or "غير محدد"
+            count = row[1]
+            analytics['classes'][cls_str] = analytics['classes'].get(cls_str, 0) + count
+
+    # 3. Top Depts
+    if cursor.nextset():
+        dept_rows = cursor.fetchall()
+        for row in dept_rows:
+            dname = row[0] or "غير محدد"
+            analytics['depts'][dname] = row[1]
+
+    # 4. Paged Users
+    users_rows = []
+    if cursor.nextset():
+        users_rows = cursor.fetchall()
+
+    # 5. All Depts
+    all_departments = []
+    if cursor.nextset():
+        all_departments = cursor.fetchall()
+
+    conn.close()
+    
+    total_records = analytics['total']
+    total_pages = (total_records + limit - 1) // limit
+    
+    classes = get_all_classes() # For filter dropdown
+
+    return render_template('userinfo_archive.html', 
+                           users=users_rows, 
+                           analytics=analytics,
+                           departments=all_departments,
+                           current_page=page,
+                           total_pages=total_pages,
+                           classes=classes)
     avg_stats = None
     history = []
     training_history = []
@@ -1014,6 +1474,171 @@ def roles_delete(rid):
     conn.close()
     flash('Role deleted successfully!', 'info')
     return redirect(url_for('roles'))
+
+@app.route('/admin/classes')
+@admin_required
+def classes_list():
+    classes = get_all_classes()
+    return render_template('classes_list.html', classes=classes)
+
+@app.route('/admin/classes/add', methods=['POST'])
+@admin_required
+def classes_add():
+    class_name = request.form.get('class_name', '').strip()
+    display_name = request.form.get('display_name', '').strip()
+    
+    if not class_name:
+        flash('❌ يرجى إدخال رمز الفئة', 'danger')
+        return redirect(url_for('classes_list'))
+        
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        # Check uniqueness
+        cursor.execute("SELECT Count(*) FROM [Zktime_Copy].[dbo].[EmployeeClasses] WHERE ClassName = ?", (class_name,))
+        if cursor.fetchone()[0] > 0:
+            flash(f'❌ الفئة "{class_name}" موجودة بالفعل.', 'danger')
+        else:
+            cursor.execute("INSERT INTO [Zktime_Copy].[dbo].[EmployeeClasses] (ClassName, DisplayName) VALUES (?, ?)", (class_name, display_name or class_name))
+            conn.commit()
+            flash('✅ تم إضافة الفئة بنجاح.', 'success')
+        conn.close()
+    except Exception as e:
+        flash(f'❌ خطأ: {e}', 'danger')
+        
+    return redirect(url_for('classes_list'))
+
+@app.route('/admin/logs')
+@admin_required
+def logs_dashboard():
+    # 1. Filters
+    page = request.args.get('page', 1, type=int)
+    search = request.args.get('search', '').strip()
+    username = request.args.get('username', '')
+    date_from = request.args.get('date_from', '')
+    date_to = request.args.get('date_to', '')
+    module = request.args.get('module', '')
+    action_type = request.args.get('action_type', '')
+    
+    limit = 50
+    offset = (page - 1) * limit
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    # 2. Build Query
+    where_clauses = ["1=1"]
+    params = []
+    
+    if search:
+        where_clauses.append("(Description LIKE ? OR Username LIKE ?)")
+        params.extend([f'%{search}%', f'%{search}%'])
+        
+    if username:
+        where_clauses.append("Username = ?")
+        params.append(username)
+
+    if module:
+        where_clauses.append("Module = ?")
+        params.append(module)
+        
+    if action_type:
+        where_clauses.append("ActionType = ?")
+        params.append(action_type)
+        
+    if date_from:
+        where_clauses.append("CAST(Timestamp AS DATE) >= ?")
+        params.append(date_from)
+        
+    if date_to:
+        where_clauses.append("CAST(Timestamp AS DATE) <= ?")
+        params.append(date_to)
+        
+    where_sql = " AND ".join(where_clauses)
+    
+    # 3. KPIs
+    # Total Logs
+    cursor.execute(f"SELECT COUNT(*) FROM AppLogs WHERE {where_sql}", params)
+    total_logs = cursor.fetchone()[0]
+    total_pages = (total_logs + limit - 1) // limit
+    
+    # Active Users
+    cursor.execute("SELECT DISTINCT Username FROM AppLogs WHERE Username IS NOT NULL ORDER BY Username")
+    all_usernames = [row[0] for row in cursor.fetchall()]
+    
+    # Active Users (Filtered)
+    cursor.execute(f"SELECT COUNT(DISTINCT Username) FROM AppLogs WHERE {where_sql}", params)
+    active_users = cursor.fetchone()[0]
+    
+    # Today Actions
+    cursor.execute("SELECT COUNT(*) FROM AppLogs WHERE CAST(Timestamp AS DATE) = CAST(GETDATE() AS DATE)")
+    today_actions = cursor.fetchone()[0]
+    
+    # 4. Chart Data
+    cursor.execute("""
+        SELECT TOP 7 
+            FORMAT(Timestamp, 'MM-dd') as Day, 
+            COUNT(*) as Count 
+        FROM AppLogs 
+        GROUP BY FORMAT(Timestamp, 'MM-dd') 
+        ORDER BY Day DESC
+    """)
+    chart_rows = cursor.fetchall()
+    chart_data = {
+        'labels': [row.Day for row in reversed(chart_rows)],
+        'data': [row.Count for row in reversed(chart_rows)]
+    }
+    
+    # 5. Fetch Logs
+    query = f"""
+        SELECT * FROM AppLogs 
+        WHERE {where_sql} 
+        ORDER BY Timestamp DESC 
+        OFFSET ? ROWS FETCH NEXT ? ROWS ONLY
+    """
+    params.extend([offset, limit])
+    
+    cursor.execute(query, params)
+    logs = cursor.fetchall()
+    
+    conn.close()
+    
+    from datetime import datetime
+    return render_template('logs_dashboard.html',
+                           logs=logs,
+                           total_logs=total_logs,
+                           total_pages=total_pages,
+                           current_page=page,
+                           active_users=active_users,
+                           today_actions=today_actions,
+                           all_usernames=all_usernames,
+                           today_date=datetime.now().strftime('%Y-%m-%d'),
+                           chart_data=chart_data,
+                           modules=['Recruitment', 'Training', 'Evaluations', 'Access', 'Users', 'Settings'],
+                           action_types=['Login', 'Create', 'Update', 'Delete', 'Archive', 'Restore', 'Other'])
+
+@app.route('/admin/classes/delete/<int:id>', methods=['POST'])
+@admin_required
+def classes_delete(id):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Check if it's a core class, although UI prevents it, secure backend too
+        cursor.execute("SELECT ClassName FROM [Zktime_Copy].[dbo].[EmployeeClasses] WHERE ClassID = ?", (id,))
+        row = cursor.fetchone()
+        if row and row.ClassName in ['A', 'B', 'C', 'مشرف', 'مدير']:
+            flash('⚠️ لا يمكن حذف الفئات الأساسية للنظام.', 'warning')
+        else:
+            cursor.execute("DELETE FROM [Zktime_Copy].[dbo].[EmployeeClasses] WHERE ClassID = ?", (id,))
+            conn.commit()
+            flash('✅ تم حذف الفئة بنجاح.', 'success')
+            
+        conn.close()
+    except Exception as e:
+        flash(f'❌ خطأ: {e}', 'danger')
+        
+    return redirect(url_for('classes_list'))
 
 @app.route('/departments/manage')
 @login_required
@@ -1185,9 +1810,42 @@ def recommendations_delete(rid):
 def criteria_list():
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT C.CriteriaID, C.CriteriaName, C.CriteriaWeight, C.MaxScore, C.AppliesToDeptID, C.employee_class, D.DEPTNAME FROM [Zktime_Copy].[dbo].[EvaluationCriteria] C LEFT JOIN [Zktime_Copy].[dbo].[DEPARTMENTS] D ON C.AppliesToDeptID = D.DEPTID ORDER BY C.CriteriaID")
-    criteria = cursor.fetchall()
+    # 1. Fetch Criteria (No Join on Departments)
+    cursor.execute("SELECT CriteriaID, CriteriaName, CriteriaWeight, MaxScore, AppliesToDeptID, employee_class FROM [Zktime_Copy].[dbo].[EvaluationCriteria] ORDER BY CriteriaID")
+    criteria_rows = cursor.fetchall()
+    
+    # 2. Fetch Departments Reference
+    cursor.execute("SELECT DEPTID, DEPTNAME FROM [Zktime_Copy].[dbo].[DEPARTMENTS]")
+    depts_rows = cursor.fetchall()
+    dept_map = {d.DEPTID: d.DEPTNAME for d in depts_rows}
+    
     conn.close()
+
+    # 3. Process Data (Convert to dicts and map Dept Names)
+    criteria = []
+    for row in criteria_rows:
+        c_dict = {
+            'CriteriaID': row.CriteriaID,
+            'CriteriaName': row.CriteriaName,
+            'CriteriaWeight': row.CriteriaWeight,
+            'MaxScore': row.MaxScore,
+            'employee_class': row.employee_class
+        }
+        
+        # Resolve Dept Names
+        if not row.AppliesToDeptID:
+            c_dict['DEPTNAME'] = 'عام (كل الأقسام)'
+        else:
+            try:
+                # Split CSV, map to names, join
+                ids = [int(x) for x in str(row.AppliesToDeptID).split(',') if x.strip()]
+                names = [dept_map.get(dept_id, '?') for dept_id in ids]
+                c_dict['DEPTNAME'] = '، '.join(names)
+            except:
+                c_dict['DEPTNAME'] = row.AppliesToDeptID # Fallback
+                
+        criteria.append(c_dict)
+
     return render_template('criteria_list.html', criteria=criteria)
 
 @app.route('/evaluation/criteria/add', methods=['GET', 'POST'])
@@ -1195,96 +1853,111 @@ def criteria_list():
 def criteria_add():
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT DEPTID, DEPTNAME FROM [Zktime_Copy].[dbo].[DEPARTMENTS] ORDER BY DEPTID")
-    departments = cursor.fetchall()
-    if request.method == 'POST':
-        name = request.form['name']
-        weight = request.form['weight']
-        max_score = request.form.get('max_score', 10)
-        dept_id = request.form.get('dept_id')
-        dept_id = int(dept_id) if dept_id else None
-        employee_levels = request.form.getlist('employee_levels')
-        employee_class = ','.join(employee_levels) if employee_levels else 'لم تضاف'
-        try:
-            weight_float = float(weight)
-            max_score_int = int(max_score)
-            if not (0 < weight_float <= 1):
-                raise ValueError("Weight must be between 0 and 1 (e.g., 0.20 for 20%)")
-            if max_score_int <= 0:
-                 raise ValueError("Max score must be positive")
-            valid_classes = ['A', 'B', 'C', 'مشرف', 'مدير']
-            if not employee_levels:
-                raise ValueError("Please select at least one employee level")
-            for level in employee_levels:
-                if level not in valid_classes:
-                    raise ValueError(f"Invalid employee level: {level}")
-        except ValueError as e:
-            flash(f'Invalid input: {e}', 'danger')
-            conn.close()
-            return render_template('criteria_form.html', departments=departments, action='Add')
-        try:
-            cursor.execute("INSERT INTO [Zktime_Copy].[dbo].[EvaluationCriteria] (CriteriaName, CriteriaWeight, MaxScore, AppliesToDeptID, employee_class) VALUES (?, ?, ?, ?, ?)", (name, weight_float, max_score_int, dept_id, employee_class))
-            conn.commit()
-            flash('✅ Criterion added successfully!', 'success')
-            return redirect(url_for('criteria_list'))
-        except Exception as e:
-            conn.rollback()
-            flash(f'❌ Database error: {e}', 'danger')
-        finally:
-            conn.close()
-    conn.close()
-    return render_template('criteria_form.html', departments=departments, action='Add')
+    try:
+        cursor.execute("SELECT DEPTID, DEPTNAME FROM [Zktime_Copy].[dbo].[DEPARTMENTS] ORDER BY DEPTID")
+        departments = cursor.fetchall()
+        
+        classes = get_all_classes() 
+        
+        if request.method == 'POST':
+            name = request.form['name']
+            weight = request.form['weight']
+            max_score = request.form.get('max_score', 10)
+            
+            # --- Handle Multiple Departments ---
+            dept_ids_list = request.form.getlist('dept_ids')
+            if not dept_ids_list or '' in dept_ids_list:
+                 applies_to_dept = None
+            else:
+                 clean_ids = [x for x in dept_ids_list if x.strip()]
+                 applies_to_dept = ','.join(clean_ids) if clean_ids else None
+
+            employee_levels = request.form.getlist('employee_levels')
+            employee_class = ','.join(employee_levels) if employee_levels else 'لم تضاف'
+            
+            try:
+                weight_float = float(weight)
+                max_score_int = int(max_score)
+                if not (0 < weight_float <= 1):
+                    raise ValueError("Weight must be between 0 and 1 (e.g., 0.20 for 20%)")
+                if max_score_int <= 0:
+                     raise ValueError("Max score must be positive")
+                if not employee_levels:
+                    raise ValueError("Please select at least one employee level")
+                    
+                cursor.execute("INSERT INTO [Zktime_Copy].[dbo].[EvaluationCriteria] (CriteriaName, CriteriaWeight, MaxScore, AppliesToDeptID, employee_class) VALUES (?, ?, ?, ?, ?)", (name, weight_float, max_score_int, applies_to_dept, employee_class))
+                conn.commit()
+                flash('✅ Criterion added successfully!', 'success')
+                return redirect(url_for('criteria_list'))
+            except ValueError as e:
+                flash(f'Invalid input: {e}', 'danger')
+                # No need to return here, just fall through to render template
+            except Exception as e:
+                conn.rollback()
+                flash(f'❌ Database error: {e}', 'danger')
+
+        return render_template('criteria_form.html', departments=departments, classes=classes, action='Add')
+    finally:
+        conn.close()
 
 @app.route('/evaluation/criteria/edit/<int:cid>', methods=['GET', 'POST'])
 @admin_required
 def criteria_edit(cid):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT DEPTID, DEPTNAME FROM [Zktime_Copy].[dbo].[DEPARTMENTS] ORDER BY DEPTID")
-    departments = cursor.fetchall()
-    cursor.execute("SELECT * FROM [Zktime_Copy].[dbo].[EvaluationCriteria] WHERE CriteriaID = ?", (cid,))
-    criterion = cursor.fetchone()
-    if not criterion:
-        flash('Criterion not found!', 'warning')
-        conn.close()
-        return redirect(url_for('criteria_list'))
-    if request.method == 'POST':
-        name = request.form['name']
-        weight = request.form['weight']
-        max_score = request.form.get('max_score', 10)
-        dept_id = request.form.get('dept_id')
-        dept_id = int(dept_id) if dept_id else None
-        employee_levels = request.form.getlist('employee_levels')
-        employee_class = ','.join(employee_levels) if employee_levels else 'لم تضاف'
-        try:
-            weight_float = float(weight)
-            max_score_int = int(max_score)
-            if not (0 < weight_float <= 1):
-                raise ValueError("Weight must be between 0 and 1 (e.g., 0.20 for 20%)")
-            if max_score_int <= 0:
-                 raise ValueError("Max score must be positive")
-            valid_classes = ['A', 'B', 'C', 'مشرف', 'مدير']
-            if not employee_levels:
-                raise ValueError("Please select at least one employee level")
-            for level in employee_levels:
-                if level not in valid_classes:
-                    raise ValueError(f"Invalid employee level: {level}")
-        except ValueError as e:
-            flash(f'Invalid input: {e}', 'danger')
-            conn.close()
-            return render_template('criteria_form.html', departments=departments, criterion=criterion, action='Edit')
-        try:
-            cursor.execute("UPDATE [Zktime_Copy].[dbo].[EvaluationCriteria] SET CriteriaName = ?, CriteriaWeight = ?, MaxScore = ?, AppliesToDeptID = ?, employee_class = ? WHERE CriteriaID = ?", (name, weight_float, max_score_int, dept_id, employee_class, cid))
-            conn.commit()
-            flash('✅ Criterion updated successfully!', 'success')
+    try:
+        cursor.execute("SELECT DEPTID, DEPTNAME FROM [Zktime_Copy].[dbo].[DEPARTMENTS] ORDER BY DEPTID")
+        departments = cursor.fetchall()
+        cursor.execute("SELECT * FROM [Zktime_Copy].[dbo].[EvaluationCriteria] WHERE CriteriaID = ?", (cid,))
+        row = cursor.fetchone()
+        if not row:
+            flash('Criterion not found!', 'warning')
             return redirect(url_for('criteria_list'))
-        except Exception as e:
-            conn.rollback()
-            flash(f'❌ Database error: {e}', 'danger')
-        finally:
-            conn.close()
-    conn.close()
-    return render_template('criteria_form.html', departments=departments, criterion=criterion, action='Edit')
+        
+        selected_depts = []
+        if row.AppliesToDeptID:
+            selected_depts = [x.strip() for x in str(row.AppliesToDeptID).split(',') if x.strip()]
+
+        classes = get_all_classes() 
+        
+        if request.method == 'POST':
+            name = request.form['name']
+            weight = request.form['weight']
+            max_score = request.form.get('max_score', 10)
+            
+            dept_ids_list = request.form.getlist('dept_ids')
+            if not dept_ids_list or '' in dept_ids_list:
+                 applies_to_dept = None
+            else:
+                 clean_ids = [x for x in dept_ids_list if x.strip()]
+                 applies_to_dept = ','.join(clean_ids) if clean_ids else None
+
+            employee_levels = request.form.getlist('employee_levels')
+            employee_class = ','.join(employee_levels) if employee_levels else 'لم تضاف'
+            try:
+                weight_float = float(weight)
+                max_score_int = int(max_score)
+                if not (0 < weight_float <= 1):
+                    raise ValueError("Weight must be between 0 and 1 (e.g., 0.20 for 20%)")
+                if max_score_int <= 0:
+                     raise ValueError("Max score must be positive")
+                if not employee_levels:
+                    raise ValueError("Please select at least one employee level")
+                
+                cursor.execute("UPDATE [Zktime_Copy].[dbo].[EvaluationCriteria] SET CriteriaName = ?, CriteriaWeight = ?, MaxScore = ?, AppliesToDeptID = ?, employee_class = ? WHERE CriteriaID = ?", (name, weight_float, max_score_int, applies_to_dept, employee_class, cid))
+                conn.commit()
+                flash('✅ Criterion updated successfully!', 'success')
+                return redirect(url_for('criteria_list'))
+            except ValueError as e:
+                flash(f'Invalid input: {e}', 'danger')
+                # Fall through
+            except Exception as e:
+                conn.rollback()
+                flash(f'❌ Database error: {e}', 'danger')
+
+        return render_template('criteria_form.html', departments=departments, criterion=row, classes=classes, selected_depts=selected_depts, action='Edit')
+    finally:
+        conn.close()
 
 @app.route('/evaluation/criteria/delete/<int:cid>', methods=['POST'])
 @admin_required
@@ -1541,11 +2214,36 @@ def new_evaluation(badgenumber_str):
 
     class_clause = "(" + " OR ".join(class_likes) + ")" if class_likes else "employee_class = 'لم تضاف'"
     
-    criteria_query = f"SELECT CriteriaID, CriteriaName, CriteriaWeight, MaxScore FROM [Zktime_Copy].[dbo].[EvaluationCriteria] WHERE {class_clause} AND (AppliesToDeptID = ? OR AppliesToDeptID IS NULL) ORDER BY CriteriaID"
-    criteria_params = class_params + [employee_dept_id]
+    # --- MODIFIED CRITERIA FILTERING FOR MULTI-DEPT ---
+    # Fetch ALL criteria matching the class (ignoring dept in SQL for now)
     
-    cursor.execute(criteria_query, criteria_params)
-    criteria = cursor.fetchall()
+    criteria_query = f"SELECT CriteriaID, CriteriaName, CriteriaWeight, MaxScore, AppliesToDeptID FROM [Zktime_Copy].[dbo].[EvaluationCriteria] WHERE {class_clause} ORDER BY CriteriaID"
+    # We remove (AppliesToDeptID = ? OR AppliesToDeptID IS NULL) from SQL because we need to check CSV in Python
+    
+    cursor.execute(criteria_query, class_params)
+    all_class_criteria = cursor.fetchall()
+
+    # Filter by Department in Python
+    criteria = []
+    for c in all_class_criteria:
+        # Rules:
+        # 1. If AppliesToDeptID is None => General (Keep)
+        # 2. If AppliesToDeptID contains employee_dept_id => Keep
+        
+        keep = False
+        if not c.AppliesToDeptID:
+            keep = True
+        else:
+            # Check if employee_dept_id is in the CSV list
+            try:
+                allowed_depts = [int(x.strip()) for x in str(c.AppliesToDeptID).split(',') if x.strip()]
+                if employee_dept_id in allowed_depts:
+                    keep = True
+            except:
+                pass # If parsing fail, ignore
+        
+        if keep:
+            criteria.append(c)
 
     if not criteria:
         flash(f'⚠️ لم يتم تعريف معايير تقييم للفئة "{employee_class_string}" في هذا القسم.', 'warning')
@@ -1645,6 +2343,8 @@ def evaluation_reports():
     date_to = request.args.get('date_to', '')
     recommendation_id = request.args.get('recommendation_id', '')
     training_course_id = request.args.get('training_course_id', '')
+    taken_course_id = request.args.get('taken_course_id', '')
+    overall_rating = request.args.get('overall_rating', '')
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
@@ -1658,10 +2358,21 @@ def evaluation_reports():
         all_evaluation_types = cursor.fetchall()
         query = """
             SELECT E.EvaluationID, E.EvaluationDate, COALESCE(ET.DisplayName, E.EvaluationType) as EvaluationType,
-                E.OverallScore, E.OverallRating, E.ManagerComments,
+                E.OverallScore, E.OverallRating, E.ManagerComments, E.EmployeeUserID,
                 COALESCE(EmpInfo.NAME, EmpUser.Name, EmpUser.Username) AS EmployeeName, 
                 COALESCE(Mgr.Name, Mgr.Username) AS EvaluatorName, EmpInfo.employee_class,
-                R.RecommendationText, TC.TrainingCourseText
+                R.RecommendationText, TC.TrainingCourseText,
+                (
+                    SELECT STUFF((
+                        SELECT '###' + TC_Sub.TrainingCourseText
+                        FROM [Zktime_Copy].[dbo].[TrainingEnrollments] TE_Sub 
+                        JOIN [Zktime_Copy].[dbo].[TrainingSessions] TS_Sub ON TE_Sub.SessionID = TS_Sub.SessionID
+                        JOIN [Zktime_Copy].[dbo].[TrainingCourses] TC_Sub ON TS_Sub.CourseID = TC_Sub.TrainingCourseID
+                        WHERE TE_Sub.EmployeeUserID = EmpInfo.USERID
+                        ORDER BY TC_Sub.TrainingCourseText
+                        FOR XML PATH('')
+                    ), 1, 3, '')
+                ) as CoursesTaken
             FROM [Zktime_Copy].[dbo].[Evaluations] E
             LEFT JOIN [Zktime_Copy].[dbo].[Users] Mgr ON E.EvaluatorUserID = Mgr.UserID 
             LEFT JOIN [Zktime_Copy].[dbo].[USERINFO] EmpInfo ON E.EmployeeUserID = EmpInfo.USERID
@@ -1709,6 +2420,20 @@ def evaluation_reports():
         if training_course_id:
             where_clauses.append("E.TrainingCourseID = ?")
             params.append(training_course_id)
+        if taken_course_id:
+            where_clauses.append("""
+                EXISTS (
+                    SELECT 1 FROM [Zktime_Copy].[dbo].[TrainingEnrollments] TE_F
+                    JOIN [Zktime_Copy].[dbo].[TrainingSessions] TS_F ON TE_F.SessionID = TS_F.SessionID
+                    WHERE TE_F.EmployeeUserID = E.EmployeeUserID AND TS_F.CourseID = ?
+                )
+            """)
+            params.append(taken_course_id)
+            
+        if overall_rating:
+            where_clauses.append("E.OverallRating = ?")
+            params.append(overall_rating)
+
         query += " WHERE " + " AND ".join(where_clauses)
         query += " ORDER BY E.EvaluationDate DESC"
         cursor.execute(query, params)
@@ -1927,7 +2652,35 @@ def evaluation_details(evaluation_id):
         cursor = conn.cursor()
         role_id = session.get('role_id')
         user_id = session.get('user_id')
-        cursor.execute("SELECT E.EvaluationID, E.EvaluationDate, COALESCE(ET.DisplayName, E.EvaluationType) as EvaluationType, E.OverallScore, E.OverallRating, E.ManagerComments, E.EmployeeUserID, E.EvaluatorUserID, COALESCE(EmpInfo.NAME, EmpUser.Name, EmpUser.Username) AS EmployeeName, COALESCE(Mgr.Name, Mgr.Username) AS EvaluatorName, COALESCE(EmpInfo.TITLE, EmpUser.Name, EmpUser.Username) AS EmployeeTitle, DeptEmp.DEPTNAME as EmployeeDeptName, EmpInfo.employee_class, R.RecommendationText, TC.TrainingCourseText FROM [Zktime_Copy].[dbo].[Evaluations] E LEFT JOIN [Zktime_Copy].[dbo].[Users] Mgr ON E.EvaluatorUserID = Mgr.UserID LEFT JOIN [Zktime_Copy].[dbo].[USERINFO] EmpInfo ON E.EmployeeUserID = EmpInfo.USERID LEFT JOIN [Zktime_Copy].[dbo].[Users] EmpUser ON E.EmployeeUserID = EmpUser.UserID LEFT JOIN [Zktime_Copy].[dbo].[DEPARTMENTS] DeptEmp ON COALESCE(EmpInfo.DEFAULTDEPTID, EmpUser.DepartmentID) = DeptEmp.DEPTID LEFT JOIN [Zktime_Copy].[dbo].[Recommendations] R ON E.RecommendationID = R.RecommendationID LEFT JOIN [Zktime_Copy].[dbo].[TrainingCourses] TC ON E.TrainingCourseID = TC.TrainingCourseID LEFT JOIN [Zktime_Copy].[dbo].[EvaluationTypes] ET ON E.EvaluationTypeID = ET.EvaluationTypeID WHERE E.EvaluationID = ?", (evaluation_id,))
+        cursor.execute("""
+            SELECT E.EvaluationID, E.EvaluationDate, COALESCE(ET.DisplayName, E.EvaluationType) as EvaluationType, 
+                E.OverallScore, E.OverallRating, E.ManagerComments, E.EmployeeUserID, E.EvaluatorUserID, 
+                COALESCE(EmpInfo.NAME, EmpUser.Name, EmpUser.Username) AS EmployeeName, 
+                COALESCE(Mgr.Name, Mgr.Username) AS EvaluatorName, 
+                COALESCE(EmpInfo.TITLE, EmpUser.Name, EmpUser.Username) AS EmployeeTitle, 
+                DeptEmp.DEPTNAME as EmployeeDeptName, EmpInfo.employee_class, 
+                R.RecommendationText, TC.TrainingCourseText,
+                (
+                    SELECT STUFF((
+                        SELECT '###' + TC_Sub.TrainingCourseText
+                        FROM [Zktime_Copy].[dbo].[TrainingEnrollments] TE_Sub 
+                        JOIN [Zktime_Copy].[dbo].[TrainingSessions] TS_Sub ON TE_Sub.SessionID = TS_Sub.SessionID
+                        JOIN [Zktime_Copy].[dbo].[TrainingCourses] TC_Sub ON TS_Sub.CourseID = TC_Sub.TrainingCourseID
+                        WHERE TE_Sub.EmployeeUserID = EmpInfo.USERID
+                        ORDER BY TC_Sub.TrainingCourseText
+                        FOR XML PATH('')
+                    ), 1, 3, '')
+                ) as CoursesTaken
+            FROM [Zktime_Copy].[dbo].[Evaluations] E 
+            LEFT JOIN [Zktime_Copy].[dbo].[Users] Mgr ON E.EvaluatorUserID = Mgr.UserID 
+            LEFT JOIN [Zktime_Copy].[dbo].[USERINFO] EmpInfo ON E.EmployeeUserID = EmpInfo.USERID 
+            LEFT JOIN [Zktime_Copy].[dbo].[Users] EmpUser ON E.EmployeeUserID = EmpUser.UserID 
+            LEFT JOIN [Zktime_Copy].[dbo].[DEPARTMENTS] DeptEmp ON COALESCE(EmpInfo.DEFAULTDEPTID, EmpUser.DepartmentID) = DeptEmp.DEPTID 
+            LEFT JOIN [Zktime_Copy].[dbo].[Recommendations] R ON E.RecommendationID = R.RecommendationID 
+            LEFT JOIN [Zktime_Copy].[dbo].[TrainingCourses] TC ON E.TrainingCourseID = TC.TrainingCourseID 
+            LEFT JOIN [Zktime_Copy].[dbo].[EvaluationTypes] ET ON E.EvaluationTypeID = ET.EvaluationTypeID 
+            WHERE E.EvaluationID = ?
+        """, (evaluation_id,))
         evaluation_data = cursor.fetchone()
         if not evaluation_data:
             flash("Evaluation not found.", "warning")
@@ -2613,14 +3366,41 @@ def training_sessions():
     cursor.execute("""
         SELECT S.SessionID, C.TrainingCourseText, S.SessionDate, S.EndDate,
                S.Location, S.InstructorID, S.IsExternal,
-               S.ExternalTrainerName, S.MaxSeats
+               S.ExternalTrainerName, S.MaxSeats,
+               (SELECT COUNT(*) FROM TrainingEnrollments WHERE SessionID = S.SessionID) AS EnrolledCount
         FROM TrainingSessions S
         LEFT JOIN TrainingCourses C ON S.CourseID = C.TrainingCourseID
         ORDER BY S.SessionDate DESC
     """)
     sessions = cursor.fetchall()
+    # --- Fetch Pending Recommendations ---
+    cursor.execute("""
+        SELECT 
+            E.EvaluationID,
+            E.EvaluationDate,
+            U_Emp.Name AS EmployeeName,
+            U_Mgr.Name AS ManagerName,
+            TC.TrainingCourseText AS CourseName,
+            E.TrainingCourseID
+        FROM Evaluations E
+        JOIN USERINFO U_Emp ON E.EmployeeUserID = U_Emp.USERID
+        LEFT JOIN USERINFO U_Mgr ON E.EvaluatorUserID = U_Mgr.USERID
+        JOIN TrainingCourses TC ON E.TrainingCourseID = TC.TrainingCourseID
+        WHERE E.TrainingCourseID IS NOT NULL
+        AND NOT EXISTS (
+            SELECT 1 FROM TrainingEnrollments EN
+            JOIN TrainingSessions S ON EN.SessionID = S.SessionID
+            WHERE EN.EmployeeUserID = E.EmployeeUserID
+            AND S.CourseID = E.TrainingCourseID
+            AND (EN.PassStatus = 'Passed' OR EN.PassStatus IS NULL) -- Filter if passed or currently enrolled (NULL usually means active)
+        )
+    """)
+    pending_recommendations = cursor.fetchall()
     conn.close()
-    return render_template('sessions_list.html', sessions=sessions)
+
+    return render_template('training_dashboard.html', 
+                         sessions=sessions, 
+                         recommendations=pending_recommendations)
 
 @app.route('/training/employee_report')
 @login_required
@@ -2635,11 +3415,165 @@ def training_employee_report():
     date_from = request.args.get('date_from')
     date_to = request.args.get('date_to')
 
-    # 2. Build Query
-    # We start with USERINFO so we can see employees even if they have no training (optional, but good for reports)
-    # If a specific course/date filter is applied, we switch to inner join logic implicitly by the WHERE clause
+    # 2. Base Filter Logic (Reused for Analytics & Main List)
+    where_clauses = ["U.IsActive = 1"]
+    params = []
+
+    if search:
+        where_clauses.append("(U.NAME LIKE ? OR U.BADGENUMBER LIKE ?)")
+        params.extend([f"%{search}%", f"%{search}%"])
     
-    query = """
+    if dept_id:
+        where_clauses.append("U.DEFAULTDEPTID = ?")
+        params.append(dept_id)
+        
+    if course_id:
+        where_clauses.append("TS.CourseID = ?")
+        params.append(course_id)
+        
+    if date_from:
+        where_clauses.append("TS.SessionDate >= ?")
+        params.append(date_from)
+        
+    if date_to:
+        where_clauses.append("TS.SessionDate <= ?")
+        params.append(date_to)
+
+    where_sql = " AND ".join(where_clauses)
+    
+    # 3. Analytics Queries (Executed Separately for Reliability)
+    stats = {'total_employees': 0, 'total_courses': 0, 'pass_rate': 0, 'status_counts': {}, 'dept_counts': {}}
+
+    # A. Totals
+    q_totals = f"""
+        SELECT 
+            COUNT(DISTINCT U.USERID),
+            COUNT(TE.EnrollmentID)
+        FROM [Zktime_Copy].[dbo].[USERINFO] U
+        LEFT JOIN [Zktime_Copy].[dbo].[DEPARTMENTS] D ON U.DEFAULTDEPTID = D.DEPTID
+        LEFT JOIN [Zktime_Copy].[dbo].[TrainingEnrollments] TE ON U.USERID = TE.EmployeeUserID
+        LEFT JOIN [Zktime_Copy].[dbo].[TrainingSessions] TS ON TE.SessionID = TS.SessionID
+        LEFT JOIN [Zktime_Copy].[dbo].[TrainingCourses] TC ON TS.CourseID = TC.TrainingCourseID
+        WHERE {where_sql}
+    """
+    cursor.execute(q_totals, params)
+    totals_row = cursor.fetchone()
+    if totals_row:
+        stats['total_employees'] = totals_row[0]
+        stats['total_courses'] = totals_row[1]
+
+    # B. Pass Status Breakdown
+    q_status = f"""
+        SELECT TE.PassStatus, COUNT(*)
+        FROM [Zktime_Copy].[dbo].[USERINFO] U
+        LEFT JOIN [Zktime_Copy].[dbo].[DEPARTMENTS] D ON U.DEFAULTDEPTID = D.DEPTID
+        JOIN [Zktime_Copy].[dbo].[TrainingEnrollments] TE ON U.USERID = TE.EmployeeUserID
+        LEFT JOIN [Zktime_Copy].[dbo].[TrainingSessions] TS ON TE.SessionID = TS.SessionID
+        LEFT JOIN [Zktime_Copy].[dbo].[TrainingCourses] TC ON TS.CourseID = TC.TrainingCourseID
+        WHERE {where_sql}
+        GROUP BY TE.PassStatus
+    """
+    cursor.execute(q_status, params)
+    status_rows = cursor.fetchall()
+    
+    passed = 0
+    failed = 0
+    others = 0
+    for r in status_rows:
+        st = r[0] or 'Unknown'
+        cnt = r[1]
+        stats['status_counts'][st] = cnt
+        if st == 'Passed': passed += cnt
+        elif st == 'Failed': failed += cnt
+    # B. Pass Status Breakdown (Using LEFT JOIN + NOT NULL check for consistency)
+    q_status = f"""
+        SELECT TE.PassStatus, COUNT(*)
+        FROM [Zktime_Copy].[dbo].[USERINFO] U
+        LEFT JOIN [Zktime_Copy].[dbo].[DEPARTMENTS] D ON U.DEFAULTDEPTID = D.DEPTID
+        LEFT JOIN [Zktime_Copy].[dbo].[TrainingEnrollments] TE ON U.USERID = TE.EmployeeUserID
+        LEFT JOIN [Zktime_Copy].[dbo].[TrainingSessions] TS ON TE.SessionID = TS.SessionID
+        LEFT JOIN [Zktime_Copy].[dbo].[TrainingCourses] TC ON TS.CourseID = TC.TrainingCourseID
+        WHERE {where_sql} AND TE.EnrollmentID IS NOT NULL
+        GROUP BY TE.PassStatus
+    """
+    cursor.execute(q_status, params)
+    status_rows = cursor.fetchall()
+    
+    passed = 0
+    failed = 0
+    others = 0
+    for r in status_rows:
+        st = r[0] or 'Unknown'
+        cnt = r[1]
+        stats['status_counts'][st] = cnt
+        if st == 'Passed': passed += cnt
+        elif st == 'Failed': failed += cnt
+        else: others += cnt
+    
+    total_finished = passed + failed
+    stats['pass_rate'] = round((passed / total_finished * 100)) if total_finished > 0 else 0
+    stats['passed'] = passed
+    stats['failed'] = failed
+    stats['others'] = others
+
+    # C. Top Departments (Using LEFT JOIN + NOT NULL check)
+    q_depts = f"""
+        SELECT TOP 5 D.DEPTNAME, COUNT(TE.EnrollmentID) as Cnt
+        FROM [Zktime_Copy].[dbo].[USERINFO] U
+        LEFT JOIN [Zktime_Copy].[dbo].[DEPARTMENTS] D ON U.DEFAULTDEPTID = D.DEPTID
+        LEFT JOIN [Zktime_Copy].[dbo].[TrainingEnrollments] TE ON U.USERID = TE.EmployeeUserID
+        LEFT JOIN [Zktime_Copy].[dbo].[TrainingSessions] TS ON TE.SessionID = TS.SessionID
+        LEFT JOIN [Zktime_Copy].[dbo].[TrainingCourses] TC ON TS.CourseID = TC.TrainingCourseID
+        WHERE {where_sql} AND TE.EnrollmentID IS NOT NULL
+        GROUP BY D.DEPTNAME
+        ORDER BY Cnt DESC
+    """
+    cursor.execute(q_depts, params)
+    dept_rows = cursor.fetchall()
+    
+    for r in dept_rows:
+        dname = r[0] or 'غير محدد'
+        stats['dept_counts'][dname] = r[1]
+    
+    # --- GLOBAL ANALYTICS (Company-Wide, Unfiltered) ---
+    global_stats = {'total_employees': 0, 'total_courses': 0, 'pass_rate': 0}
+    
+    # G1. Global Totals
+    cur_global = conn.cursor()
+    cur_global.execute("""
+        SELECT COUNT(DISTINCT U.USERID), COUNT(TE.EnrollmentID)
+        FROM [Zktime_Copy].[dbo].[USERINFO] U
+        LEFT JOIN [Zktime_Copy].[dbo].[TrainingEnrollments] TE ON U.USERID = TE.EmployeeUserID
+        WHERE U.IsActive = 1
+    """)
+    g_totals = cur_global.fetchone()
+    if g_totals:
+        global_stats['total_employees'] = g_totals[0]
+        global_stats['total_courses'] = g_totals[1]
+
+    # G2. Global Pass Rate
+    cur_global.execute("""
+        SELECT TE.PassStatus, COUNT(*)
+        FROM [Zktime_Copy].[dbo].[USERINFO] U
+        LEFT JOIN [Zktime_Copy].[dbo].[TrainingEnrollments] TE ON U.USERID = TE.EmployeeUserID
+        WHERE U.IsActive = 1 AND TE.EnrollmentID IS NOT NULL
+        GROUP BY TE.PassStatus
+    """)
+    g_rows = cur_global.fetchall()
+    g_passed = 0
+    g_total_finished = 0
+    for r in g_rows:
+        gst = r[0]
+        gcnt = r[1]
+        if gst in ['Passed', 'Failed']:
+            g_total_finished += gcnt
+        if gst == 'Passed':
+            g_passed += gcnt
+            
+    global_stats['pass_rate'] = round((g_passed / g_total_finished * 100)) if g_total_finished > 0 else 0
+    
+    # 4. Main User List Query
+    query = f"""
         SELECT 
             U.USERID, U.BADGENUMBER, U.NAME, U.TITLE, U.pic, 
             D.DEPTNAME,
@@ -2651,48 +3585,18 @@ def training_employee_report():
         LEFT JOIN [Zktime_Copy].[dbo].[TrainingEnrollments] TE ON U.USERID = TE.EmployeeUserID
         LEFT JOIN [Zktime_Copy].[dbo].[TrainingSessions] TS ON TE.SessionID = TS.SessionID
         LEFT JOIN [Zktime_Copy].[dbo].[TrainingCourses] TC ON TS.CourseID = TC.TrainingCourseID
-        WHERE U.IsActive = 1
+        WHERE {where_sql}
+        ORDER BY U.NAME, TS.SessionDate DESC
     """
-    
-    params = []
-    
-    # Apply Filters
-    if search:
-        query += " AND (U.NAME LIKE ? OR U.BADGENUMBER LIKE ?)"
-        params.extend([f"%{search}%", f"%{search}%"])
-    
-    if dept_id:
-        query += " AND U.DEFAULTDEPTID = ?"
-        params.append(dept_id)
-        
-    # For Course/Date filters, we filter the *Trainings*. 
-    # Note: This might exclude employees who didn't take that specific course.
-    if course_id:
-        query += " AND TS.CourseID = ?"
-        params.append(course_id)
-        
-    if date_from:
-        query += " AND TS.SessionDate >= ?"
-        params.append(date_from)
-        
-    if date_to:
-        query += " AND TS.SessionDate <= ?"
-        params.append(date_to)
-
-    query += " ORDER BY U.NAME, TS.SessionDate DESC"
 
     cursor.execute(query, params)
     rows = cursor.fetchall()
     
-    # 3. Process Data into a Structured Dictionary
-    # Structure: employees[user_id] = { 'info': user_obj, 'courses': [list_of_courses] }
-    
+    # 5. Process Users
     employees = defaultdict(lambda: {'info': None, 'courses': [], 'stats': {'total': 0, 'passed': 0, 'failed': 0}})
     
     for row in rows:
         uid = row.USERID
-        
-        # Set User Info (only needs to be done once per user, but doing it every loop is safe/fast enough)
         if employees[uid]['info'] is None:
             employees[uid]['info'] = {
                 'id': row.USERID,
@@ -2703,7 +3607,6 @@ def training_employee_report():
                 'has_pic': True if row.pic else False
             }
         
-        # Add Course Detail (only if enrollment exists)
         if row.EnrollmentID:
             employees[uid]['courses'].append({
                 'course_name': row.TrainingCourseText,
@@ -2712,15 +3615,13 @@ def training_employee_report():
                 'grade': row.Grade,
                 'attendance': row.AttendanceStatus
             })
-            
-            # Update Stats
             employees[uid]['stats']['total'] += 1
             if row.PassStatus == 'Passed':
                 employees[uid]['stats']['passed'] += 1
             elif row.PassStatus == 'Failed':
                 employees[uid]['stats']['failed'] += 1
 
-    # 4. Get Dropdown Data
+    # 6. Dropdowns
     cursor.execute("SELECT DEPTID, DEPTNAME FROM DEPARTMENTS ORDER BY DEPTNAME")
     all_depts = cursor.fetchall()
     
@@ -2733,7 +3634,9 @@ def training_employee_report():
                            employees=employees, 
                            all_depts=all_depts, 
                            all_courses=all_courses,
-                           filters=request.args)
+                           filters=request.args,
+                           analytics=stats,
+                           global_stats=global_stats)
 
 @app.route('/training/session/edit/<int:sid>', methods=['GET', 'POST'])
 @training_required
@@ -3055,10 +3958,18 @@ def training_enroll(sid):
     if session_info:
         course_id = session_info.CourseID
         # Find employees recommended for this SPECIFIC course
+        # logic: Recommended in Evaluations AND NOT (Enrolled/Passed previously)
         cursor.execute("""
-            SELECT DISTINCT EmployeeUserID 
-            FROM Evaluations 
-            WHERE TrainingCourseID = ?
+            SELECT DISTINCT E.EmployeeUserID 
+            FROM Evaluations E
+            WHERE E.TrainingCourseID = ?
+            AND NOT EXISTS (
+                SELECT 1 FROM TrainingEnrollments EN
+                JOIN TrainingSessions S ON EN.SessionID = S.SessionID
+                WHERE EN.EmployeeUserID = E.EmployeeUserID
+                AND S.CourseID = E.TrainingCourseID
+                AND (EN.PassStatus = 'Passed') -- Only exclude if they actually PASSED.
+            )
         """, (course_id,))
         recommended_ids = [row.EmployeeUserID for row in cursor.fetchall()]
 
@@ -3347,6 +4258,26 @@ def recruitment_analytics():
     cursor.execute("SELECT COUNT(*) FROM Candidates WHERE Status = 'Hired'")
     total_hired = cursor.fetchone()[0]
 
+    # 7. Average Time to Hire (Days)
+    # Calculated as diff between ApplicationDate and the log date when they became 'Hired'
+    cursor.execute("""
+        SELECT AVG(DATEDIFF(day, C.ApplicationDate, L.ActionDate)) 
+        FROM CandidateLogs L
+        JOIN Candidates C ON L.CandidateID = C.CandidateID
+        WHERE L.ToStage = 'Hired'
+    """)
+    avg_hire_time = cursor.fetchone()[0] or 0
+    
+    # 8. Monthly Applicant Trend (Last 6 Months)
+    cursor.execute("""
+        SELECT FORMAT(ApplicationDate, 'yyyy-MM') as Month, COUNT(*) 
+        FROM Candidates 
+        WHERE ApplicationDate >= DATEADD(month, -6, GETDATE())
+        GROUP BY FORMAT(ApplicationDate, 'yyyy-MM')
+        ORDER BY Month
+    """)
+    trend_data = cursor.fetchall()
+
     conn.close()
 
     # Convert data to JSON for JavaScript
@@ -3361,6 +4292,10 @@ def recruitment_analytics():
             'total': [row.Total for row in dept_stats],
             'hired': [row.Hired for row in dept_stats],
             'rejected': [row.Rejected for row in dept_stats]
+        },
+        'trend': {
+            'labels': [row.Month for row in trend_data], 
+            'data': [row[1] for row in trend_data]
         }
     }
 
@@ -3369,6 +4304,7 @@ def recruitment_analytics():
                            total_candidates=total_candidates,
                            open_positions=open_positions,
                            total_hired=total_hired,
+                           avg_hire_time=int(avg_hire_time),
                            rejection_logs=rejection_logs) # Pass logs to template
 
 @app.route('/recruitment/jobs')
@@ -3713,21 +4649,36 @@ def recruitment_waiting():
 @app.route('/recruitment/resign', methods=['POST'])
 def submit_resignation():
     candidate_id = request.form['candidate_id']
-    reason_id = request.form['reason_id']
+    type_id = request.form['termination_type_id']
+    reason_id = request.form['termination_reason_id']
     notes = request.form['notes']
     
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    # Get Reason Text
-    cursor.execute("SELECT ReasonText FROM ResignationReasons WHERE ReasonID = ?", (reason_id,))
+    # Get Text for Logging
+    cursor.execute("SELECT TypeText FROM TerminationTypes WHERE TypeID = ?", (type_id,))
+    type_text = cursor.fetchone()[0]
+    
+    cursor.execute("SELECT ReasonText FROM TerminationReasons WHERE ReasonID = ?", (reason_id,))
     reason_text = cursor.fetchone()[0]
     
-    # 1. Update Candidate Status
+    # 1. Update Candidate Status (Generalizing status to 'Terminated' or keeping 'Resigned'?)
+    # For backward compatibility and clarity, let's stick to 'Resigned' if it's resignation, 
+    # but maybe we should use 'Terminated' or the actual Type Text?
+    # The user asked to "merge it". Let's update status to 'Terminated' or 'Resigned' 
+    # depending on what makes sense. But the Kanban only had 'Resigned'. 
+    # Let's decide to map everything to 'Resigned' status in the pipeline for now, 
+    # or better, add 'Terminated' status validation.
+    # Given the complexity, let's assume 'Resigned' acts as a catch-all "Left the company" status 
+    # in the UI, or we change the status in DB to 'Terminated' and update template to show it green/red/etc.
+    # Let's stick to 'Resigned' as the status key for now to avoid breaking other parts, 
+    # but log the specific type.
+    
     cursor.execute("UPDATE Candidates SET Status = 'Resigned' WHERE CandidateID = ?", (candidate_id,))
     
     # 2. Add to Log
-    log_note = f"استقالة: {reason_text} - {notes}"
+    log_note = f"{type_text}: {reason_text} - {notes}"
     cursor.execute("""
         INSERT INTO CandidateLogs (CandidateID, FromStage, ToStage, EvaluationScore, Note, ActionDate)
         VALUES (?, 'Hired', 'Resigned', 0, ?, GETDATE())
@@ -3736,7 +4687,7 @@ def submit_resignation():
     conn.commit()
     conn.close()
     
-    flash('🚪 تم تسجيل الاستقالة بنجاح.', 'warning')
+    flash(f'🚪 تم تسجيل {type_text} بنجاح.', 'warning')
     return redirect(url_for('recruitment_history'))
 
 from datetime import timedelta, datetime
@@ -3885,15 +4836,20 @@ def recruitment_history():
     """)
     logs = cursor.fetchall()
 
-    # Fetch Resignation Reasons
+    # Fetch Termination Types and Reasons
     try:
-        cursor.execute("SELECT * FROM ResignationReasons")
+        cursor.execute("SELECT * FROM TerminationTypes")
+        types = cursor.fetchall()
+        
+        cursor.execute("SELECT * FROM TerminationReasons")
         reasons = cursor.fetchall()
     except:
+        types = []
         reasons = [] 
 
+
     conn.close()
-    return render_template('recruitment/recruitment_history.html', logs=logs, reasons=reasons)
+    return render_template('recruitment/recruitment_history.html', logs=logs, types=types, reasons=reasons)
 
 @app.route('/recruitment/job/toggle/<int:job_id>', methods=['POST'])
 @login_required  # Or @admin_required depending on your needs
@@ -3925,31 +4881,58 @@ def job_toggle_status(job_id):
 
 @app.route('/recruitment/settings', methods=['GET', 'POST'])
 def recruitment_settings():
-    """ Page to manage Resignation Reasons """
+    """ Page to manage Termination Types and Reasons """
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    # 1. Handle Adding a New Reason
+    # 1. Handle Adding a New Type
+    if request.method == 'POST' and 'new_type' in request.form:
+        new_type = request.form['new_type'].strip()
+        if new_type:
+            cursor.execute("INSERT INTO TerminationTypes (TypeText) VALUES (?)", (new_type,))
+            conn.commit()
+            flash('✅ تم إضافة نوع الإنهاء بنجاح', 'success')
+            
+    # 2. Handle Deleting a Type
+    if request.method == 'POST' and 'delete_type_id' in request.form:
+        delete_id = request.form['delete_type_id']
+        try:
+            cursor.execute("DELETE FROM TerminationTypes WHERE TypeID = ?", (delete_id,))
+            conn.commit()
+            flash('🗑️ تم حذف نوع الإنهاء', 'warning')
+        except Exception as e:
+            flash(f'❌ لا يمكن حذف هذا النوع لوجود أسباب مرتبطة به.', 'danger')
+
+    # 3. Handle Adding a New Reason
     if request.method == 'POST' and 'new_reason' in request.form:
         new_reason = request.form['new_reason'].strip()
-        if new_reason:
-            cursor.execute("INSERT INTO ResignationReasons (ReasonText) VALUES (?)", (new_reason,))
+        type_id = request.form['type_id']
+        if new_reason and type_id:
+            cursor.execute("INSERT INTO TerminationReasons (ReasonText, TypeID) VALUES (?, ?)", (new_reason, type_id))
             conn.commit()
             flash('✅ تم إضافة السبب بنجاح', 'success')
 
-    # 2. Handle Deleting a Reason
-    if request.method == 'POST' and 'delete_id' in request.form:
-        delete_id = request.form['delete_id']
-        cursor.execute("DELETE FROM ResignationReasons WHERE ReasonID = ?", (delete_id,))
+    # 4. Handle Deleting a Reason
+    if request.method == 'POST' and 'delete_reason_id' in request.form:
+        delete_id = request.form['delete_reason_id']
+        cursor.execute("DELETE FROM TerminationReasons WHERE ReasonID = ?", (delete_id,))
         conn.commit()
         flash('🗑️ تم حذف السبب', 'warning')
 
-    # 3. Fetch All Reasons
-    cursor.execute("SELECT * FROM ResignationReasons")
+    # Fetch All Data
+    cursor.execute("SELECT * FROM TerminationTypes")
+    types = cursor.fetchall()
+    
+    cursor.execute("""
+        SELECT R.*, T.TypeText 
+        FROM TerminationReasons R
+        JOIN TerminationTypes T ON R.TypeID = T.TypeID
+        ORDER BY T.TypeText, R.ReasonText
+    """)
     reasons = cursor.fetchall()
     
     conn.close()
-    return render_template('recruitment/recruitment_settings.html', reasons=reasons)
+    return render_template('recruitment/recruitment_settings.html', types=types, reasons=reasons)
 
 @app.route('/recruitment/job/add', methods=['GET', 'POST'])
 def job_create():
@@ -4002,7 +4985,7 @@ def recruitment_archive():
     # Fetch archived candidates with their Job Title
     cursor.execute("""
         SELECT C.CandidateID, C.FullName, C.Phone, C.Email, C.ApplicationDate, 
-               J.JobTitle, D.DEPTNAME,
+               J.JobTitle, D.DEPTNAME, C.HireDate, C.EndDate,
                (SELECT TOP 1 Note FROM CandidateLogs L WHERE L.CandidateID = C.CandidateID ORDER BY L.ActionDate DESC) as LastNote
         FROM Candidates C
         LEFT JOIN Jobs J ON C.JobID = J.JobID
@@ -4011,9 +4994,52 @@ def recruitment_archive():
         ORDER BY C.ApplicationDate DESC
     """)
     candidates = cursor.fetchall()
+    
+    # Fetch Jobs for Manual Add Dropdown
+    cursor.execute("SELECT JobID, JobTitle FROM Jobs WHERE Status = 'Open'")
+    jobs = cursor.fetchall()
+    
     conn.close()
     
-    return render_template('recruitment/recruitment_archive.html', candidates=candidates)
+    return render_template('recruitment/recruitment_archive.html', candidates=candidates, jobs=jobs)
+
+@app.route('/recruitment/archive/add', methods=['POST'])
+def recruitment_archive_add():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        fullname = request.form.get('fullname')
+        phone = request.form.get('phone')
+        email = request.form.get('email') or None
+        national_id = request.form.get('national_id') or None
+        job_id = request.form.get('job_id') or None
+        note = request.form.get('note')
+        hire_date = request.form.get('hire_date') or None
+        end_date = request.form.get('end_date') or None
+
+        if not fullname:
+             flash('❌ Full Name is required', 'danger')
+        else:
+            cursor.execute("""
+               INSERT INTO Candidates (FullName, Phone, Email, NationalID, JobID, Status, ApplicationDate, HireDate, EndDate, Source)
+               OUTPUT INSERTED.CandidateID
+               VALUES (?, ?, ?, ?, ?, 'Archived', GETDATE(), ?, ?, 'Manual Archive')
+            """, (fullname, phone, email, national_id, job_id, hire_date, end_date))
+            
+            cid = cursor.fetchone()[0]
+            
+            if note:
+                cursor.execute("INSERT INTO CandidateLogs (CandidateID, Note, ActionDate) VALUES (?, ?, GETDATE())", (cid, note))
+                
+            conn.commit()
+            flash('✅ Candidate manually added to archive.', 'success')
+    except Exception as e:
+        conn.rollback()
+        flash(f'❌ Error adding candidate: {e}', 'danger')
+    finally:
+        conn.close()
+        
+    return redirect(url_for('recruitment_archive'))
 
 @app.route('/recruitment/archive_action', methods=['POST'])
 def archive_candidate():

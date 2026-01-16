@@ -1,13 +1,14 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ 'إضافة موظف' if action == 'Add' else 'تعديل موظف' }} - نظام إدارة الموارد البشرية</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
-    
+
     <link rel="stylesheet" href="{{ url_for('static', filename='css/fontawesome.css') }}">
-    
+
     <link rel="stylesheet" href="{{ url_for('static', filename='css/cairo.css') }}">
 
     <script src="{{ url_for('static', filename='js/chart.min.js') }}"></script>
@@ -33,6 +34,7 @@
             margin-bottom: 30px;
             box-shadow: 0 4px 15px rgba(0, 77, 122, 0.2);
         }
+
         .page-header h2 {
             margin: 0;
             font-weight: 700;
@@ -53,14 +55,16 @@
             margin-bottom: 8px;
         }
 
-        .form-control, .form-select {
+        .form-control,
+        .form-select {
             border-radius: 10px;
             padding: 12px;
             border: 1px solid #dee2e6;
             transition: all 0.3s ease;
         }
-        
-        .form-control:focus, .form-select:focus {
+
+        .form-control:focus,
+        .form-select:focus {
             border-color: #004d7a;
             box-shadow: 0 0 0 4px rgba(0, 77, 122, 0.1);
         }
@@ -112,13 +116,17 @@
             font-size: 15px;
             transition: all 0.3s ease;
         }
-        
+
         .btn-success {
             background-color: #2e7d32;
             border: none;
             box-shadow: 0 4px 15px rgba(46, 125, 50, 0.2);
         }
-        .btn-success:hover { background-color: #1b5e20; transform: translateY(-2px); }
+
+        .btn-success:hover {
+            background-color: #1b5e20;
+            transform: translateY(-2px);
+        }
 
         .btn-warning {
             background-color: #f9a825;
@@ -126,14 +134,22 @@
             border: none;
             box-shadow: 0 4px 15px rgba(249, 168, 37, 0.2);
         }
-        .btn-warning:hover { background-color: #f57f17; color: #fff; transform: translateY(-2px); }
+
+        .btn-warning:hover {
+            background-color: #f57f17;
+            color: #fff;
+            transform: translateY(-2px);
+        }
 
         .btn-secondary {
             background-color: #e0e0e0;
             color: #333;
             border: none;
         }
-        .btn-secondary:hover { background-color: #bdbdbd; }
+
+        .btn-secondary:hover {
+            background-color: #bdbdbd;
+        }
 
         /* Image Upload Section */
         .img-upload-card {
@@ -141,18 +157,20 @@
             background-color: #fcfcfc;
             border: 2px dashed #dbe4eb;
         }
+
         .img-upload-card h3 {
             font-size: 18px;
             color: #555;
             margin-bottom: 20px;
         }
+
         .current-img {
             width: 140px;
             height: 140px;
             border-radius: 50%;
             object-fit: cover;
             border: 4px solid #fff;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
             margin-bottom: 20px;
         }
     </style>
@@ -163,7 +181,7 @@
     <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
 
     <div class="container">
-        
+
         <div class="page-header">
             <h2>{{ '👤 إضافة موظف جديد' if action == 'Add' else '✏️ تعديل بيانات الموظف' }}</h2>
         </div>
@@ -177,12 +195,14 @@
         {% endwith %}
 
         <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1100;">
-            <div id="successToast" class="toast align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+            <div id="successToast" class="toast align-items-center text-white bg-success border-0" role="alert"
+                aria-live="assertive" aria-atomic="true">
                 <div class="d-flex">
                     <div class="toast-body">
                         ✅ تم الحفظ بنجاح!
                     </div>
-                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
+                        aria-label="Close"></button>
                 </div>
             </div>
         </div>
@@ -190,14 +210,16 @@
         <div class="card">
             <form method="POST" onsubmit="return validateForm()">
                 <div class="row g-4">
-                    
+
                     <div class="col-12">
-                        <h5 class="text-muted mb-3" style="border-bottom: 2px solid #f0f0f0; padding-bottom: 10px;">البيانات الشخصية</h5>
+                        <h5 class="text-muted mb-3" style="border-bottom: 2px solid #f0f0f0; padding-bottom: 10px;">
+                            البيانات الشخصية</h5>
                     </div>
 
                     <div class="col-md-6">
                         <label class="form-label">الاسم الكامل <span class="text-danger">*</span></label>
-                        <input type="text" name="name" class="form-control" value="{{ user.NAME if user else '' }}" required placeholder="الاسم رباعي">
+                        <input type="text" name="name" class="form-control" value="{{ user.NAME if user else '' }}"
+                            required placeholder="الاسم رباعي">
                     </div>
 
                     <div class="col-md-6">
@@ -215,12 +237,14 @@
                     </div>
 
                     <div class="col-12 mt-4">
-                        <h5 class="text-muted mb-3" style="border-bottom: 2px solid #f0f0f0; padding-bottom: 10px;">بيانات الوظيفة</h5>
+                        <h5 class="text-muted mb-3" style="border-bottom: 2px solid #f0f0f0; padding-bottom: 10px;">
+                            بيانات الوظيفة</h5>
                     </div>
 
                     <div class="col-md-4">
                         <label class="form-label">الرقم الوظيفي</label>
-                        <input type="text" name="badgenumber" class="form-control" value="{{ user.BADGENUMBER if user else '' }}">
+                        <input type="text" name="badgenumber" class="form-control"
+                            value="{{ user.BADGENUMBER if user else '' }}">
                     </div>
 
                     <div class="col-md-4">
@@ -228,7 +252,8 @@
                         <select class="form-select" name="defaultdept" id="dept_select">
                             <option value="">-- اختر القسم --</option>
                             {% for d in depts %}
-                            <option value="{{ d.DEPTID }}" {% if user and user.DEFAULTDEPTID==d.DEPTID %}selected{% endif %}>
+                            <option value="{{ d.DEPTID }}" {% if user and user.DEFAULTDEPTID==d.DEPTID %}selected{%
+                                endif %}>
                                 {{ d.DEPTNAME }}
                             </option>
                             {% endfor %}
@@ -237,43 +262,23 @@
 
                     <div class="col-md-4">
                         <label class="form-label">المسمى الوظيفي <span class="text-danger">*</span></label>
-                        <input type="text" 
-                            name="title" 
-                            id="title_input" 
-                            class="form-control" 
-                            value="{{ user.TITLE if user else '' }}" 
-                            placeholder="مثال: مدير مبيعات، مهندس شبكات، محاسب..." 
-                            required>
+                        <input type="text" name="title" id="title_input" class="form-control"
+                            value="{{ user.TITLE if user else '' }}"
+                            placeholder="مثال: مدير مبيعات، مهندس شبكات، محاسب..." required>
                         <small class="text-muted">اكتب المسمى الوظيفي يدويًا (سيظهر كما تكتبه في كل التقارير)</small>
                     </div>
 
                     <div class="col-12 mt-4">
                         <label class="form-label mb-2">تصنيف الموظف (يمكن اختيار أكثر من فئة)</label>
                         <div class="checkbox-grid">
+                            {% for cls in classes %}
                             <div class="checkbox-item">
-                                <input type="checkbox" id="level_a" name="employee_levels" value="A" {% if user and user.employee_class and 'A' in user.employee_class %}checked{% endif %}>
-                                <label for="level_a">A - موظف إداري</label>
+                                <input type="checkbox" id="level_{{ cls.ClassName }}" name="employee_levels"
+                                    value="{{ cls.ClassName }}" {% if user and user.employee_class and cls.ClassName in
+                                    user.employee_class %}checked{% endif %}>
+                                <label for="level_{{ cls.ClassName }}">{{ cls.DisplayName or cls.ClassName }}</label>
                             </div>
-
-                            <div class="checkbox-item">
-                                <input type="checkbox" id="level_b" name="employee_levels" value="B" {% if user and user.employee_class and 'B' in user.employee_class %}checked{% endif %}>
-                                <label for="level_b">B - موظف فني</label>
-                            </div>
-
-                            <div class="checkbox-item">
-                                <input type="checkbox" id="level_c" name="employee_levels" value="C" {% if user and user.employee_class and 'C' in user.employee_class %}checked{% endif %}>
-                                <label for="level_c">C - فئة ج</label>
-                            </div>
-
-                            <div class="checkbox-item">
-                                <input type="checkbox" id="level_supervisor" name="employee_levels" value="مشرف" {% if user and user.employee_class and 'مشرف' in user.employee_class %}checked{% endif %}>
-                                <label for="level_supervisor">مشرف</label>
-                            </div>
-
-                            <div class="checkbox-item">
-                                <input type="checkbox" id="level_manager" name="employee_levels" value="مدير" {% if user and user.employee_class and 'مدير' in user.employee_class %}checked{% endif %}>
-                                <label for="level_manager">مدير</label>
-                            </div>
+                            {% endfor %}
                         </div>
                         <div id="levelsError" class="text-danger mt-2 small" style="display: none;">
                             <i class="bi bi-exclamation-circle"></i> يرجى اختيار فئة واحدة على الأقل
@@ -284,7 +289,7 @@
                         <a href="{{ url_for('userinfo_list') }}" class="btn btn-secondary">
                             العودة للقائمة
                         </a>
-                        
+
                         {% if action == 'Add' %}
                         <button type="submit" class="btn btn-success px-5">
                             حفظ الموظف الجديد
@@ -304,10 +309,12 @@
             <h3>تحديث الصورة الشخصية</h3>
             <div class="d-flex flex-column align-items-center">
                 <img src="{{ url_for('user_pic', user_id=user.USERID) }}" alt="صورة الموظف" class="current-img">
-                
-                <form action="{{ url_for('upload_pic', user_id=user.USERID) }}" method="POST" enctype="multipart/form-data" class="w-100" style="max-width: 400px;">
+
+                <form action="{{ url_for('upload_pic', user_id=user.USERID) }}" method="POST"
+                    enctype="multipart/form-data" class="w-100" style="max-width: 400px;">
                     <div class="input-group mb-3">
-                        <input type="file" class="form-control" name="user_pic" id="user_pic" accept="image/png, image/jpeg">
+                        <input type="file" class="form-control" name="user_pic" id="user_pic"
+                            accept="image/png, image/jpeg">
                         <button class="btn btn-primary" type="submit">رفع</button>
                     </div>
                 </form>
@@ -327,7 +334,7 @@
         function validateForm() {
             const checkboxes = document.querySelectorAll('input[name="employee_levels"]:checked');
             const errorDiv = document.getElementById('levelsError');
-            
+
             if (checkboxes.length === 0) {
                 errorDiv.style.display = 'block';
                 errorDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -345,7 +352,7 @@
         }
 
         document.querySelectorAll('input[name="employee_levels"]').forEach(checkbox => {
-            checkbox.addEventListener('change', function() {
+            checkbox.addEventListener('change', function () {
                 const checkboxes = document.querySelectorAll('input[name="employee_levels"]:checked');
                 const errorDiv = document.getElementById('levelsError');
                 if (checkboxes.length > 0) {
@@ -354,8 +361,9 @@
             });
         });
 
-        
+
     </script>
 
 </body>
+
 </html>

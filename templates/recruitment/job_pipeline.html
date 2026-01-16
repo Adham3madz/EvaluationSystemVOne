@@ -16,18 +16,25 @@
 
     /* === Header Section === */
     .job-header-glass {
-        background: rgba(0, 0, 0, 0.6); 
-        color: white;
+        background: rgba(0, 0, 0, 0.6);
+        color: white !important;
+        /* Force White */
         padding: 20px;
         border-radius: 20px;
-        border: 1px solid rgba(255,255,255,0.15);
+        border: 1px solid rgba(255, 255, 255, 0.15);
         display: flex;
         align-items: center;
         gap: 20px;
         margin-bottom: 25px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
     }
-    
+
+    .job-header-glass h2,
+    .job-header-glass p,
+    .job-header-glass strong {
+        color: white !important;
+    }
+
     .job-icon-box {
         width: 70px;
         height: 70px;
@@ -40,409 +47,464 @@
         box-shadow: 0 5px 15px rgba(13, 110, 253, 0.3);
     }
 
-    /* === Search Bar === */
-    .search-glass {
-        background: rgba(255, 255, 255, 0.15);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        color: white !important; 
-        border-radius: 12px;
-        padding: 15px 20px;
-        font-size: 1.1rem;
-        transition: all 0.3s;
-    }
-    .search-glass::placeholder { color: rgba(255, 255, 255, 0.7); }
-    .search-glass:focus {
-        background: rgba(255, 255, 255, 0.25);
-        box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
-        color: white;
-        outline: none;
+    /* === Kanban Board Layout === */
+    .kanban-container {
+        display: flex;
+        gap: 10px;
+        /* Reduced gap to save space */
+        overflow-x: hidden;
+        /* Hide scrollbar by default, will fit content */
+        padding: 20px 5px;
+        align-items: flex-start;
+        min-height: calc(100vh - 250px);
+        width: 100%;
+        /* Ensure full width usage */
     }
 
-    /* === Stage Headers === */
-    .stage-header {
+    /* ... Scrollbar styling removed as we aim to eliminate scrolling ... */
+
+    .kanban-column {
+        flex: 1;
+        /* Grow and shrink to share space equally */
+        min-width: 0;
+        /* Allow shrinking below content size if necessary */
+        /* width: 320px; REMOVED fixed width */
+        /* flex-shrink: 0; REMOVED prevent shrink */
+
+        background: rgba(20, 20, 25, 0.6);
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        display: flex;
+        flex-direction: column;
+        max-height: calc(100vh - 200px);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .kanban-header {
         padding: 15px;
-        border-radius: 12px 12px 0 0;
+        border-radius: 16px 16px 0 0;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        backdrop-filter: blur(5px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         display: flex;
         justify-content: space-between;
         align-items: center;
-        backdrop-filter: blur(5px);
-        border-bottom: 1px solid rgba(255,255,255,0.1);
-        color: white; /* Ensures text inside is white */
-        text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        color: white !important;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+        /* Text shadow for contrast */
+        font-weight: bold;
     }
 
-    .stage-new { background: linear-gradient(135deg, rgba(13, 110, 253, 0.6), rgba(13, 110, 253, 0.3)); border-top: 3px solid #0d6efd; }
-    .stage-screening { background: linear-gradient(135deg, rgba(13, 202, 240, 0.6), rgba(13, 202, 240, 0.3)); border-top: 3px solid #0dcaf0; }
-    .stage-interview { background: linear-gradient(135deg, rgba(255, 193, 7, 0.6), rgba(255, 193, 7, 0.3)); border-top: 3px solid #ffc107; }
-    .stage-training { background: linear-gradient(135deg, rgba(102, 16, 242, 0.6), rgba(102, 16, 242, 0.3)); border-top: 3px solid #6610f2; }
-    .stage-offer { background: linear-gradient(135deg, rgba(33, 37, 41, 0.7), rgba(33, 37, 41, 0.4)); border-top: 3px solid #fff; }
-    .stage-hired { background: linear-gradient(135deg, rgba(25, 135, 84, 0.6), rgba(25, 135, 84, 0.3)); border-top: 3px solid #198754; }
-    .stage-rejected { background: linear-gradient(135deg, rgba(220, 53, 69, 0.6), rgba(220, 53, 69, 0.3)); border-top: 3px solid #dc3545; }
+    /* Force all children of header to be white */
+    .kanban-header h6,
+    .kanban-header span,
+    .kanban-header div {
+        color: white !important;
+    }
 
-    /* === Candidate Cards (UPDATED TO DARK GLASS) === */
-    /* Changed background to dark so white text is visible */
+    .kanban-body {
+        padding: 15px;
+        overflow-y: auto;
+        flex-grow: 1;
+        min-height: 150px;
+    }
+
+    .kanban-body::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .kanban-body::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 4px;
+    }
+
+    /* Column Colors */
+    .col-new {
+        background: linear-gradient(180deg, rgba(13, 110, 253, 0.4) 0%, rgba(13, 110, 253, 0.1) 100%);
+        border-top: 4px solid #0d6efd;
+    }
+
+    .col-screening {
+        background: linear-gradient(180deg, rgba(13, 202, 240, 0.4) 0%, rgba(13, 202, 240, 0.1) 100%);
+        border-top: 4px solid #0dcaf0;
+    }
+
+    .col-interview {
+        background: linear-gradient(180deg, rgba(255, 193, 7, 0.4) 0%, rgba(255, 193, 7, 0.1) 100%);
+        border-top: 4px solid #ffc107;
+    }
+
+    .col-training {
+        background: linear-gradient(180deg, rgba(102, 16, 242, 0.4) 0%, rgba(102, 16, 242, 0.1) 100%);
+        border-top: 4px solid #6610f2;
+    }
+
+    .col-offer {
+        background: linear-gradient(180deg, rgba(230, 230, 230, 0.4) 0%, rgba(200, 200, 200, 0.1) 100%);
+        border-top: 4px solid #fff;
+    }
+
+    .col-hired {
+        background: linear-gradient(180deg, rgba(25, 135, 84, 0.4) 0%, rgba(25, 135, 84, 0.1) 100%);
+        border-top: 4px solid #198754;
+    }
+
+    .col-rejected {
+        background: linear-gradient(180deg, rgba(220, 53, 69, 0.4) 0%, rgba(220, 53, 69, 0.1) 100%);
+        border-top: 4px solid #dc3545;
+    }
+
+    .col-waiting {
+        background: linear-gradient(180deg, rgba(253, 126, 20, 0.4) 0%, rgba(253, 126, 20, 0.1) 100%);
+        border-top: 4px solid #fd7e14;
+    }
+
+    /* === Candidate Cards (Draggable) === */
     .candidate-card {
-        background: rgba(30, 30, 35, 0.8); /* Dark background */
-        backdrop-filter: blur(10px);
+        background: rgba(40, 44, 52, 0.95);
+        /* Opaque dark background */
+        backdrop-filter: blur(8px);
         border: 1px solid rgba(255, 255, 255, 0.2);
         border-radius: 12px;
         padding: 15px;
-        transition: transform 0.2s, box-shadow 0.2s;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.2);
         margin-bottom: 15px;
-    }
-    
-    .candidate-card:hover {
-        transform: translateY(-3px) scale(1.01);
-        box-shadow: 0 10px 20px rgba(0,0,0,0.4);
-        background: rgba(40, 40, 45, 0.9);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        cursor: grab;
+        transition: transform 0.2s, box-shadow 0.2s;
+        position: relative;
+        color: white !important;
+        /* Force white text */
     }
 
-    /* Updated text colors to white */
-    .candidate-name { color: white; font-weight: 800; font-size: 1.1rem; }
-    .candidate-meta { color: rgba(255, 255, 255, 0.7); font-size: 0.85rem; font-weight: 600; }
-    .candidate-phone { color: rgba(255, 255, 255, 0.8); }
+    .candidate-card h6,
+    .candidate-card p,
+    .candidate-card small,
+    .candidate-card span {
+        color: white !important;
+    }
+
+    .candidate-card .text-muted {
+        color: rgba(255, 255, 255, 0.7) !important;
+        /* Override muted */
+    }
+
+    .candidate-card:active {
+        cursor: grabbing;
+        transform: rotate(2deg) scale(1.02);
+    }
+
+    .candidate-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.5);
+        background: rgba(50, 54, 62, 1);
+        border-color: rgba(255, 255, 255, 0.4);
+    }
+
+    /* Drag over effect */
+    .kanban-body.drag-over {
+        background: rgba(255, 255, 255, 0.1);
+        border: 2px dashed rgba(255, 255, 255, 0.3);
+        border-radius: 12px;
+    }
+
+    .dragging {
+        opacity: 0.5;
+        border: 2px dashed #fff;
+    }
+
+    /* Text Colors */
+    .text-light-glass {
+        color: rgba(255, 255, 255, 0.7);
+    }
+
+    .text-light-glass-50 {
+        color: rgba(255, 255, 255, 0.5);
+    }
+
+    .btn-glass {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: white;
+    }
+
+    .btn-glass:hover {
+        background: rgba(255, 255, 255, 0.25);
+        color: white;
+    }
+
+    /* Glass Search */
+    .search-glass {
+        background: rgba(255, 255, 255, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: white !important;
+        border-radius: 12px;
+        padding: 12px 20px;
+    }
+
+    .search-glass::placeholder {
+        color: rgba(255, 255, 255, 0.6);
+    }
 
     /* === Modal Glass === */
     .modal-content.glass-modal {
-        background: rgba(30, 30, 35, 0.95);
+        background: #1e1e24;
+        /* Solid Dark */
         backdrop-filter: blur(20px);
-        border: 1px solid rgba(255,255,255,0.2);
+        border: 1px solid rgba(255, 255, 255, 0.2);
         border-radius: 20px;
         color: white !important;
     }
-    
-    .modal-header { border-bottom: 1px solid rgba(255,255,255,0.1); }
-    .modal-footer { border-top: 1px solid rgba(255,255,255,0.1); }
-    
-    .glass-modal .form-control, .glass-modal .form-select {
+
+    .modal-title,
+    .modal-body label,
+    .modal-body p {
+        color: white !important;
+    }
+
+    .form-control,
+    .form-select {
+        background: rgba(255, 255, 255, 0.1) !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        color: white !important;
+    }
+
+    .form-control::placeholder {
+        color: rgba(255, 255, 255, 0.5) !important;
+    }
+
+    /* Button Visibility on Card */
+    .btn-card-action {
         background: rgba(255, 255, 255, 0.1);
-        border: 1px solid rgba(255,255,255,0.2);
+        border: 1px solid rgba(255, 255, 255, 0.2);
         color: white !important;
-    }
-    .glass-modal .form-control:focus, .glass-modal .form-select:focus {
-        background: rgba(255,255,255,0.2);
-        color: white !important;
-    }
-    .glass-modal .form-control::placeholder { color: rgba(255, 255, 255, 0.5); }
-    .glass-modal option { color: #000; }
-    .btn-glass {
-        background: rgba(255, 255, 255, 0.2);
-        border: 1px solid rgba(255,255,255,0.3);
-        color: white;
         transition: 0.2s;
     }
-    .btn-glass:hover { background: rgba(255, 255, 255, 0.4); color: white; }
+
+    .btn-card-action:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: scale(1.05);
+    }
+
+    .modal-header {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .modal-footer {
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .glass-modal .form-control,
+    .glass-modal .form-select {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: white !important;
+    }
 </style>
 
 <div class="container-fluid py-4" style="min-height: 100vh;">
-    
-    <div class="container" style="max-width: 1200px;">
-        
+
+    <div class="container-fluid" style="padding: 0 30px;">
+
+        <!-- Messages -->
         {% with messages = get_flashed_messages(with_categories=true) %}
-          {% if messages %}
-            {% for category, message in messages %}
-              <div class="alert alert-{{ category }} shadow-lg border-0 mb-4 fw-bold d-flex align-items-center" 
-                   style="background: rgba(255,255,255,0.9); backdrop-filter: blur(10px);">
-                  {{ message }}
-                  <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
-              </div>
-            {% endfor %}
-          {% endif %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }} shadow-lg border-0 mb-4 fw-bold d-flex align-items-center"
+            style="background: rgba(255,255,255,0.9); backdrop-filter: blur(10px);">
+            {{ message }}
+            <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+        {% endif %}
         {% endwith %}
 
+        <!-- Header -->
         <div class="job-header-glass">
-            <div class="job-icon-box">
-                💼
-            </div>
+            <div class="job-icon-box">💼</div>
             <div class="flex-grow-1 text-white">
                 <h2 class="fw-bold mb-1 text-white">{{ job.JobTitle }}</h2>
-                <p class="mb-0 opacity-75 text-white">
-                    👤 المدير المسؤول: <strong class="text-white">{{ job.HiringManager }}</strong>
+                <p class="mb-0 opacity-75">
+                    👤 المدير المسؤول: <strong class="text-white">{{ job.HiringManager }}</strong> | 🏢 القسم: {{
+                    job.DEPTNAME_DISPLAY or 'عام' }}
                 </p>
             </div>
-            <div class="d-flex gap-2">
-                 <a href="{{ url_for('recruitment_jobs') }}" class="btn btn-glass rounded-pill px-4">
-                    ⬅️ العودة
-                 </a>
-                <button class="btn btn-primary rounded-pill px-4 shadow-lg fw-bold" data-bs-toggle="modal" data-bs-target="#addCandidateModal">
-                    ➕ إضافة مرشح
+
+            <div class="d-flex align-items-center gap-3">
+                <input type="text" id="candidateSearch" class="form-control search-glass" style="width: 250px;"
+                    placeholder="🔍 بحث عن مرشح...">
+
+                <button class="btn btn-primary rounded-pill px-4 shadow-lg fw-bold" data-bs-toggle="modal"
+                    data-bs-target="#addCandidateModal">
+                    ➕ مرشح جديد
                 </button>
+                <a href="{{ url_for('recruitment_jobs') }}" class="btn btn-glass rounded-pill px-4">
+                    ⬅️ خروج
+                </a>
             </div>
         </div>
 
-        <div class="mb-5">
-            <div class="input-group input-group-lg shadow-lg" style="border-radius: 12px; overflow: hidden;">
-                <span class="input-group-text border-0" style="background: rgba(255,255,255,0.15); color: white;">🔍</span>
-                <input type="text" id="candidateSearch" class="form-control search-glass border-0" 
-                       placeholder="ابحث عن مرشح بالاسم أو رقم الهاتف...">
-            </div>
-        </div>
+        <!-- KANBAN BOARD -->
+        <div class="kanban-container">
+            {% set kanban_stages = ['New', 'Screening', 'Interview', 'Training', 'Offer', 'Hired', 'Reactive_Reject'] %}
 
-        <div class="vstack gap-4">
-            
-            {% set custom_stages = ['New', 'Screening', 'Interview', 'Training', 'Offer', 'Hired', 'Rejected'] %}
-            
-            {% for stage in custom_stages %}
-            
-            {% set stage_class = 'stage-new' %}
-            {% set stage_name = 'طلبات جديدة' %}
-            {% set stage_icon = '🆕' %}
+            {# NOTE: Reactive_Reject is a hack to separate Rejected/Waiting if needed, but here we iterate standard
+            stages + Rejected/Waiting manually #}
 
-            {% if stage == 'Screening' %}
-                {% set stage_class = 'stage-screening' %} {% set stage_name = 'فحص أولي' %} {% set stage_icon = '🧐' %}
-            {% elif stage == 'Interview' %}
-                {% set stage_class = 'stage-interview' %} {% set stage_name = 'مقابلة شخصية' %} {% set stage_icon = '🗣️' %}
-            {% elif stage == 'Training' %}
-                {% set stage_class = 'stage-training' %} {% set stage_name = '🎓 تدريب (3 شهور)' %} {% set stage_icon = '🎓' %}
-            {% elif stage == 'Offer' %}
-                {% set stage_class = 'stage-offer' %} {% set stage_name = 'عرض عمل' %} {% set stage_icon = '📜' %}
-            {% elif stage == 'Hired' %}
-                {% set stage_class = 'stage-hired' %} {% set stage_name = 'تم التعيين' %} {% set stage_icon = '🎉' %}
-            {% elif stage == 'Rejected' %}
-                {% set stage_class = 'stage-rejected' %} {% set stage_name = 'مرفوض' %} {% set stage_icon = '🚫' %}
+            {% for stage in ['New', 'Screening', 'Interview', 'Training', 'Offer', 'Hired', 'Waiting', 'Rejected',
+            'Resigned'] %}
+
+            {% set stage_display = stage %}
+            {% set col_class = 'col-new' %}
+            {% set icon = '🆕' %}
+
+            {% if stage == 'New' %}{% set stage_display = 'طلبات جديدة' %}{% set col_class = 'col-new' %}{% set icon =
+            '🆕' %}
+            {% elif stage == 'Screening' %}{% set stage_display = 'فحص أولي' %}{% set col_class = 'col-screening' %}{%
+            set icon = '🧐' %}
+            {% elif stage == 'Interview' %}{% set stage_display = 'مقابلة شخصية' %}{% set col_class = 'col-interview'
+            %}{% set icon = '🗣️' %}
+            {% elif stage == 'Training' %}{% set stage_display = 'تدريب (3 شهور)' %}{% set col_class = 'col-training'
+            %}{% set icon = '🎓' %}
+            {% elif stage == 'Offer' %}{% set stage_display = 'عرض عمل' %}{% set col_class = 'col-offer' %}{% set icon =
+            '📜' %}
+            {% elif stage == 'Hired' %}{% set stage_display = 'تم التعيين' %}{% set col_class = 'col-hired' %}{% set
+            icon = '🎉' %}
+            {% elif stage == 'Waiting' %}{% set stage_display = 'قائمة الانتظار' %}{% set col_class = 'col-waiting' %}{%
+            set icon = '⏳' %}
+            {% elif stage == 'Rejected' %}{% set stage_display = 'مرفوض' %}{% set col_class = 'col-rejected' %}{% set
+            icon = '🚫' %}
+            {% elif stage == 'Resigned' %}{% set stage_display = 'انسحاب / استقالة' %}{% set col_class = 'col-rejected'
+            %}{% set
+            icon = '👋' %}
             {% endif %}
 
             {% set stage_candidates = candidates|selectattr('Status', 'equalto', stage)|list %}
 
-            {% if stage_candidates|length > 0 or stage == 'New' %}
-            <div class="stage-section" style="margin-bottom: 20px;">
-                
-                <div class="stage-header {{ stage_class }}">
-                    <div class="d-flex align-items-center gap-3">
-                        <span class="fs-4">{{ stage_icon }}</span>
-                        <h5 class="fw-bold mb-0 text-white">{{ stage_name }}</h5>
+            <div class="kanban-column" ondragover="allowDrop(event)" ondrop="drop(event, '{{ stage }}')"
+                ondragenter="this.querySelector('.kanban-body').classList.add('drag-over')"
+                ondragleave="this.querySelector('.kanban-body').classList.remove('drag-over')">
+
+                <div class="kanban-header {{ col_class }}">
+                    <div class="d-flex align-items-center gap-2">
+                        <span>{{ icon }}</span>
+                        <h6 class="mb-0 fw-bold">{{ stage_display }}</h6>
                     </div>
-                    <span class="badge bg-white text-dark rounded-pill px-3 fs-6 shadow-sm">{{ stage_candidates|length }}</span>
+                    <span class="badge bg-white text-dark rounded-pill shadow-sm"
+                        style="color: #000 !important; font-weight: 800; font-size: 0.9rem;">{{ stage_candidates|length
+                        }}</span>
                 </div>
-                
-                <div class="p-3" style="background: rgba(0,0,0,0.2); border-radius: 0 0 12px 12px; border: 1px solid rgba(255,255,255,0.05); border-top: none;">
-                    {% if stage_candidates|length == 0 %}
-                        <div class="text-center py-3 opacity-50 text-white">
-                            <div class="fs-1 mb-2">📂</div>
-                            <p class="mb-0">لا يوجد مرشحين في هذه المرحلة.</p>
+
+                <div class="kanban-body">
+                    {% for c in stage_candidates %}
+                    <div class="candidate-card" draggable="true"
+                        ondragstart="drag(event, '{{ c.CandidateID }}', '{{ c.FullName }}')"
+                        id="card-{{ c.CandidateID }}" data-name="{{ c.FullName }}" data-phone="{{ c.Phone }}">
+
+                        <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+                            <span
+                                class="badge bg-secondary bg-opacity-25 text-white border border-secondary border-opacity-25">{{
+                                c.Source }}</span>
+                            <small class="text-light-glass-50" style="font-size: 0.75rem;">{{
+                                c.ApplicationDate.strftime('%Y-%m-%d') }}</small>
                         </div>
-                    {% else %}
-                        <div class="row g-3">
-                            {% for c in stage_candidates %}
-                            <div class="col-md-6 col-lg-4 candidate-item"> 
-                                <div class="candidate-card h-100">
-                                    
-                                    <div class="d-flex justify-content-between mb-2">
-                                        <span class="badge bg-secondary bg-opacity-25 text-white border">{{ c.Source }}</span>
-                                        <small class="candidate-meta text-white-50">{{ c.ApplicationDate.strftime('%Y-%m-%d') }}</small>
-                                    </div>
-                                    
-                                    <h5 class="candidate-name mb-1 text-white">{{ c.FullName }}</h5>
-                                    <p class="small text-white-50 mb-1 candidate-phone">📞 {{ c.Phone }}</p>
-                                    {% if c.NationalID %}<p class="small text-white-50 mb-2">🆔 {{ c.NationalID }}</p>{% endif %}
 
-                                    {% if c.LastNote %}
-                                    <div class="bg-dark bg-opacity-50 border border-secondary rounded p-2 mb-3">
-                                        <small class="text-white-50 d-block fw-bold mb-1">📝 آخر ملاحظة:</small>
-                                        <p class="mb-0 small text-white fst-italic">"{{ c.LastNote }}"</p>
-                                    </div>
-                                    {% else %}
-                                    <div class="mb-3"></div> {% endif %}
-                                    
-                                    <div class="d-flex gap-2 mb-2">
-                                        <button onclick="openEditModal(
-                                            '{{ c.CandidateID }}', '{{ c.FullName }}', '{{ c.Phone }}', '{{ c.Email or '' }}', '{{ c.NationalID or '' }}', '{{ c.Source }}', '{{ c.ApplicationDate.strftime('%Y-%m-%d') if c.ApplicationDate else '' }}' )" class="btn btn-sm btn-outline-warning text-white border-warning" title="تعديل">
-                                            ✏️
-                                        </button>
+                        <h6 class="candidate-name mb-1">{{ c.FullName }}</h6>
+                        <p class="small text-light-glass mb-2">📞 {{ c.Phone }}</p>
 
-                                        <button onclick="openDocModal(
-                                            '{{ c.CandidateID }}', '{{ c.FullName }}', {{ c.DocBirthCert|default(0)|int }}, {{ c.DocDegree|default(0)|int }}, {{ c.DocMilitary|default(0)|int }}, {{ c.DocCriminalRecord|default(0)|int }}, {{ c.DocPersonalPhoto|default(0)|int }}, {{ c.DocIDCard|default(0)|int }}, {{ c.DocInfoSheet|default(0)|int }}
-                                        )" class="btn btn-sm btn-outline-light flex-grow-1 text-white">
-                                            📂 الملفات
-                                        </button>
-
-                                        <button onclick="openTransferModal('{{ c.CandidateID }}', '{{ c.FullName }}')" 
-                                                class="btn btn-sm btn-outline-primary text-white" title="نقل">
-                                            🔄 نقل
-                                        </button>
-                                    </div>
-
-                                    <div class="d-grid gap-2">
-                                        {% if stage != 'Rejected' and stage != 'Hired' %}
-                                            
-                                            {# Logic for Next/Prev #}
-                                            {% set next_stage = '' %}
-                                            {% if stage == 'New' %}{% set next_stage = 'Screening' %}{% endif %}
-                                            {% if stage == 'Screening' %}{% set next_stage = 'Interview' %}{% endif %}
-                                            {% if stage == 'Interview' %}{% set next_stage = 'Training' %}{% endif %}
-                                            {% if stage == 'Training' %}{% set next_stage = 'Offer' %}{% endif %}
-                                            {% if stage == 'Offer' %}{% set next_stage = 'Hired' %}{% endif %}
-
-                                            {% set prev_stage = '' %}
-                                            {% if stage == 'Screening' %}{% set prev_stage = 'New' %}{% endif %}
-                                            {% if stage == 'Interview' %}{% set prev_stage = 'Screening' %}{% endif %}
-                                            {% if stage == 'Training' %}{% set prev_stage = 'Interview' %}{% endif %}
-                                            {% if stage == 'Offer' %}{% set prev_stage = 'Training' %}{% endif %}
-
-                                            <div class="d-flex gap-2">
-                                                {% if prev_stage %}
-                                                <button onclick="openMoveModal('{{ c.CandidateID }}', '{{ c.FullName }}', '{{ prev_stage }}', 'back')" 
-                                                        class="btn btn-outline-light btn-sm w-50">⬅️ عودة</button>
-                                                {% endif %}
-
-                                                {% if next_stage %}
-                                                <button onclick="openMoveModal('{{ c.CandidateID }}', '{{ c.FullName }}', '{{ next_stage }}', 'next')" 
-                                                        class="btn btn-success btn-sm w-100">التالي ➡️</button>
-                                                {% endif %}
-                                            </div>
-
-                                            <button onclick="openMoveModal('{{ c.CandidateID }}', '{{ c.FullName }}', 'Waiting', 'waiting')" 
-                                                    class="btn btn-warning btn-sm text-dark fw-bold mt-1">⏳ الانتظار</button>
-                                            
-                                            <button onclick="openMoveModal('{{ c.CandidateID }}', '{{ c.FullName }}', 'Rejected', 'reject')" 
-                                                    class="btn btn-outline-danger btn-sm mt-1">❌ رفض</button>
-
-                                        {% elif stage == 'Rejected' %}
-                                            <div class="alert alert-danger py-1 mb-0 text-center small fw-bold">⛔ تم الرفض</div>
-                                            <button onclick="openMoveModal('{{ c.CandidateID }}', '{{ c.FullName }}', 'New', 'back')" 
-                                                    class="btn btn-sm btn-outline-secondary mt-2">🔄 إعادة فتح</button>
-                                        {% elif stage == 'Hired' %}
-                                            <div class="alert alert-success py-1 mb-0 text-center small fw-bold">🎉 تم التعيين</div>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                            </div>
-                            {% endfor %}
+                        {% if c.LastNote %}
+                        <div class="bg-black bg-opacity-25 rounded p-2 mb-2 border border-white border-opacity-10">
+                            <small class="d-block text-warning fw-bold" style="font-size: 0.75rem;">📝 ملاحظة:</small>
+                            <p class="mb-0 small text-white fst-italic text-truncate" style="max-width: 250px;">{{
+                                c.LastNote }}</p>
                         </div>
-                    {% endif %}
+                        {% endif %}
+
+                        <!-- Action Buttons on Card -->
+                        <div class="d-flex gap-2 mt-2">
+                            <button
+                                onclick="openEditModal(
+                                    '{{ c.CandidateID }}', '{{ c.FullName }}', '{{ c.Phone }}', '{{ c.Email or '' }}', '{{ c.NationalID or '' }}', '{{ c.Source }}', '{{ c.ApplicationDate.strftime('%Y-%m-%d') if c.ApplicationDate else '' }}' )"
+                                class="btn btn-sm btn-outline-warning text-white flex-fill p-1" title="تعديل">
+                                ✏️
+                            </button>
+
+                            <button onclick="openDocModal(
+                                    '{{ c.CandidateID }}', '{{ c.FullName }}', {{ c.DocBirthCert|default(0)|int }}, {{ c.DocDegree|default(0)|int }}, {{ c.DocMilitary|default(0)|int }}, {{ c.DocCriminalRecord|default(0)|int }}, {{ c.DocPersonalPhoto|default(0)|int }}, {{ c.DocIDCard|default(0)|int }}, {{ c.DocInfoSheet|default(0)|int }}
+                                )" class="btn btn-sm btn-outline-info text-white flex-fill p-1" title="الملفات">
+                                📂
+                            </button>
+
+                            <button onclick="openTransferModal('{{ c.CandidateID }}', '{{ c.FullName }}')"
+                                class="btn btn-sm btn-outline-secondary text-white flex-fill p-1" title="نقل وظيفة">
+                                🔄
+                            </button>
+                        </div>
+                    </div>
+                    {% endfor %}
                 </div>
             </div>
-            {% endif %}
-
             {% endfor %}
-            
         </div>
     </div>
 </div>
 
+<!-- ================= MODALS ================= -->
+
+<!-- 1. ADD CANDIDATE MODAL -->
 <div class="modal fade" id="addCandidateModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
-        <form class="modal-content glass-modal shadow-lg text-white" method="POST" action="{{ url_for('add_candidate_to_job', job_id=job.JobID) }}">
+        <form class="modal-content glass-modal shadow-lg" method="POST"
+            action="{{ url_for('add_candidate_to_job', job_id=job.JobID) }}">
             <div class="modal-header">
                 <h5 class="modal-title text-white">📄 تسجيل مرشح جديد</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-4">
-                
                 <div class="mb-3">
                     <label class="fw-bold text-white">📅 تاريخ التقديم</label>
                     <input type="date" name="application_date" id="appDateInput" class="form-control" required>
-                    <div class="form-text text-white-50 small">اتركه كما هو لليوم، أو غيّره لتسجيل تاريخ قديم.</div>
                 </div>
-
-                <div class="mb-3">
-                    <label class="fw-bold text-white">🆔 الرقم القومي</label>
-                    <input type="text" name="national_id" class="form-control" required>
+                <!-- Other fields shortened for brevity but functional -->
+                <div class="row">
+                    <div class="col-6 mb-3"><label class="text-white">الاسم</label><input type="text" name="name"
+                            class="form-control" required></div>
+                    <div class="col-6 mb-3"><label class="text-white">الهاتف</label><input type="text" name="phone"
+                            class="form-control" required></div>
                 </div>
-
-                <div class="mb-3">
-                    <label class="fw-bold text-white">الاسم بالكامل</label>
-                    <input type="text" name="name" class="form-control" required>
+                <div class="row">
+                    <div class="col-6 mb-3">
+                        <label class="text-white">الرقم القومي</label>
+                        <input type="text" name="national_id" class="form-control">
+                    </div>
+                    <div class="col-6 mb-3">
+                        <label class="text-white">البريد الإلكتروني</label>
+                        <input type="email" name="email" class="form-control">
+                    </div>
                 </div>
-
-                <div class="mb-3">
-                    <label class="fw-bold text-white">رقم الهاتف</label>
-                    <input type="text" name="phone" class="form-control" required>
-                </div>
-
-                <div class="mb-3">
-                    <label class="fw-bold text-white">البريد الإلكتروني</label>
-                    <input type="email" name="email" class="form-control">
-                </div>
-
-                <div class="mb-3">
-                    <label class="fw-bold text-white">المصدر</label>
+                <div class="mb-3"><label class="text-white">المصدر</label>
                     <select name="source" class="form-select">
                         <option value="LinkedIn">LinkedIn</option>
-                        <option value="Referral">ترشيح (Referral)</option>
-                        <option value="Website">الموقع الإلكتروني</option>
-                        <option value="Facebook">فيسبوك</option>
-                        <option value="Other">أخرى</option>
-                    </select>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="submit" class="btn btn-primary px-4 fw-bold">حفظ البيانات</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const dateInput = document.getElementById('appDateInput');
-        if(dateInput) {
-            dateInput.valueAsDate = new Date(); // Defaults to today
-        }
-    });
-</script>
-
-<div class="modal fade" id="editCandidateModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <form class="modal-content glass-modal shadow-lg text-white" method="POST" action="{{ url_for('edit_candidate') }}">
-            
-            <div class="modal-header" style="border-bottom-color: #ffc107;">
-                <h5 class="modal-title text-white">✏️ تعديل بيانات المرشح</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            
-            <div class="modal-body p-4">
-                <input type="hidden" name="candidate_id" id="edit_id">
-                
-                <div class="mb-3">
-                    <label class="fw-bold text-white">📅 تاريخ التقديم</label>
-                    <input type="date" name="application_date" id="edit_app_date" class="form-control" required>
-                </div>
-                <div class="mb-3">
-                    <label class="fw-bold text-white">الاسم بالكامل</label>
-                    <input type="text" name="name" id="edit_name" class="form-control" required>
-                </div>
-                
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label class="fw-bold text-white">رقم الهاتف</label>
-                        <input type="text" name="phone" id="edit_phone" class="form-control" required>
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label class="fw-bold text-white">الرقم القومي</label>
-                        <input type="text" name="national_id" id="edit_nid" class="form-control">
-                    </div>
-                </div>
-                
-                <div class="mb-3">
-                    <label class="fw-bold text-white">البريد الإلكتروني</label>
-                    <input type="email" name="email" id="edit_email" class="form-control">
-                </div>
-                
-                <div class="mb-3">
-                    <label class="fw-bold text-white">المصدر</label>
-                    <select name="source" id="edit_source" class="form-select">
-                        <option value="LinkedIn">LinkedIn</option>
                         <option value="Referral">ترشيح</option>
-                        <option value="Website">الموقع</option>
                         <option value="Facebook">فيسبوك</option>
+                        <option value="Website">موقع</option>
                         <option value="Other">أخرى</option>
                     </select>
                 </div>
             </div>
-            
             <div class="modal-footer">
-                <button type="submit" class="btn btn-warning text-dark fw-bold px-4">حفظ التعديلات</button>
+                <button type="submit" class="btn btn-primary fw-bold">حفظ</button>
             </div>
-            
         </form>
     </div>
 </div>
 
-<div class="modal fade" id="moveModal" tabindex="-1">
+<!-- 2. MOVE / EVALUATE MODAL (Triggered by Drop) -->
+<div class="modal fade" id="moveModal" tabindex="-1" data-bs-backdrop="static">
     <div class="modal-dialog modal-dialog-centered">
-        <form class="modal-content glass-modal shadow-lg text-white" method="POST" action="{{ url_for('move_candidate_with_eval') }}">
+        <form class="modal-content glass-modal shadow-lg" method="POST"
+            action="{{ url_for('move_candidate_with_eval') }}">
             <div class="modal-header bg-gradient">
                 <h5 class="modal-title">📝 تقييم ونقل المرشح</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
@@ -450,186 +512,221 @@
             <div class="modal-body p-4">
                 <input type="hidden" name="candidate_id" id="modal_candidate_id">
                 <input type="hidden" name="new_stage" id="modal_new_stage">
+
                 <div class="text-center mb-4">
                     <p class="text-white-50 mb-1">نقل المرشح:</p>
                     <h4 id="modal_candidate_name" class="fw-bold text-white"></h4>
                     <div class="d-inline-flex align-items-center gap-2 mt-2">
                         <span class="fs-4">⬇️</span>
-                        <span id="modal_stage_display" class="badge bg-white text-dark fs-6 px-3 py-2 rounded-pill shadow-sm"></span>
+                        <span id="modal_stage_display"
+                            class="badge bg-white text-dark fs-6 px-3 py-2 rounded-pill shadow-sm"></span>
                     </div>
                 </div>
+
                 <hr class="border-white opacity-25">
+
                 <div class="mb-4">
-                    <label class="form-label fw-bold d-flex justify-content-between">
+                    <label class="form-label fw-bold d-flex justify-content-between text-white">
                         <span>⭐ التقييم المبدئي</span>
                         <span class="text-warning fw-bold" id="scoreVal">5/10</span>
                     </label>
-                    <input type="range" name="score" class="form-range" min="1" max="10" value="5" oninput="document.getElementById('scoreVal').innerText = this.value + '/10'">
+                    <input type="range" name="score" class="form-range" min="1" max="10" value="5"
+                        oninput="document.getElementById('scoreVal').innerText = this.value + '/10'">
                 </div>
+
                 <div class="mb-3">
-                    <label class="form-label fw-bold">💬 ملاحظات / سبب القرار</label>
-                    <textarea name="note" class="form-control" rows="3" placeholder="اكتب ملاحظاتك..." required></textarea>
+                    <label class="form-label fw-bold text-white">💬 ملاحظات / سبب القرار</label>
+                    <textarea name="note" class="form-control" rows="3"
+                        placeholder="مثال: اجتاز المقابلة الفنية بنجاح..." required></textarea>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="submit" class="btn btn-success fw-bold px-4">✅ تأكيد</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="submit" class="btn btn-success fw-bold px-4">✅ تأكيد النقل</button>
             </div>
         </form>
     </div>
 </div>
 
+<!-- 3. DOCS MODAL -->
 <div class="modal fade" id="docModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
-        <form class="modal-content glass-modal shadow-lg text-white" method="POST" action="{{ url_for('update_candidate_docs') }}">
+        <form class="modal-content glass-modal shadow-lg" method="POST" action="{{ url_for('update_candidate_docs') }}">
+            <!-- ... Inputs same as before ... -->
             <div class="modal-header">
-                <h5 class="modal-title">📂 ملف مسوغات التعيين</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                <h5 class="modal-title text-white">📂 الملفات</h5><button type="button"
+                    class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-4">
                 <input type="hidden" name="candidate_id" id="doc_candidate_id">
-                <h5 class="text-center fw-bold mb-4 text-white" id="doc_candidate_name"></h5>
+                <h5 id="doc_candidate_name" class="text-center text-white mb-3"></h5>
                 <div class="vstack gap-2">
-                    {% for doc_id, label in [('birth', '1. شهادة ميلاد'), ('degree', '2. شهادة مؤهل'), ('military', '3. شهادة جيش'), ('criminal', '4. فيش جنائي'), ('photo', '5. صور شخصية'), ('id', '6. صور بطاقة'), ('sheet', '7. شيت تعارف (Info Sheet)')] %}
-                    <div class="form-check form-switch p-3 bg-white bg-opacity-10 rounded d-flex justify-content-between border border-light border-opacity-10">
-                        <label class="form-check-label fw-bold text-white" for="check_{{ doc_id }}">{{ label }}</label>
+                    {% for doc_id, label in [('birth', '1. شهادة ميلاد'), ('degree', '2. شهادة مؤهل'), ('military', '3.
+                    شهادة جيش'), ('criminal', '4. فيش جنائي'), ('photo', '5. صور شخصية'), ('id', '6. صور بطاقة'),
+                    ('sheet', '7. Info Sheet')] %}
+                    <div
+                        class="form-check form-switch p-2 border border-white border-opacity-10 rounded d-flex justify-content-between">
+                        <label class="form-check-label text-white" for="check_{{ doc_id }}">{{ label }}</label>
                         <input class="form-check-input" type="checkbox" name="doc_{{ doc_id }}" id="check_{{ doc_id }}">
                     </div>
                     {% endfor %}
                 </div>
             </div>
-            <div class="modal-footer">
-                <button type="submit" class="btn btn-success px-4">💾 حفظ</button>
+            <div class="modal-footer"><button type="submit" class="btn btn-success">حفظ</button></div>
+        </form>
+    </div>
+</div>
+
+<!-- 4. EDIT & TRANSFER MODALS (Condensed) -->
+<div class="modal fade" id="editCandidateModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <form class="modal-content glass-modal shadow-lg" method="POST" action="{{ url_for('edit_candidate') }}">
+            <div class="modal-header">
+                <h5 class="text-white">✏️ تعديل</h5><button type="button" class="btn-close btn-close-white"
+                    data-bs-dismiss="modal"></button>
             </div>
+            <div class="modal-body p-4">
+                <input type="hidden" name="candidate_id" id="edit_id">
+                <input type="date" name="application_date" id="edit_app_date" class="form-control mb-3">
+                <input type="text" name="name" id="edit_name" class="form-control mb-3" placeholder="الاسم">
+                <input type="text" name="phone" id="edit_phone" class="form-control mb-3" placeholder="الهاتف">
+                <input type="text" name="national_id" id="edit_nid" class="form-control mb-3"
+                    placeholder="الرقم القومي">
+                <input type="email" name="email" id="edit_email" class="form-control mb-3" placeholder="البريد">
+                <select name="source" id="edit_source" class="form-select">
+                    <option value="Other">Other</option>
+                    <option value="LinkedIn">LinkedIn</option>
+                </select>
+            </div>
+            <div class="modal-footer"><button type="submit" class="btn btn-warning">تعديل</button></div>
         </form>
     </div>
 </div>
 
 <div class="modal fade" id="transferModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
-        <form class="modal-content glass-modal shadow-lg text-white" method="POST" action="{{ url_for('transfer_candidate_to_job') }}">
+        <form class="modal-content glass-modal shadow-lg" method="POST"
+            action="{{ url_for('transfer_candidate_to_job') }}">
             <div class="modal-header">
-                <h5 class="modal-title">🔄 نقل المرشح لوظيفة أخرى</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                <h5 class="text-white">🔄 نقل</h5><button type="button" class="btn-close btn-close-white"
+                    data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-4">
                 <input type="hidden" name="candidate_id" id="transfer_candidate_id">
-                <p class="text-center mb-4 text-white">نقل المرشح: <strong id="transfer_candidate_name" class="fs-5 text-warning"></strong></p>
-                <div class="mb-3">
-                    <label class="fw-bold mb-2">اختر الوظيفة الجديدة:</label>
-                    <select name="new_job_id" class="form-select form-select-lg" required>
-                        <option value="" disabled selected>-- اختر الوظيفة --</option>
-                        {% for j in other_jobs %}
-                            <option value="{{ j.JobID }}">{{ j.JobTitle }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
+                <h5 id="transfer_candidate_name" class="text-center text-white mb-3"></h5>
+                <select name="new_job_id" class="form-select" required>
+                    <option value="" disabled selected>-- اختر الوظيفة --</option>
+                    {% for j in other_jobs %}<option value="{{ j.JobID }}">{{ j.JobTitle }}</option>{% endfor %}
+                </select>
             </div>
-            <div class="modal-footer">
-                <button type="submit" class="btn btn-info fw-bold">تأكيد النقل</button>
-            </div>
+            <div class="modal-footer"><button type="submit" class="btn btn-info">نقل</button></div>
         </form>
     </div>
 </div>
 
 <script>
-    // JS Logic remains the same
-    document.getElementById('candidateSearch').addEventListener('keyup', function() {
-        let value = this.value.toLowerCase();
-        let items = document.querySelectorAll('.candidate-item');
-        let stages = document.querySelectorAll('.stage-section');
-        items.forEach(item => {
-            let name = item.querySelector('.candidate-name').innerText.toLowerCase();
-            let phone = item.querySelector('.candidate-phone').innerText.toLowerCase();
-            if (name.includes(value) || phone.includes(value)) item.style.display = "block";
-            else item.style.display = "none";
-        });
-        stages.forEach(stage => {
-            let allItems = stage.querySelectorAll('.candidate-item');
-            let hasVisible = false;
-            allItems.forEach(i => { if(i.style.display !== 'none') hasVisible = true; });
-            stage.style.display = hasVisible ? "block" : "none";
+    // === JS Logic for DnD ===
+    document.addEventListener('DOMContentLoaded', function () {
+        // Set Today Date default
+        const dateInput = document.getElementById('appDateInput');
+        if (dateInput) dateInput.valueAsDate = new Date();
+    });
+
+    // 1. Drag Start
+    function drag(ev, id, name) {
+        ev.dataTransfer.setData("text/plain", JSON.stringify({ id: id, name: name }));
+        ev.currentTarget.classList.add('dragging');
+    }
+
+    // 2. Allow Drop
+    function allowDrop(ev) {
+        ev.preventDefault();
+    }
+
+    // 3. Drop Event
+    function drop(ev, newStage) {
+        ev.preventDefault();
+
+        // Remove 'drag-over' class from all columns
+        document.querySelectorAll('.kanban-body').forEach(el => el.classList.remove('drag-over'));
+        document.querySelectorAll('.dragging').forEach(el => el.classList.remove('dragging'));
+
+        const data = JSON.parse(ev.dataTransfer.getData("text/plain"));
+        const candidateId = data.id;
+        const candidateName = data.name;
+
+        // Open the Modal to confirm move + add note
+        openMoveModal(candidateId, candidateName, newStage);
+    }
+
+    // === Helper Functions ===
+    function openMoveModal(id, name, stage) {
+        document.getElementById('modal_candidate_id').value = id;
+        document.getElementById('modal_candidate_name').innerText = name;
+        document.getElementById('modal_new_stage').value = stage;
+
+        let label = stage;
+        // Arabic mapping
+        const map = {
+            'New': 'طلبات جديدة', 'Screening': 'فحص أولي', 'Interview': 'مقابلة شخصية',
+            'Training': 'تدريب', 'Offer': 'عرض عمل', 'Hired': 'تعيين',
+            'Waiting': 'قائمة الانتظار', 'Rejected': 'رفض'
+        };
+        if (map[stage]) label = map[stage];
+
+        document.getElementById('modal_stage_display').innerText = label;
+
+        // Color coding header
+        const header = document.querySelector('#moveModal .modal-header');
+        header.className = 'modal-header text-white ';
+        if (stage === 'Rejected') header.classList.add('bg-danger');
+        else if (stage === 'Hired') header.classList.add('bg-success');
+        else if (stage === 'Waiting') header.classList.add('bg-warning', 'text-dark');
+        else header.classList.add('bg-primary');
+
+        new bootstrap.Modal(document.getElementById('moveModal')).show();
+    }
+
+    // Search Logic
+    document.getElementById('candidateSearch').addEventListener('keyup', function () {
+        let val = this.value.toLowerCase();
+        document.querySelectorAll('.candidate-card').forEach(card => {
+            let name = card.getAttribute('data-name').toLowerCase();
+            let phone = card.getAttribute('data-phone');
+            if (name.includes(val) || (phone && phone.includes(val))) card.style.display = 'block';
+            else card.style.display = 'none';
         });
     });
 
+    // Helper Modals (Recycled from previous template)
     function openDocModal(id, name, b, d, m, c, p, i, s) {
         document.getElementById('doc_candidate_id').value = id;
         document.getElementById('doc_candidate_name').innerText = name;
-        document.getElementById('check_birth').checked = (b === 1);
-        document.getElementById('check_degree').checked = (d === 1);
-        document.getElementById('check_military').checked = (m === 1);
-        document.getElementById('check_criminal').checked = (c === 1);
-        document.getElementById('check_photo').checked = (p === 1);
-        document.getElementById('check_id').checked = (i === 1);
-        document.getElementById('check_sheet').checked = (s === 1);
+        document.getElementById('check_birth').checked = !!b;
+        document.getElementById('check_degree').checked = !!d;
+        document.getElementById('check_military').checked = !!m;
+        document.getElementById('check_criminal').checked = !!c;
+        document.getElementById('check_photo').checked = !!p;
+        document.getElementById('check_id').checked = !!i;
+        document.getElementById('check_sheet').checked = !!s;
         new bootstrap.Modal(document.getElementById('docModal')).show();
     }
 
-    function openTransferModal(id, name) {
-        document.getElementById('transfer_candidate_id').value = id;
-        document.getElementById('transfer_candidate_name').innerText = name;
-        new bootstrap.Modal(document.getElementById('transferModal')).show();
-    }
-
-    // Inside job_pipeline.html <script>
     function openEditModal(id, name, phone, email, nid, source, appDate) {
         document.getElementById('edit_id').value = id;
         document.getElementById('edit_name').value = name;
         document.getElementById('edit_phone').value = phone;
         document.getElementById('edit_email').value = email;
         document.getElementById('edit_nid').value = nid;
-        document.getElementById('edit_app_date').value = appDate; // NEW: Set the date
-
-        let sourceSelect = document.getElementById('edit_source');
-        if (source) sourceSelect.value = source;
-        else sourceSelect.value = "Other"; 
-        
+        document.getElementById('edit_app_date').value = appDate;
+        document.getElementById('edit_source').value = source || 'Other';
         new bootstrap.Modal(document.getElementById('editCandidateModal')).show();
     }
 
-    function openMoveModal(id, name, stage, direction) {
-        document.getElementById('modal_candidate_id').value = id;
-        document.getElementById('modal_candidate_name').innerText = name;
-        document.getElementById('modal_new_stage').value = stage;
-        
-        let stageNameAr = stage;
-        if(stage === 'New') stageNameAr = 'طلبات جديدة';
-        if(stage === 'Screening') stageNameAr = 'الفحص الأولي';
-        if(stage === 'Interview') stageNameAr = 'المقابلة الشخصية';
-        if(stage === 'Training') stageNameAr = '🎓 التدريب';
-        if(stage === 'Offer') stageNameAr = 'عرض العمل';
-        if(stage === 'Hired') stageNameAr = 'التعيين';
-        if(stage === 'Rejected') stageNameAr = 'الرفض';
-        if(stage === 'Waiting') stageNameAr = '⏳ قائمة الانتظار';
-
-        document.getElementById('modal_stage_display').innerText = stageNameAr;
-
-        const header = document.querySelector('#moveModal .modal-header');
-        const btn = document.querySelector('#moveModal button[type="submit"]'); 
-        const btnClasses = btn.classList;
-        
-        header.classList.remove('bg-primary', 'bg-danger', 'bg-secondary', 'bg-warning', 'text-dark', 'bg-success');
-        btnClasses.remove('btn-success', 'btn-danger', 'btn-secondary', 'btn-warning');
-
-        if(direction === 'reject') {
-            header.classList.add('bg-danger');
-            btnClasses.add('btn-danger');
-            btn.innerText = "❌ تأكيد الرفض";
-        } else if (direction === 'back') {
-            header.classList.add('bg-secondary');
-            btnClasses.add('btn-secondary');
-            btn.innerText = "⬅️ تأكيد العودة";
-        } else if (direction === 'waiting') {
-            header.classList.add('bg-warning');
-            header.classList.add('text-dark');
-            btnClasses.add('btn-warning');
-            btn.innerText = "⏳ تأكيد النقل للانتظار";      
-        } else {
-            header.classList.add('bg-primary');
-            btnClasses.add('btn-success');
-            btn.innerText = "✅ تأكيد النقل";
-        }
-
-        new bootstrap.Modal(document.getElementById('moveModal')).show();
+    function openTransferModal(id, name) {
+        document.getElementById('transfer_candidate_id').value = id;
+        document.getElementById('transfer_candidate_name').innerText = name;
+        new bootstrap.Modal(document.getElementById('transferModal')).show();
     }
 </script>
 {% endblock %}

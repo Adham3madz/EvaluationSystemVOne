@@ -3,15 +3,23 @@
 
 {% block content %}
 <style>
-    .page-header { text-align: center; margin-bottom: 25px; }
-    .page-header h2 { color: #ffffff; font-weight: 700; font-size: 28px; }
-    
+    .page-header {
+        text-align: center;
+        margin-bottom: 25px;
+    }
+
+    .page-header h2 {
+        color: #ffffff;
+        font-weight: 700;
+        font-size: 28px;
+    }
+
     /* Filter Styles */
     .filter-container {
         background: #fff;
         padding: 20px;
         border-radius: 10px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
         margin-bottom: 20px;
         display: flex;
         align-items: flex-end;
@@ -19,27 +27,29 @@
         gap: 15px;
         flex-wrap: wrap;
     }
-    
+
     .filter-group {
         display: flex;
         flex-direction: column;
         gap: 5px;
     }
-    
+
     .filter-label {
         font-weight: bold;
         font-size: 13px;
         color: #555;
     }
 
-    .filter-input, .filter-select {
+    .filter-input,
+    .filter-select {
         padding: 10px 15px;
         border-radius: 6px;
         border: 1px solid #ddd;
-        min-width: 150px; /* Slightly smaller to fit dates */
+        min-width: 150px;
+        /* Slightly smaller to fit dates */
         font-size: 14px;
     }
-    
+
     .btn-filter {
         padding: 10px 20px;
         background-color: #004d7a;
@@ -50,7 +60,10 @@
         font-weight: bold;
         height: 42px;
     }
-    .btn-filter:hover { background-color: #003a5c; }
+
+    .btn-filter:hover {
+        background-color: #003a5c;
+    }
 
     .btn-modern-add {
         background: linear-gradient(135deg, #2e7d32, #1b5e20);
@@ -67,29 +80,126 @@
         transition: all 0.3s ease;
         border: none;
     }
+
     .btn-modern-add:hover {
         transform: translateY(-3px);
         box-shadow: 0 8px 20px rgba(46, 125, 50, 0.4);
         background: linear-gradient(135deg, #388e3c, #2e7d32);
     }
-    .btn-modern-add i { font-size: 18px; }
+
+    .btn-modern-add i {
+        font-size: 18px;
+    }
 
     /* Grid & Chart Styles */
-    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 30px; align-items: stretch; }
-    .stat-card, .chart-card { background: #fff; border: 1px solid #e5e7eb; padding: 15px; border-radius: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); display: flex; flex-direction: column; justify-content: flex-start; min-height: 300px; }
-    .chart-wrapper { position: relative; height: 220px; width: 100%; margin-top: auto; margin-bottom: auto; }
-    .stat-card h5, .chart-card h5 { font-weight: 600; color: #004d7a; text-align: center; font-size: 14px; margin-bottom: 15px; height: 30px; }
-    .stat-content { flex: 1; display: flex; align-items: center; justify-content: center; }
-    .stat-number { font-size: 3.5rem; font-weight: 700; color: #c62828; text-align: center; }
-    .card { background: #fff; border-radius: 14px; box-shadow: 0 3px 10px rgba(0,0,0,0.07); padding: 20px; overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; text-align: center; min-width: 1000px; }
-    th, td { padding: 12px 10px; border-bottom: 1px solid #ddd; font-size: 14px; }
-    th { background: #1565c0; color: #fff; white-space: nowrap; }
-    tr:hover td { background: #f1f8e9; }
-    .comment-cell { max-width: 200px; white-space: pre-wrap; text-align: right; font-size: 13px; }
-    
-    @media (max-width: 1200px) { .stats-grid { grid-template-columns: 1fr 1fr; } }
-    @media (max-width: 768px) { .stats-grid { grid-template-columns: 1fr; } .filter-container { flex-direction: column; align-items: stretch; } }
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 15px;
+        margin-bottom: 30px;
+        align-items: stretch;
+    }
+
+    .stat-card,
+    .chart-card {
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        padding: 15px;
+        border-radius: 10px;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        min-height: 300px;
+    }
+
+    .chart-wrapper {
+        position: relative;
+        height: 220px;
+        width: 100%;
+        margin-top: auto;
+        margin-bottom: auto;
+    }
+
+    .stat-card h5,
+    .chart-card h5 {
+        font-weight: 600;
+        color: #004d7a;
+        text-align: center;
+        font-size: 14px;
+        margin-bottom: 15px;
+        height: 30px;
+    }
+
+    .stat-content {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .stat-number {
+        font-size: 3.5rem;
+        font-weight: 700;
+        color: #c62828;
+        text-align: center;
+    }
+
+    .card {
+        background: #fff;
+        border-radius: 14px;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.07);
+        padding: 20px;
+        overflow-x: auto;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: center;
+        min-width: 1000px;
+    }
+
+    th,
+    td {
+        padding: 12px 10px;
+        border-bottom: 1px solid #ddd;
+        font-size: 14px;
+    }
+
+    th {
+        background: #1565c0;
+        color: #fff;
+        white-space: nowrap;
+    }
+
+    tr:hover td {
+        background: #f1f8e9;
+    }
+
+    .comment-cell {
+        max-width: 200px;
+        white-space: pre-wrap;
+        text-align: right;
+        font-size: 13px;
+    }
+
+    @media (max-width: 1200px) {
+        .stats-grid {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .filter-container {
+            flex-direction: column;
+            align-items: stretch;
+        }
+    }
 </style>
 
 <div class="page-header">
@@ -101,7 +211,9 @@
 <div class="stats-grid">
     <div class="stat-card">
         <h5>إجمالي المؤرشفين</h5>
-        <div class="stat-content"><p class="stat-number">{{ total_archived }}</p></div>
+        <div class="stat-content">
+            <p class="stat-number">{{ total_archived }}</p>
+        </div>
     </div>
     <div class="chart-card">
         <h5>تحليل الأسباب</h5>
@@ -124,13 +236,11 @@
 </div>
 
 <div class="filter-container">
-    <form method="GET" action="{{ url_for('userinfo_archive_report') }}" style="display:contents;">
-        
+    <form id="filtersForm" method="GET" action="{{ url_for('userinfo_archive_report') }}" style="display:contents;">
+
         <div class="filter-group">
             <label class="filter-label">بحث (الاسم / الرقم القومي):</label>
-            <input type="text" name="search" class="filter-input" 
-                   placeholder="بحث..." 
-                   value="{{ search_term }}">
+            <input type="text" name="search" class="filter-input" placeholder="بحث..." value="{{ search_term }}">
         </div>
 
         <div class="filter-group">
@@ -147,7 +257,7 @@
             <select name="dept_id" class="filter-select">
                 <option value="">-- الكل --</option>
                 {% for dept in all_depts %}
-                <option value="{{ dept.DEPTID }}" {% if selected_dept == dept.DEPTID|string %}selected{% endif %}>
+                <option value="{{ dept.DEPTID }}" {% if selected_dept==dept.DEPTID|string %}selected{% endif %}>
                     {{ dept.DEPTNAME }}
                 </option>
                 {% endfor %}
@@ -159,7 +269,7 @@
             <select name="pos_id" class="filter-select">
                 <option value="">-- الكل --</option>
                 {% for pos in all_positions %}
-                <option value="{{ pos.PositionID }}" {% if selected_pos == pos.PositionID|string %}selected{% endif %}>
+                <option value="{{ pos.PositionID }}" {% if selected_pos==pos.PositionID|string %}selected{% endif %}>
                     {{ pos.PositionName }}
                 </option>
                 {% endfor %}
@@ -171,7 +281,8 @@
             <select name="reason_id" class="filter-select">
                 <option value="">-- الكل --</option>
                 {% for reason in all_reasons %}
-                <option value="{{ reason.ReasonID }}" {% if selected_reason == reason.ReasonID|string %}selected{% endif %}>
+                <option value="{{ reason.ReasonID }}" {% if selected_reason==reason.ReasonID|string %}selected{% endif
+                    %}>
                     {{ reason.ReasonText }}
                 </option>
                 {% endfor %}
@@ -183,7 +294,7 @@
             <select name="why_id" class="filter-select">
                 <option value="">-- الكل --</option>
                 {% for why in all_whys %}
-                <option value="{{ why.WhyID }}" {% if selected_why == why.WhyID|string %}selected{% endif %}>
+                <option value="{{ why.WhyID }}" {% if selected_why==why.WhyID|string %}selected{% endif %}>
                     {{ why.WhyText }}
                 </option>
                 {% endfor %}
@@ -191,100 +302,119 @@
         </div>
 
         <div class="filter-group" style="justify-content: flex-end;">
-             <button type="submit" class="btn-filter">تطبيق</button>
+            <button type="submit" class="btn-filter">تطبيق</button>
         </div>
 
         {% if selected_reason or selected_why or search_term or selected_dept or selected_pos or date_from or date_to %}
-            <div class="filter-group" style="justify-content: flex-end;">
-                <a href="{{ url_for('userinfo_archive_report') }}" class="btn btn-sm btn-secondary" style="padding: 10px 20px; height: 42px; display: flex; align-items: center;">مسح</a>
-            </div>
+        <div class="filter-group" style="justify-content: flex-end;">
+            <button type="button" onclick="clearFilters()" class="btn btn-sm btn-secondary"
+                style="padding: 10px 20px; height: 42px; display: flex; align-items: center; border: none; cursor: pointer;">مسح</button>
+        </div>
         {% endif %}
     </form>
 </div>
 
 <div class="card">
-  <table>
-    <thead>
-      <tr>
-        <th>الرقم</th>
-        <th>الاسم</th>
-        <th>الرقم القومي</th>
-        <th>القسم</th>
-        <th>الوظيفة</th>
-        <th>تاريخ التعيين</th>
-        <th>تاريخ الإنهاء</th>
-        <th>السبب العام</th>
-        <th>السبب التفصيلي</th>
-        <th>الملاحظات</th>
-        <th>بواسطة</th>
-        <th>استعادة</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for emp in archived_employees %}
-      <tr>
-        <td>{{ emp.UserID }}</td>
-        <td style="font-weight: bold;">{{ emp.Name }}</td>
-        <td>{{ emp.ArchivedSSN or '-' }}</td>
-        <td>{{ emp.DEPTNAME or '-' }}</td>
-        <td>{{ emp.PositionName or '-' }}</td>
-        <td>{{ emp.HiredDay.strftime('%Y-%m-%d') if emp.HiredDay else '-' }}</td>
-        <td style="color: #c62828;">{{ emp.EndDay.strftime('%Y-%m-%d') if emp.EndDay else '-' }}</td>
-        <td>{{ emp.ReasonText or 'غير محدد' }}</td>
-        <td>{{ emp.WhyText or '-' }}</td>
-        <td class="comment-cell">{{ emp.ArchiveComment }}</td>
-        <td>{{ emp.AdminName or '-' }}</td>
-        <td>
-            <a href="{{ url_for('userinfo_restore', archive_id=emp.ArchiveID) }}" 
-               class="btn btn-sm btn-success"
-               style="padding: 5px 10px; background-color: #2e7d32; color: white; text-decoration: none; border-radius: 5px; font-size: 13px;"
-               onclick="return confirm('هل أنت متأكد من استعادة هذا الموظف؟')">
-               ♻️
-            </a>
-        </td>
-      </tr>
-      {% else %}
-        <tr>
-          <td colspan="12" style="color:#777; padding: 20px;">لا يوجد بيانات للعرض.</td>
-        </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+    <table>
+        <thead>
+            <tr>
+                <th>الرقم</th>
+                <th>الاسم</th>
+                <th>الرقم القومي</th>
+                <th>القسم</th>
+                <th>الوظيفة</th>
+                <th>تاريخ التعيين</th>
+                <th>تاريخ الإنهاء</th>
+                <th>السبب العام</th>
+                <th>السبب التفصيلي</th>
+                <th>الملاحظات</th>
+                <th>بواسطة</th>
+                <th>استعادة</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for emp in archived_employees %}
+            <tr>
+                <td>{{ emp.UserID }}</td>
+                <td style="font-weight: bold;">{{ emp.Name }}</td>
+                <td>{{ emp.ArchivedSSN or '-' }}</td>
+                <td>{{ emp.DEPTNAME or '-' }}</td>
+                <td>{{ emp.PositionName or '-' }}</td>
+                <td>{{ emp.HiredDay.strftime('%Y-%m-%d') if emp.HiredDay else '-' }}</td>
+                <td style="color: #c62828;">{{ emp.EndDay.strftime('%Y-%m-%d') if emp.EndDay else '-' }}</td>
+                <td>{{ emp.ReasonText or 'غير محدد' }}</td>
+                <td>{{ emp.WhyText or '-' }}</td>
+                <td class="comment-cell">{{ emp.ArchiveComment }}</td>
+                <td>{{ emp.AdminName or '-' }}</td>
+                <td>
+                    <a href="{{ url_for('userinfo_restore', archive_id=emp.ArchiveID) }}" class="btn btn-sm btn-success"
+                        style="padding: 5px 10px; background-color: #2e7d32; color: white; text-decoration: none; border-radius: 5px; font-size: 13px;"
+                        onclick="return confirm('هل أنت متأكد من استعادة هذا الموظف؟')">
+                        ♻️
+                    </a>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="12" style="color:#777; padding: 20px;">لا يوجد بيانات للعرض.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-  try {
-    const chartData = JSON.parse('{{ chart_data|safe }}');
-    function createChart(id, type, labels, data, label) {
-        const ctx = document.getElementById(id);
-        if (!ctx) return; 
-        if (labels && labels.length > 0) {
-            new Chart(ctx, {
-                type: type,
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: label,
-                        data: data,
-                        backgroundColor: ['#004d7a', '#c62828', '#2e7d32', '#f9a825', '#1565c0', '#6a1b9a'],
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false, 
-                    plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } } }
-                }
-            });
-        } else {
-            ctx.parentElement.innerHTML = '<p style="text-align:center; color:#999; margin-top: 80px;">لا توجد بيانات</p>';
+    document.addEventListener('DOMContentLoaded', function () {
+        // === Sticky Filters Logic ===
+        const filterKey = 'archiveReportFilters';
+
+        // 1. Check if we should restore filters
+        if (!window.location.search && localStorage.getItem(filterKey)) {
+            window.location.search = localStorage.getItem(filterKey);
+            return;
         }
+
+        // 2. Save current filters if they exist
+        if (window.location.search) {
+            localStorage.setItem(filterKey, window.location.search);
+        }
+
+        try {
+            const chartData = JSON.parse('{{ chart_data|safe }}');
+            function createChart(id, type, labels, data, label) {
+                const ctx = document.getElementById(id);
+                if (!ctx) return;
+                if (labels && labels.length > 0) {
+                    new Chart(ctx, {
+                        type: type,
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: label,
+                                data: data,
+                                backgroundColor: ['#004d7a', '#c62828', '#2e7d32', '#f9a825', '#1565c0', '#6a1b9a'],
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } } }
+                        }
+                    });
+                } else {
+                    ctx.parentElement.innerHTML = '<p style="text-align:center; color:#999; margin-top: 80px;">لا توجد بيانات</p>';
+                }
+            }
+            createChart('reasonsChart', 'pie', chartData.reason_labels, chartData.reason_data, 'العدد');
+            createChart('deptChart', 'doughnut', chartData.dept_labels, chartData.dept_data, 'العدد');
+            createChart('posChart', 'pie', chartData.pos_labels, chartData.pos_data, 'العدد');
+        } catch (e) { console.error('Error creating charts:', e); }
+    });
+
+    function clearFilters() {
+        localStorage.removeItem('archiveReportFilters');
+        window.location.href = "{{ url_for('userinfo_archive_report') }}";
     }
-    createChart('reasonsChart', 'pie', chartData.reason_labels, chartData.reason_data, 'العدد');
-    createChart('deptChart', 'doughnut', chartData.dept_labels, chartData.dept_data, 'العدد');
-    createChart('posChart', 'pie', chartData.pos_labels, chartData.pos_data, 'العدد');
-  } catch (e) { console.error('Error creating charts:', e); }
-});
 </script>
 {% endblock %}

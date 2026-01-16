@@ -5,7 +5,8 @@
 <style>
     /* === Glass Panel Theme === */
     .glass-panel {
-        background: rgba(40, 44, 52, 0.95); /* Dark Grey/Blue for better contrast */
+        background: rgba(40, 44, 52, 0.95);
+        /* Dark Grey/Blue for better contrast */
         backdrop-filter: blur(15px);
         -webkit-backdrop-filter: blur(15px);
         border: 1px solid rgba(255, 255, 255, 0.15);
@@ -24,15 +25,18 @@
         padding: 15px;
         transition: transform 0.2s;
     }
+
     .stat-card:hover {
         background: rgba(255, 255, 255, 0.1);
         transform: translateY(-2px);
     }
+
     .stat-value {
         font-size: 2rem;
         font-weight: 800;
         margin-bottom: 0;
     }
+
     .stat-label {
         font-size: 0.9rem;
         opacity: 0.8;
@@ -40,45 +44,58 @@
 
     /* === Table Styling === */
     .table-glass {
-        color: white !important; /* Force white text */
+        color: white !important;
+        /* Force white text */
         margin-bottom: 0;
         vertical-align: middle;
         border-color: rgba(255, 255, 255, 0.1);
     }
+
     .table-glass thead th {
         background: rgba(0, 0, 0, 0.6);
-        color: #ffc107 !important; /* Gold for headers */
+        color: #ffc107 !important;
+        /* Gold for headers */
         border: none;
         padding: 15px;
         font-weight: 800;
         font-size: 1rem;
     }
+
     .table-glass tbody td {
         background: transparent;
         border-bottom: 1px solid rgba(255, 255, 255, 0.08);
         padding: 15px;
-        color: white !important; /* Force white text */
+        color: white !important;
+        /* Force white text */
     }
+
     .table-glass tbody tr:hover td {
         background: rgba(255, 255, 255, 0.1);
     }
-    
+
     /* === Inputs & Selects === */
-    .search-glass, .select-glass {
+    .search-glass,
+    .select-glass {
         background: rgba(255, 255, 255, 0.1);
         border: 1px solid rgba(255, 255, 255, 0.2);
-        color: white !important; /* Force white text in inputs */
+        color: white !important;
+        /* Force white text in inputs */
         border-radius: 12px;
         padding: 12px 20px;
     }
-    .search-glass::placeholder { color: rgba(255, 255, 255, 0.5); }
-    
+
+    .search-glass::placeholder {
+        color: rgba(255, 255, 255, 0.5);
+    }
+
     .select-glass option {
-        background: #333; /* Dark background for dropdown options */
+        background: #333;
+        /* Dark background for dropdown options */
         color: white;
     }
 
-    .search-glass:focus, .select-glass:focus {
+    .search-glass:focus,
+    .select-glass:focus {
         background: rgba(255, 255, 255, 0.2);
         box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
         border-color: #ffc107;
@@ -90,28 +107,35 @@
     .btn-restore {
         background: linear-gradient(135deg, #198754, #146c43);
         color: white;
-        border: 1px solid rgba(255,255,255,0.2);
-        box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
         transition: 0.3s;
     }
-    .btn-restore:hover { 
-        background: #198754; 
-        transform: translateY(-2px); 
-        box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+
+    .btn-restore:hover {
+        background: #198754;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
         color: white;
     }
 </style>
 
 <div class="container-fluid py-4" style="min-height: 100vh;">
-    
+
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h2 class="fw-bold text-white mb-1" style="text-shadow: 0 2px 4px rgba(0,0,0,0.5);">📦 أرشيف المرشحين</h2>
             <p class="text-white-50">قائمة المرشحين المحفوظين وتحليل البيانات.</p>
         </div>
-        <a href="{{ url_for('recruitment_jobs') }}" class="btn btn-outline-light rounded-pill px-4 shadow-sm fw-bold">
-            ⬅️ العودة للوظائف
-        </a>
+        <div class="d-flex gap-2">
+            <button type="button" class="btn btn-warning rounded-pill px-4 shadow-sm fw-bold" onclick="openAddModal()">
+                ➕ أرشيف يدوي
+            </button>
+            <a href="{{ url_for('recruitment_jobs') }}"
+                class="btn btn-outline-light rounded-pill px-4 shadow-sm fw-bold">
+                ⬅️ العودة للوظائف
+            </a>
+        </div>
     </div>
 
     <div class="glass-panel mb-4">
@@ -124,7 +148,7 @@
                     <div class="stat-label text-white-50">إجمالي المؤرشفين</div>
                 </div>
             </div>
-            
+
             <div class="col-md-4">
                 <div class="stat-card text-center">
                     <div class="fs-1 mb-1">🏢</div>
@@ -146,19 +170,20 @@
     <div class="glass-panel py-3 mb-4">
         <div class="row g-3 align-items-center">
             <div class="col-md-8">
-                <input type="text" id="archiveSearch" class="form-control search-glass" placeholder="🔍 ابحث بالاسم، الرقم القومي، أو الهاتف...">
+                <input type="text" id="archiveSearch" class="form-control search-glass"
+                    placeholder="🔍 ابحث بالاسم، الرقم القومي، أو الهاتف...">
             </div>
             <div class="col-md-4">
                 <select id="deptFilter" class="form-select select-glass">
                     <option value="">🏢 كل الأقسام</option>
                     {% set depts = [] %}
                     {% for c in candidates %}
-                        {% if c.DEPTNAME and c.DEPTNAME not in depts %}
-                            {% set _ = depts.append(c.DEPTNAME) %}
-                        {% endif %}
+                    {% if c.DEPTNAME and c.DEPTNAME not in depts %}
+                    {% set _ = depts.append(c.DEPTNAME) %}
+                    {% endif %}
                     {% endfor %}
                     {% for d in depts %}
-                        <option value="{{ d }}">{{ d }}</option>
+                    <option value="{{ d }}">{{ d }}</option>
                     {% endfor %}
                 </select>
             </div>
@@ -174,7 +199,7 @@
                         <th>🆔 الرقم القومي</th>
                         <th>الوظيفة / القسم</th>
                         <th>بيانات الاتصال</th>
-                        <th>تاريخ التقديم</th>
+                        <th>التواريخ (تقديم/تعيين/إنهاء)</th>
                         <th>آخر ملاحظة</th>
                         <th>إجراءات</th>
                     </tr>
@@ -188,32 +213,41 @@
 
                         <td class="align-middle">
                             {% if c.NationalID %}
-                                <span class="badge bg-light text-dark font-monospace fs-6 shadow-sm">{{ c.NationalID }}</span>
+                            <span class="badge bg-light text-dark font-monospace fs-6 shadow-sm">{{ c.NationalID
+                                }}</span>
                             {% else %}
-                                <span class="badge bg-danger bg-opacity-75 text-white">غير مسجل ⚠️</span>
+                            <span class="badge bg-danger bg-opacity-75 text-white">غير مسجل ⚠️</span>
                             {% endif %}
                         </td>
-                        
+
                         <td class="align-middle">
                             <div class="fw-bold text-warning">{{ c.JobTitle }}</div>
                             <small class="text-white-50">{{ c.DEPTNAME or 'عام' }}</small>
                         </td>
-                        
+
                         <td class="text-start align-middle">
                             <div class="small">📞 {{ c.Phone }}</div>
                             {% if c.Email %}<div class="small text-white-50">📧 {{ c.Email }}</div>{% endif %}
                         </td>
-                        
-                        <td class="text-white-50 align-middle">{{ c.ApplicationDate.strftime('%Y-%m-%d') }}</td>
-                        
+
+                        <td class="text-white-50 align-middle">
+                            <div class="small">📥 {{ c.ApplicationDate.strftime('%Y-%m-%d') }}</div>
+                            {% if c.HireDate %}<div class="small text-success">✅ {{ c.HireDate.strftime('%Y-%m-%d') }}
+                            </div>{% endif %}
+                            {% if c.EndDate %}<div class="small text-danger">❌ {{ c.EndDate.strftime('%Y-%m-%d') }}
+                            </div>{% endif %}
+                        </td>
+
                         <td class="text-white-50 fst-italic small align-middle" style="max-width: 200px;">
                             "{{ c.LastNote or 'لا يوجد' }}"
                         </td>
-                        
+
                         <td class="align-middle">
-                            <form action="{{ url_for('restore_candidate') }}" method="POST" class="d-inline" onsubmit="return confirm('هل أنت متأكد من استعادة هذا المرشح؟');">
+                            <form action="{{ url_for('restore_candidate') }}" method="POST" class="d-inline"
+                                onsubmit="return confirm('هل أنت متأكد من استعادة هذا المرشح؟');">
                                 <input type="hidden" name="candidate_id" value="{{ c.CandidateID }}">
-                                <button type="submit" class="btn btn-sm btn-restore rounded-pill px-3 fw-bold" title="استعادة إلى قائمة الطلبات الجديدة">
+                                <button type="submit" class="btn btn-sm btn-restore rounded-pill px-3 fw-bold"
+                                    title="استعادة إلى قائمة الطلبات الجديدة">
                                     ♻️ استعادة
                                 </button>
                             </form>
@@ -235,7 +269,7 @@
 
 <script>
     // === 1. Stats Calculation (Offline Analysis) ===
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         const rows = document.querySelectorAll('#archiveTableBody tr');
         let total = 0;
         let missingID = 0;
@@ -243,13 +277,13 @@
 
         // Loop only through valid data rows (ignore 'empty' message row)
         rows.forEach(row => {
-            if(row.querySelector('td').innerText.includes('الأرشيف فارغ')) return;
+            if (row.querySelector('td').innerText.includes('الأرشيف فارغ')) return;
 
             total++;
-            
+
             // Check ID
-            if(row.getAttribute('data-has-id') === 'no') missingID++;
-            
+            if (row.getAttribute('data-has-id') === 'no') missingID++;
+
             // Count Depts
             let dept = row.getAttribute('data-dept') || 'غير محدد';
             deptCounts[dept] = (deptCounts[dept] || 0) + 1;
@@ -281,7 +315,7 @@
         const deptValue = deptFilter.value;
 
         tableRows.forEach(row => {
-            if(row.innerText.includes('الأرشيف فارغ')) return;
+            if (row.innerText.includes('الأرشيف فارغ')) return;
 
             const rowText = row.innerText.toLowerCase();
             const rowDept = row.getAttribute('data-dept');
@@ -299,5 +333,72 @@
 
     searchInput.addEventListener('keyup', filterData);
     deptFilter.addEventListener('change', filterData);
+
+    // === Manual Add Modal ===
+    function openAddModal() {
+        document.getElementById('manualAddModal').style.display = 'flex';
+    }
+    function closeAddModal() {
+        document.getElementById('manualAddModal').style.display = 'none';
+    }
 </script>
+
+<!-- Manual Add Modal -->
+<div id="manualAddModal"
+    style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); z-index: 9999; align-items: center; justify-content: center;">
+    <div class="glass-panel"
+        style="width: 500px; max-width: 90%; background: #212529; border: 1px solid rgba(255,255,255,0.15);">
+        <h4 class="text-warning mb-4 fw-bold">📝 إضافة للأرشيف يدوياً</h4>
+
+        <form action="{{ url_for('recruitment_archive_add') }}" method="POST">
+            <div class="mb-3">
+                <label class="text-white-50 small mb-1">الاسم بالكامل <span class="text-danger">*</span></label>
+                <input type="text" name="fullname" class="form-control search-glass" required>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="text-white-50 small mb-1">الهاتف</label>
+                    <input type="text" name="phone" class="form-control search-glass">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="text-white-50 small mb-1">الرقم القومي</label>
+                    <input type="text" name="national_id" class="form-control search-glass">
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="text-white-50 small mb-1">الوظيفة (اختياري)</label>
+                <select name="job_id" class="form-select select-glass">
+                    <option value="">-- بدون وظيفة محددة --</option>
+                    {% for job in jobs %}
+                    <option value="{{ job.JobID }}">{{ job.JobTitle }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="text-white-50 small mb-1">تاريخ التعيين (Hire Date)</label>
+                    <input type="date" name="hire_date" class="form-control search-glass">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="text-white-50 small mb-1">تاريخ الإنهاء (Fire Date)</label>
+                    <input type="date" name="end_date" class="form-control search-glass">
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="text-white-50 small mb-1">ملاحظات / سبب الأرشفة</label>
+                <textarea name="note" class="form-control search-glass" rows="2"></textarea>
+            </div>
+
+            <div class="d-flex gap-2 mt-4">
+                <button type="submit" class="btn btn-warning fw-bold flex-grow-1">حفظ في الأرشيف</button>
+                <button type="button" class="btn btn-outline-light flex-grow-1" onclick="closeAddModal()">إلغاء</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 {% endblock %}

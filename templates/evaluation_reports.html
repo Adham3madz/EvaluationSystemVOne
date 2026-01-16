@@ -30,25 +30,49 @@
         flex-direction: column;
         justify-content: center;
         align-items: center;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
     }
+
     .kpi-card:hover {
         transform: translateY(-5px);
         box-shadow: 0 10px 25px rgba(13, 110, 253, 0.15);
     }
-    .kpi-icon { font-size: 2rem; margin-bottom: 8px; }
-    .kpi-value { font-size: 1.8rem; font-weight: 800; color: #004d99; }
-    .kpi-label { font-size: 0.85rem; font-weight: 700; color: #666; }
+
+    .kpi-icon {
+        font-size: 2rem;
+        margin-bottom: 8px;
+    }
+
+    .kpi-value {
+        font-size: 1.8rem;
+        font-weight: 800;
+        color: #004d99;
+    }
+
+    .kpi-label {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: #666;
+    }
 
     /* === Form Elements === */
-    .form-label { font-weight: 700; color: #444; font-size: 0.9rem; margin-bottom: 5px; }
-    .form-control, .form-select {
+    .form-label {
+        font-weight: 700;
+        color: #444;
+        font-size: 0.9rem;
+        margin-bottom: 5px;
+    }
+
+    .form-control,
+    .form-select {
         background: rgba(255, 255, 255, 0.6);
-        border: 1px solid rgba(0,0,0,0.1);
+        border: 1px solid rgba(0, 0, 0, 0.1);
         border-radius: 8px;
         color: #333;
     }
-    .form-control:focus, .form-select:focus {
+
+    .form-control:focus,
+    .form-select:focus {
         background: #fff;
         box-shadow: 0 0 0 3px rgba(11, 102, 178, 0.2);
         border-color: #0b66b2;
@@ -57,59 +81,162 @@
     /* === Buttons === */
     .btn-glass-primary {
         background: linear-gradient(135deg, #004d7a, #0b66b2);
-        color: white; border: none;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.2); font-weight: bold;
-        padding: 8px 20px; border-radius: 8px;
+        color: white;
+        border: none;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        font-weight: bold;
+        padding: 8px 20px;
+        border-radius: 8px;
     }
-    .btn-glass-primary:hover { background: #003d6a; color: white; transform: translateY(-2px); }
+
+    .btn-glass-primary:hover {
+        background: #003d6a;
+        color: white;
+        transform: translateY(-2px);
+    }
 
     .btn-glass-secondary {
-        background: rgba(108, 117, 125, 0.8); color: white;
-        border: 1px solid rgba(255,255,255,0.2); backdrop-filter: blur(4px);
-        padding: 8px 20px; border-radius: 8px;
+        background: rgba(108, 117, 125, 0.8);
+        color: white;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(4px);
+        padding: 8px 20px;
+        border-radius: 8px;
     }
-    .btn-glass-secondary:hover { background: rgba(108, 117, 125, 1); color: white; }
+
+    .btn-glass-secondary:hover {
+        background: rgba(108, 117, 125, 1);
+        color: white;
+    }
 
     /* === Table === */
-    .table-custom { width: 100%; border-collapse: separate; border-spacing: 0; margin-bottom: 0; }
+    .table-custom {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        margin-bottom: 0;
+    }
+
     .table-custom thead th {
         background: linear-gradient(135deg, #004d7a, #0b66b2);
-        color: #fff; padding: 15px; border: none; font-weight: 600; text-align: center;
+        color: #fff;
+        padding: 15px;
+        border: none;
+        font-weight: 600;
+        text-align: center;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     }
-    .table-custom thead th:first-child { border-top-right-radius: 10px; }
-    .table-custom thead th:last-child { border-top-left-radius: 10px; }
+
+    .table-custom thead th:first-child {
+        border-top-right-radius: 10px;
+    }
+
+    .table-custom thead th:last-child {
+        border-top-left-radius: 10px;
+    }
+
     .table-custom tbody td {
-        background-color: transparent; padding: 12px;
-        border-bottom: 1px solid rgba(0,0,0,0.05); color: #333; vertical-align: middle;
+        background-color: transparent;
+        padding: 12px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        color: #333;
+        vertical-align: middle;
     }
-    .table-custom tbody tr:hover td { background-color: rgba(11, 102, 178, 0.08); }
+
+    .table-custom tbody tr:hover td {
+        background-color: rgba(11, 102, 178, 0.08);
+    }
 
     /* === Badges & Bars === */
     .rating-badge {
-        display: inline-block; padding: 4px 12px; border-radius: 20px;
-        font-weight: 600; font-size: 12px; color: #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 12px;
+        color: #fff;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     }
-    .rating-excellent { background-color: #198754; } /* Green */
-    .rating-very-good { background-color: #20c997; } /* Teal */
-    .rating-good { background-color: #ffc107; color: #000; } /* Yellow */
-    .rating-acceptable { background-color: #fd7e14; } /* Orange */
-    .rating-weak { background-color: #dc3545; } /* Red */
-    .rating-default { background-color: #6c757d; }
+
+    .rating-excellent {
+        background-color: #198754;
+    }
+
+    /* Green */
+    .rating-very-good {
+        background-color: #20c997;
+    }
+
+    /* Teal */
+    .rating-good {
+        background-color: #ffc107;
+        color: #000;
+    }
+
+    /* Yellow */
+    .rating-acceptable {
+        background-color: #fd7e14;
+    }
+
+    /* Orange */
+    .rating-weak {
+        background-color: #dc3545;
+    }
+
+    /* Red */
+    .rating-default {
+        background-color: #6c757d;
+    }
 
     .score-bar-container {
-        width: 100%; height: 8px; background-color: #e9ecef; border-radius: 10px; overflow: hidden; margin-top: 5px;
+        width: 100%;
+        height: 8px;
+        background-color: #e9ecef;
+        border-radius: 10px;
+        overflow: hidden;
+        margin-top: 5px;
     }
-    .score-bar { height: 100%; border-radius: 10px; }
-    .score-bar.high { background-color: #198754; }
-    .score-bar.medium { background-color: #ffc107; }
-    .score-bar.low { background-color: #dc3545; }
+
+    .score-bar {
+        height: 100%;
+        border-radius: 10px;
+    }
+
+    .score-bar.high {
+        background-color: #198754;
+    }
+
+    .score-bar.medium {
+        background-color: #ffc107;
+    }
+
+    .score-bar.low {
+        background-color: #dc3545;
+    }
 
     /* === Print === */
     @media print {
-        body { background: white !important; }
-        .glass-panel { box-shadow: none; border: none; padding: 0; }
-        .btn, form { display: none !important; }
-        .kpi-card { border: 1px solid #ddd; }
+        body {
+            background: white !important;
+        }
+
+        .glass-panel {
+            box-shadow: none;
+            border: none;
+            padding: 0;
+        }
+
+        .btn,
+        form {
+            display: none !important;
+        }
+
+        .kpi-card {
+            border: 1px solid #ddd;
+        }
     }
 </style>
 
@@ -117,13 +244,14 @@
 
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h2 class="fw-bold text-white mb-1" style="text-shadow: 0 2px 4px rgba(0,0,0,0.3);">📊 سجلات تقييم الأداء</h2>
+            <h2 class="fw-bold text-white mb-1" style="text-shadow: 0 2px 4px rgba(0,0,0,0.3);">📊 سجلات تقييم الأداء
+            </h2>
             <p class="text-white-50">عرض وتحليل تقارير أداء الموظفين.</p>
         </div>
-        
+
         <div class="d-flex gap-2">
             {% if session.get('role_id') in [2, 3] %}
-                <a href="{{ url_for('select_user_for_evaluation') }}" class="btn btn-glass-primary">➕ تقييم جديد</a>
+            <a href="{{ url_for('select_user_for_evaluation') }}" class="btn btn-glass-primary">➕ تقييم جديد</a>
             {% endif %}
             <button onclick="window.print()" class="btn btn-glass-secondary">🖨️ طباعة</button>
         </div>
@@ -132,7 +260,7 @@
     {% if reports %}
     <div class="row g-4 mb-4">
         <div class="col-md-2">
-            <div class="kpi-card">
+            <div class="kpi-card" style="cursor: pointer;" onclick="clearFilters()" title="إعادة تعيين الفلاتر">
                 <div class="kpi-icon">📑</div>
                 <div class="kpi-value" id="statTotal">0</div>
                 <div class="kpi-label">إجمالي التقارير</div>
@@ -148,7 +276,9 @@
         </div>
 
         <div class="col-md-2">
-            <div class="kpi-card" style="border-color: rgba(25, 135, 84, 0.3);">
+            <div class="kpi-card" style="border-color: rgba(25, 135, 84, 0.3); cursor: pointer;"
+                onclick="document.getElementById('filterRating').value='ممتاز'; document.getElementById('filtersForm').submit();"
+                title="تصفية بالممتاز">
                 <div class="kpi-icon">🏆</div>
                 <div class="kpi-value text-success" id="statExcellent">0%</div>
                 <div class="kpi-label">نسبة الامتياز</div>
@@ -177,16 +307,20 @@
 
     <div class="glass-panel">
         <form id="filtersForm" method="GET" action="{{ url_for('evaluation_reports') }}">
+            <input type="hidden" name="overall_rating" id="filterRating"
+                value="{{ filters.get('overall_rating', '') }}">
             <div class="row g-3">
                 <div class="col-md-3">
                     <label class="form-label">الموظف</label>
-                    <input type="text" name="search_employee" class="form-control" placeholder="اسم الموظف..." value="{{ filters.get('search_employee', '') }}">
+                    <input type="text" name="search_employee" class="form-control" placeholder="اسم الموظف..."
+                        value="{{ filters.get('search_employee', '') }}">
                 </div>
-                
+
                 {% if is_admin or role_id != 5 %}
                 <div class="col-md-3">
                     <label class="form-label">المقيم</label>
-                    <input type="text" name="search_evaluator" class="form-control" placeholder="اسم المقيم..." value="{{ filters.get('search_evaluator', '') }}">
+                    <input type="text" name="search_evaluator" class="form-control" placeholder="اسم المقيم..."
+                        value="{{ filters.get('search_evaluator', '') }}">
                 </div>
                 {% endif %}
 
@@ -195,7 +329,8 @@
                     <select name="recommendation_id" class="form-select">
                         <option value="">-- الكل --</option>
                         {% for rec in all_recommendations %}
-                        <option value="{{ rec.RecommendationID }}" {% if filters.get('recommendation_id') == rec.RecommendationID|string %}selected{% endif %}>
+                        <option value="{{ rec.RecommendationID }}" {% if
+                            filters.get('recommendation_id')==rec.RecommendationID|string %}selected{% endif %}>
                             {{ rec.RecommendationText | truncate(30) }}
                         </option>
                         {% endfor %}
@@ -207,8 +342,22 @@
                     <select name="eval_type_id" class="form-select">
                         <option value="">-- الكل --</option>
                         {% for etype in all_evaluation_types %}
-                        <option value="{{ etype.EvaluationTypeID }}" {% if filters.get('eval_type_id') == etype.EvaluationTypeID|string %}selected{% endif %}>
+                        <option value="{{ etype.EvaluationTypeID }}" {% if
+                            filters.get('eval_type_id')==etype.EvaluationTypeID|string %}selected{% endif %}>
                             {{ etype.DisplayName }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label">الدورات المجتازة (History)</label>
+                    <select name="taken_course_id" class="form-select">
+                        <option value="">-- الكل --</option>
+                        {% for course in all_training_courses %}
+                        <option value="{{ course.TrainingCourseID }}" {% if
+                            filters.get('taken_course_id')==course.TrainingCourseID|string %}selected{% endif %}>
+                            {{ course.TrainingCourseText }}
                         </option>
                         {% endfor %}
                     </select>
@@ -218,7 +367,7 @@
                     <label class="form-label">من تاريخ</label>
                     <input type="date" name="date_from" class="form-control" value="{{ filters.get('date_from', '') }}">
                 </div>
-                
+
                 <div class="col-md-2">
                     <label class="form-label">إلى تاريخ</label>
                     <input type="date" name="date_to" class="form-control" value="{{ filters.get('date_to', '') }}">
@@ -233,13 +382,14 @@
     </div>
 
     <div class="glass-panel p-0 overflow-hidden">
-        <div class="table-responsive">
+        <div class="table-responsive" style="max-height: 65vh; overflow-y: auto;">
             <table class="table table-custom text-center mb-0">
                 <thead>
                     <tr>
                         <th>#</th>
                         <th>👥 الموظف / المدير</th>
                         <th>📂 النوع</th>
+                        <th>📚 الدورات السابقة</th>
                         <th>📅 التاريخ</th>
                         <th>📈 النتيجة</th>
                         <th>🏅 التقدير</th>
@@ -250,27 +400,55 @@
                 </thead>
                 <tbody id="reportsTableBody">
                     {% for report in reports %}
-                    <tr class="report-row"
-                        data-score="{{ report.OverallScore }}"
+                    <tr class="report-row" data-score="{{ report.OverallScore }}"
                         data-rating="{{ report.OverallRating or 'غير محدد' }}"
-                        data-rec="{{ report.RecommendationText or 'لا يوجد' }}">
-                        
+                        data-rec="{{ report.RecommendationText or 'لا يوجد' }}"
+                        onclick="window.location='{{ url_for('evaluation_details', evaluation_id=report.EvaluationID) }}'"
+                        style="cursor: pointer; transition: background-color 0.2s;">
+
                         <td>{{ report.EvaluationID }}</td>
-                        
+
                         <td class="text-start">
-                            <div class="fw-bold text-primary">{{ report.EmployeeName or '--' }}</div>
-                            <small class="text-muted">بواسطة: {{ report.EvaluatorName or '--' }}</small>
+                            <div class="d-flex align-items-center">
+                                <img src="{{ url_for('user_pic', user_id=report.EmployeeUserID) }}" alt="img"
+                                    style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; margin-left: 8px; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.1);"
+                                    onerror="this.src='{{ url_for('static', filename='images/default_user.png') }}'">
+                                <div>
+                                    <div class="fw-bold text-primary">{{ report.EmployeeName or '--' }}</div>
+                                    <small class="text-muted">بواسطة: {{ report.EvaluatorName or '--' }}</small>
+                                </div>
+                            </div>
                         </td>
 
-                        <td><span class="badge bg-light text-dark border">{{ report.EvaluationType or '--' }}</span></td>
-                        
-                        <td class="small">{{ report.EvaluationDate.strftime('%Y-%m-%d') if report.EvaluationDate else '--' }}</td>
+                        <td><span class="badge bg-light text-dark border">{{ report.EvaluationType or '--' }}</span>
+                        </td>
+
+                        <td style="text-align: right;">
+                            {% if report.CoursesTaken %}
+                            {% set courses = report.CoursesTaken.split('###') %}
+                            <div style="display:flex; flex-wrap:wrap; gap:4px;">
+                                {% for c in courses[:2] %}
+                                <span class="badge bg-secondary" style="font-size:0.7rem; font-weight:normal;">{{ c
+                                    }}</span>
+                                {% endfor %}
+                                {% if courses|length > 2 %}
+                                <span class="badge bg-light text-dark border" style="cursor:help; font-size:0.7rem;"
+                                    title="{{ courses|join('\n') }}">+{{ courses|length - 2 }}</span>
+                                {% endif %}
+                            </div>
+                            {% else %}
+                            <span class="text-muted small">-</span>
+                            {% endif %}
+                        </td>
+
+                        <td class="small">{{ report.EvaluationDate.strftime('%Y-%m-%d') if report.EvaluationDate else
+                            '--' }}</td>
 
                         <td style="width: 120px;">
                             <div class="fw-bold">{{ "%.1f"|format(report.OverallScore|float) }}%</div>
                             <div class="score-bar-container">
-                                <div class="score-bar {% if report.OverallScore|float < 60 %}low{% elif report.OverallScore|float < 80 %}medium{% else %}high{% endif %}" 
-                                     style="width: {{ report.OverallScore|float }}%;"></div>
+                                <div class="score-bar {% if report.OverallScore|float < 60 %}low{% elif report.OverallScore|float < 80 %}medium{% else %}high{% endif %}"
+                                    style="width: {{ report.OverallScore|float }}%;"></div>
                             </div>
                         </td>
 
@@ -288,18 +466,21 @@
                         </td>
 
                         <td>{{ report.RecommendationText or '--' }}</td>
-                        
-                        <td class="text-start small text-truncate" style="max-width: 150px;" title="{{ report.ManagerComments }}">
+
+                        <td class="text-start small text-truncate" style="max-width: 150px;"
+                            title="{{ report.ManagerComments }}">
                             {{ report.ManagerComments or '--' }}
                         </td>
 
-                        <td>
+                        <td onclick="event.stopPropagation()">
                             <div class="d-flex justify-content-center gap-1">
-                                <a href="{{ url_for('evaluation_details', evaluation_id=report.EvaluationID) }}" class="btn btn-sm btn-outline-info" title="عرض">
+                                <a href="{{ url_for('evaluation_details', evaluation_id=report.EvaluationID) }}"
+                                    class="btn btn-sm btn-outline-info" title="عرض">
                                     👁️
                                 </a>
                                 {% if is_admin %}
-                                <form action="{{ url_for('evaluation_delete', evaluation_id=report.EvaluationID) }}" method="POST" onsubmit="return confirm('حذف نهائي؟');">
+                                <form action="{{ url_for('evaluation_delete', evaluation_id=report.EvaluationID) }}"
+                                    method="POST" onsubmit="return confirm('حذف نهائي؟');">
                                     <button type="submit" class="btn btn-sm btn-outline-danger" title="حذف">🗑️</button>
                                 </form>
                                 {% endif %}
@@ -321,14 +502,28 @@
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
+        // === Sticky Filters Logic ===
+        const filterKey = 'evaluationReportsFilters';
+
+        // 1. Check if we should restore filters
+        if (!window.location.search && localStorage.getItem(filterKey)) {
+            window.location.search = localStorage.getItem(filterKey);
+            return;
+        }
+
+        // 2. Save current filters if they exist
+        if (window.location.search) {
+            localStorage.setItem(filterKey, window.location.search);
+        }
+
         // === Safe Analytics Extraction (From DOM) ===
         const rows = document.querySelectorAll('.report-row');
-        
+
         let total = 0;
         let sumScore = 0;
         let excellentCount = 0;
-        
+
         const ratingCounts = {};
         const recCounts = {};
 
@@ -371,13 +566,24 @@
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: { legend: { display: false } },
-                cutout: '70%'
+                cutout: '70%',
+                onClick: (evt, activeElements, chart) => {
+                    if (activeElements.length > 0) {
+                        const index = activeElements[0].index;
+                        const label = chart.data.labels[index];
+                        document.getElementById('filterRating').value = label;
+                        document.getElementById('filtersForm').submit();
+                    }
+                },
+                onHover: (event, chartElement) => {
+                    event.native.target.style.cursor = chartElement[0] ? 'pointer' : 'default';
+                }
             }
         });
 
         // --- Chart 2: Recommendations (Bar) ---
         // Sort & Slice Top 5
-        const sortedRecs = Object.entries(recCounts).sort((a,b) => b[1] - a[1]).slice(0, 5);
+        const sortedRecs = Object.entries(recCounts).sort((a, b) => b[1] - a[1]).slice(0, 5);
 
         new Chart(document.getElementById('recChart'), {
             type: 'bar',
@@ -394,15 +600,16 @@
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: { legend: { display: false } },
-                scales: { 
-                    x: { display: false }, 
-                    y: { display: false, beginAtZero: true } 
+                scales: {
+                    x: { display: false },
+                    y: { display: false, beginAtZero: true }
                 }
             }
         });
     });
 
     function clearFilters() {
+        localStorage.removeItem('evaluationReportsFilters');
         const form = document.getElementById('filtersForm');
         form.querySelectorAll('input, select').forEach(el => {
             el.value = '';

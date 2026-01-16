@@ -1,0 +1,72 @@
+<div class="table-responsive">
+    <table class="custom-table">
+        <thead>
+            <tr>
+                <th>المدير</th>
+                <th>القسم</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for manager in inactive_managers %}
+            <tr>
+                <td style="font-weight: 600;">{{ manager.Name }}</td>
+                <td>{{ manager.DEPTNAME }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="2" style="text-align: center; color: #34d399; font-weight: bold;">الجميع نشط! ✅</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Pagination Controls -->
+<div class="pagination-container"
+    style="display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 20px;">
+    {% if managers_page > 1 %}
+    <a href="#" onclick="loadManagersPage({{ managers_page - 1 }}); return false;" class="btn-glass-nav">
+        ▶ السابق
+    </a>
+    {% else %}
+    <span class="btn-glass-nav disabled">▶ السابق</span>
+    {% endif %}
+
+    <span style="font-weight: bold; color: var(--text-secondary);">
+        صفحة {{ managers_page }} من {{ managers_total_pages }}
+    </span>
+
+    {% if managers_page < managers_total_pages %} <a href="#"
+        onclick="loadManagersPage({{ managers_page + 1 }}); return false;" class="btn-glass-nav">
+        التالي ◀
+        </a>
+        {% else %}
+        <span class="btn-glass-nav disabled">التالي ◀</span>
+        {% endif %}
+</div>
+
+<style>
+    .btn-glass-nav {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 5px 15px;
+        border-radius: 20px;
+        color: #fff;
+        text-decoration: none;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        transition: all 0.3s;
+        font-size: 0.9rem;
+    }
+
+    .btn-glass-nav:hover:not(.disabled) {
+        background: rgba(0, 210, 255, 0.2);
+        border-color: #00d2ff;
+        transform: translateY(-2px);
+    }
+
+    .btn-glass-nav.disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        background: rgba(255, 255, 255, 0.05);
+        border-color: transparent;
+    }
+</style>

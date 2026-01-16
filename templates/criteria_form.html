@@ -3,244 +3,337 @@
 
 {% block content %}
 <style>
-  /* === General Settings === */
-  body {
-    direction: rtl;
-    background-color: #f4f6f9;
-    font-family: "Cairo", sans-serif;
+  /* === Modern Optima HR Glassmorphism Styling === */
+  :root {
+    --glass-bg: rgba(255, 255, 255, 0.95);
+    --glass-border: 1px solid rgba(255, 255, 255, 0.5);
+    --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+    --primary-gradient: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%);
+    --text-dark: #2d3748;
+    --text-muted: #718096;
   }
 
-  .container {
-    max-width: 800px;
+  /* Container & Layout */
+  .page-container {
+    max-width: 900px;
     margin: 40px auto;
+    padding: 0 20px;
+    animation: fadeIn 0.6s ease-out;
   }
 
-  /* === Header === */
-  .page-header {
-    background: linear-gradient(135deg, #004d7a, #00608f);
-    color: white;
-    padding: 20px;
-    border-radius: 12px;
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Header Section */
+  .form-header {
     text-align: center;
-    margin-bottom: 25px;
-    box-shadow: 0 4px 15px rgba(0, 77, 122, 0.2);
-  }
-  .page-header h2 { margin: 0; font-weight: 700; }
-
-  /* === Card === */
-  .form-card {
-    background: #fff;
-    padding: 30px;
-    border-radius: 16px;
-    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
-    border: 1px solid #eef2f7;
-  }
-
-  /* === Labels & Inputs === */
-  label {
-    font-weight: 700;
-    color: #2c3e50;
-    margin-bottom: 8px;
-    display: block;
-    font-size: 14px;
-  }
-
-  input[type="text"],
-  input[type="number"],
-  select {
-    width: 100%;
-    padding: 12px;
-    border-radius: 8px;
-    border: 1px solid #dee2e6;
-    font-size: 15px;
-    transition: all 0.3s ease;
-    background-color: #fdfdfd;
-  }
-
-  input:focus, select:focus {
-    border-color: #004d7a;
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(0, 77, 122, 0.1);
-  }
-
-  /* === Custom Checkboxes (Badge Style) === */
-  .checkbox-group {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-top: 5px;
-  }
-
-  .checkbox-option {
+    margin-bottom: 30px;
     position: relative;
   }
 
-  .checkbox-option input {
-    display: none; /* Hide default checkbox */
+  .form-header h2 {
+    font-weight: 800;
+    background: var(--primary-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 10px;
+    font-size: 2rem;
   }
 
-  .checkbox-option label {
-    display: inline-block;
-    padding: 10px 20px;
-    background-color: #f1f3f5;
-    border: 1px solid #e9ecef;
-    border-radius: 50px;
-    cursor: pointer;
-    font-weight: 600;
-    color: #495057;
-    transition: all 0.2s ease;
-    margin: 0;
+  .form-header p {
+    color: var(--text-muted);
+    font-size: 1.1rem;
   }
 
-  .checkbox-option input:checked + label {
-    background-color: #004d7a;
-    color: white;
-    border-color: #004d7a;
-    box-shadow: 0 2px 5px rgba(0, 77, 122, 0.3);
+  /* Glass Card */
+  .glass-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: var(--glass-border);
+    box-shadow: var(--glass-shadow);
+    border-radius: 20px;
+    padding: 40px;
+    position: relative;
+    overflow: hidden;
   }
 
-  /* === Buttons === */
+  /* Decorative Elements */
+  .glass-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 100%;
+    height: 5px;
+    background: var(--primary-gradient);
+  }
+
+  /* Forms */
+  .form-label {
+    font-weight: 700;
+    color: var(--text-dark);
+    margin-bottom: 8px;
+    font-size: 0.95rem;
+    display: block;
+  }
+
+  .form-control,
+  .form-select {
+    background-color: #f8fafc;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 12px 16px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    color: #4a5568;
+    width: 100%;
+  }
+
+  .form-control:focus,
+  .form-select:focus {
+    background-color: #fff;
+    border-color: #3a7bd5;
+    box-shadow: 0 0 0 4px rgba(58, 123, 213, 0.1);
+    outline: none;
+  }
+
+  /* Input Icons */
+  .input-icon-wrapper {
+    position: relative;
+  }
+
+  .input-icon {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #a0aec0;
+    pointer-events: none;
+  }
+
+  .input-with-icon {
+    padding-left: 45px;
+  }
+
+  /* Help Text */
+  .form-text {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-top: 6px;
+    font-style: italic;
+  }
+
+  /* Select2 Customization */
+  .select2-container--default .select2-selection--multiple {
+    border: 2px solid #e2e8f0 !important;
+    border-radius: 12px !important;
+    padding: 8px !important;
+    min-height: 50px !important;
+    background-color: #f8fafc !important;
+  }
+
+  .select2-container--default.select2-container--focus .select2-selection--multiple {
+    border-color: #3a7bd5 !important;
+    box-shadow: 0 0 0 4px rgba(58, 123, 213, 0.1) !important;
+    background-color: #fff !important;
+  }
+
+  .select2-container--default .select2-selection--multiple .select2-selection__choice {
+    background: var(--primary-gradient) !important;
+    border: none !important;
+    color: #fff !important;
+    border-radius: 20px !important;
+    padding: 4px 12px !important;
+    font-size: 0.9rem !important;
+    font-weight: 600 !important;
+    margin-top: 4px !important;
+  }
+
+  .select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
+    color: #fff !important;
+    margin-right: 8px !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.3) !important;
+  }
+
+  .select2-container--default .select2-selection--multiple .select2-selection__choice__remove:hover {
+    background: rgba(0, 0, 0, 0.1) !important;
+  }
+
+  /* Action Buttons */
   .form-actions {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    margin-top: 30px;
+    justify-content: space-between;
+    margin-top: 40px;
     padding-top: 20px;
-    border-top: 1px solid #eee;
+    border-top: 1px solid #eef2f7;
   }
 
-  .btn {
-    padding: 12px 25px;
-    border-radius: 8px;
+  .btn-custom {
+    padding: 12px 30px;
+    border-radius: 12px;
     font-weight: 700;
-    text-decoration: none;
-    cursor: pointer;
-    border: none;
-    transition: all 0.3s ease;
+    font-size: 1rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     display: inline-flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
+    border: none;
+    cursor: pointer;
   }
 
-  .btn-primary { background-color: #004d7a; color: white; }
-  .btn-primary:hover { background-color: #003a5c; transform: translateY(-1px); }
-
-  .btn-secondary { background-color: #e9ecef; color: #333; }
-  .btn-secondary:hover { background-color: #dde2e6; }
-
-  small.form-text {
-    display: block;
-    margin-top: 5px;
-    color: #8898aa;
-    font-size: 12px;
+  .btn-save {
+    background: var(--primary-gradient);
+    color: white;
+    box-shadow: 0 4px 15px rgba(58, 123, 213, 0.3);
   }
 
-  .row-grid {
+  .btn-save:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(58, 123, 213, 0.4);
+  }
+
+  .btn-cancel {
+    background: #e2e8f0;
+    color: #4a5568;
+  }
+
+  .btn-cancel:hover {
+    background: #cbd5e0;
+    color: #2d3748;
+  }
+
+  /* Responsive Grid */
+  .grid-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 20px;
+    gap: 30px;
   }
-  
-  @media (max-width: 600px) {
-    .row-grid { grid-template-columns: 1fr; }
-    .form-actions { flex-direction: column-reverse; gap: 15px; }
-    .btn { width: 100%; justify-content: center; }
+
+  @media (max-width: 768px) {
+    .grid-row {
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
   }
 </style>
 
-<div class="container">
-  
-  <div class="page-header">
-    <h2>{{ '✨ إضافة معيار تقييم جديد' if action == 'Add' else '🛠️ تعديل معيار التقييم' }}</h2>
+<div class="page-container">
+
+  <div class="form-header">
+    <h2>{{ '✨ إضافة معيار جديد' if action == 'Add' else '� تعديل المعيار' }}</h2>
+    <p>قم {{ 'بإدخال' if action == 'Add' else 'بتحديث' }} بيانات معيار التقييم بدقة لضمان كفاءة النظام</p>
   </div>
 
-  <div class="form-card">
+  <div class="glass-card">
     <form method="POST">
-      
+
+      <!-- Criterion Name -->
       <div class="mb-4">
-        <label for="name">اسم المعيار (Criterion Name):</label>
-        <input type="text" id="name" name="name" required 
-               value="{{ criterion.CriteriaName if criterion else '' }}"
-               placeholder="مثال: الالتزام بمواعيد العمل، جودة الأداء...">
+        <label for="name" class="form-label">📌 اسم المعيار (Criterion Name)</label>
+        <div class="input-icon-wrapper">
+          <input type="text" id="name" name="name" class="form-control" required
+            value="{{ criterion.CriteriaName if criterion else '' }}"
+            placeholder="مثال: الالتزام بالمواعيد، جودة الكود، العمل الجماعي...">
+        </div>
       </div>
 
-      <div class="row-grid mb-4">
+      <div class="grid-row mb-4">
+        <!-- Weight -->
         <div>
-          <label for="weight">الوزن النسبي (Weight):</label>
-          <input type="number" step="0.01" min="0.01" max="1.00" id="weight" name="weight" required
-            value="{{ criterion.CriteriaWeight if criterion else '' }}" 
-            placeholder="مثال: 0.20 (يعني 20%)">
-          <small class="form-text">مجموع أوزان جميع المعايير يجب أن يساوي 1.00 (100%)</small>
+          <label for="weight" class="form-label">⚖️ الوزن النسبي (Weight)</label>
+          <input type="number" step="0.01" min="0.01" max="1.00" id="weight" name="weight" class="form-control" required
+            value="{{ criterion.CriteriaWeight if criterion else '' }}" placeholder="مثال: 0.20">
+          <small class="form-text">يمثل نسبة الأهمية من 1.00 (مثلاً 0.20 = 20%)</small>
         </div>
 
+        <!-- Max Score -->
         <div>
-          <label for="max_score">الدرجة العظمى (Max Score):</label>
-          <input type="number" min="1" id="max_score" name="max_score" required
+          <label for="max_score" class="form-label">💯 الدرجة العظمى (Max Score)</label>
+          <input type="number" min="1" id="max_score" name="max_score" class="form-control" required
             value="{{ criterion.MaxScore if criterion else 10 }}">
-           <small class="form-text">الدرجة القصوى لهذا البند (مثلاً 10)</small>
+          <small class="form-text">الدرجة القصوى لهذا البند عند التقييم</small>
         </div>
-      </div>  
+      </div>
 
+      <!-- Departments Multi-Select -->
       <div class="mb-4">
-        <label>القسم المطبق عليه:</label>
-        <select name="dept_id">
-          <option value="">-- عام (يطبق على جميع الأقسام) --</option>
+        <label class="form-label">🏢 الأقسام المطبق عليها (Departments)</label>
+        <select name="dept_ids" class="form-control select2" multiple="multiple" style="width: 100%;">
+
+          <!-- General Option Logic -->
+          {% set is_general = not selected_depts %}
+          <option value="" {% if is_general %}selected{% endif %}>-- 🌍 عام (يطبق على جميع الأقسام) --</option>
+
           {% for dept in departments or [] %}
-          <option value="{{ dept.DEPTID }}" {% if criterion and criterion.AppliesToDeptID == dept.DEPTID %}selected{% endif %}>
+          {% set d_id = dept.DEPTID | string %}
+          <option value="{{ dept.DEPTID }}" {% if selected_depts and d_id in selected_depts %}selected{% endif %}>
             {{ dept.DEPTNAME }}
           </option>
           {% endfor %}
         </select>
+        <small class="form-text">يمكنك اختيار قسم واحد، عدة أقسام، أو "عام" لتطبيقه على الشركة بالكامل.</small>
       </div>
 
+      <!-- Employee Class Multi-Select -->
       <div class="mb-4">
-        <label>الفئات الوظيفية المستهدفة:</label>
-        <div class="checkbox-group">
-          
-          <div class="checkbox-option">
-            <input type="checkbox" id="level_a" name="employee_levels" value="A" 
-              {% if criterion and criterion.employee_class and 'A' in criterion.employee_class %}checked{% endif %}>
-            <label for="level_a">A - إداري</label>
-          </div>
+        <label class="form-label">👥 الفئات الوظيفية (Employee Classes)</label>
+        <select name="employee_levels" class="form-control select2" multiple="multiple" style="width: 100%;">
+          {% for cls in classes %}
+          <!-- We assume 'criterion' might pass 'employee_class' as a comma-string, handled in template -->
+          {% set is_selected = false %}
+          {% if criterion and criterion.employee_class and cls.ClassName in criterion.employee_class %}
+          {% set is_selected = true %}
+          {% endif %}
 
-          <div class="checkbox-option">
-            <input type="checkbox" id="level_b" name="employee_levels" value="B" 
-              {% if criterion and criterion.employee_class and 'B' in criterion.employee_class %}checked{% endif %}>
-            <label for="level_b">B - فني</label>
-          </div>
-
-          <div class="checkbox-option">
-            <input type="checkbox" id="level_c" name="employee_levels" value="C" 
-              {% if criterion and criterion.employee_class and 'C' in criterion.employee_class %}checked{% endif %}>
-            <label for="level_c">C - فئة ج</label>
-          </div>
-
-          <div class="checkbox-option">
-            <input type="checkbox" id="level_supervisor" name="employee_levels" value="مشرف" 
-              {% if criterion and criterion.employee_class and 'مشرف' in criterion.employee_class %}checked{% endif %}>
-            <label for="level_supervisor">مشرف</label>
-          </div>
-
-          <div class="checkbox-option">
-            <input type="checkbox" id="level_manager" name="employee_levels" value="مدير" 
-              {% if criterion and criterion.employee_class and 'مدير' in criterion.employee_class %}checked{% endif %}>
-            <label for="level_manager">مدير</label>
-          </div>
-
-        </div>
-        <small class="form-text">حدد الفئات التي سيظهر لها هذا المعيار عند التقييم.</small>
+          <option value="{{ cls.ClassName }}" {% if is_selected %}selected{% endif %}>
+            {{ cls.DisplayName or cls.ClassName }}
+          </option>
+          {% endfor %}
+        </select>
+        <small class="form-text">سيظهر هذا المعيار فقط للموظفين التابعين للفئات المختارة هنا.</small>
       </div>
 
+      <!-- Actions -->
       <div class="form-actions">
-        <a href="{{ url_for('criteria_list') }}" class="btn btn-secondary">
-          إلغاء ورجوع
+        <a href="{{ url_for('criteria_list') }}" class="btn-custom btn-cancel">
+          🚫 إلغاء
         </a>
-        <button type="submit" class="btn btn-primary">
-          {{ 'حفظ المعيار الجديد' if action == 'Add' else 'حفظ التعديلات' }}
+        <button type="submit" class="btn-custom btn-save">
+          {{ '💾 حفظ المعيار' if action == 'Add' else '💾 حفظ التعديلات' }}
         </button>
       </div>
 
     </form>
   </div>
 </div>
+
+<!-- Select2 Initialization Script -->
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    // Initialize Select2 with Bootstrap 5 theme settings if available, or default
+    $('.select2').select2({
+      placeholder: "🔍 انقر للاختيار...",
+      allowClear: true,
+      dir: "rtl",
+      width: '100%',
+      // Customizing the dropdown to match glass theme
+      dropdownCssClass: 'glass-dropdown'
+    });
+
+    // Animation for form on load
+    $('.glass-card').hide().fadeIn(500);
+  });
+</script>
+
 {% endblock %}

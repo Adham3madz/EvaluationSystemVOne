@@ -6,9 +6,11 @@
 
 <style>
     /* === Glass Panel === */
+    /* === Glass Panel === */
     .glass-panel {
         background: rgba(255, 255, 255, 0.75);
         backdrop-filter: blur(15px);
+        -webkit-backdrop-filter: blur(15px);
         border: 1px solid rgba(255, 255, 255, 0.6);
         border-radius: 16px;
         box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
@@ -16,10 +18,11 @@
         margin-bottom: 20px;
     }
 
-    /* === KPI Cards (Blue Theme for Training) === */
+    /* === KPI Cards (Glass Blue Theme) === */
     .kpi-card {
         background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(207, 226, 255, 0.4));
-        border: 1px solid rgba(13, 110, 253, 0.2);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.5);
         border-radius: 16px;
         padding: 15px;
         text-align: center;
@@ -29,27 +32,76 @@
         flex-direction: column;
         justify-content: center;
         align-items: center;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
     }
+
     .kpi-card:hover {
         transform: translateY(-5px);
-        box-shadow: 0 10px 20px rgba(13, 110, 253, 0.15);
+        box-shadow: 0 10px 25px rgba(13, 110, 253, 0.2);
     }
-    .kpi-icon { font-size: 2.5rem; margin-bottom: 10px; }
-    .kpi-value { font-size: 1.8rem; font-weight: 800; color: #0d6efd; }
-    .kpi-label { font-size: 0.9rem; font-weight: 600; color: #666; }
 
-    /* === Trainee Card === */
-    .trainee-card {
-        border: none;
-        border-radius: 12px;
-        transition: all 0.3s ease;
-        background: white;
+    .kpi-icon {
+        font-size: 2.5rem;
+        margin-bottom: 10px;
     }
+
+    .kpi-value {
+        font-size: 1.8rem;
+        font-weight: 800;
+        color: #0d6efd;
+        line-height: 1;
+    }
+
+    .kpi-label {
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: #495057;
+    }
+
+    /* === Glass Trainee Card === */
+    .trainee-card {
+        background: rgba(255, 255, 255, 0.6) !important;
+        backdrop-filter: blur(20px) !important;
+        border: 1px solid rgba(255, 255, 255, 0.45) !important;
+        border-radius: 16px !important;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05) !important;
+        transition: all 0.3s ease;
+    }
+
     .trainee-card:hover {
         transform: translateY(-5px);
-        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        background: rgba(255, 255, 255, 0.8) !important;
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1) !important;
     }
-    .progress-thin { height: 8px; border-radius: 4px; }
+
+    /* === Glass Modal === */
+    .glass-modal {
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(25px);
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        border-radius: 20px;
+    }
+
+    /* === Buttons === */
+    .btn-glass-primary {
+        background: linear-gradient(135deg, #0d6efd, #0b5ed7);
+        color: white;
+        border: none;
+        box-shadow: 0 4px 10px rgba(13, 110, 253, 0.3);
+    }
+
+    .btn-glass-danger {
+        background: linear-gradient(135deg, #dc3545, #b02a37);
+        color: white;
+        border: none;
+        box-shadow: 0 4px 10px rgba(220, 53, 69, 0.3);
+    }
+
+    .progress-thin {
+        height: 8px;
+        border-radius: 4px;
+        background: rgba(0, 0, 0, 0.05);
+    }
 </style>
 
 <div class="container-fluid py-4" style="background-color: #f4f6f9; min-height: 100vh;">
@@ -100,29 +152,31 @@
         </div>
     </div>
 
-    <div class="row g-4">
+    <div class="row g-4 overflow-auto" style="height: calc(100vh - 360px); padding-bottom: 20px;">
         {% for t in trainees %}
         <div class="col-md-6 col-xl-4">
-            <div class="card trainee-card shadow-sm h-100 trainee-data-item"
-                 data-progress="{{ t.percent }}"
-                 data-trainer="{{ t.trainer or 'غير معين' }}">
-                
-                <div class="card-header bg-white border-0 pt-4 pb-0 d-flex justify-content-between">
+            <div class="card trainee-card shadow-sm h-100 trainee-data-item glass-card"
+                style="background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.4);"
+                data-progress="{{ t.percent }}" data-trainer="{{ t.trainer or 'غير معين' }}">
+
+                <div class="card-header bg-transparent border-0 pt-4 pb-0 d-flex justify-content-between">
                     <h5 class="fw-bold text-primary mb-0">{{ t.name }}</h5>
                     <span class="badge bg-light text-dark border">{{ t.job }}</span>
                 </div>
-                
+
                 <div class="card-body">
                     <p class="text-muted small mb-3">📞 {{ t.phone }}</p>
 
-                    <div class="bg-light p-2 rounded mb-3 d-flex justify-content-between align-items-center">
+                    <div
+                        class="bg-light bg-opacity-50 p-2 rounded mb-3 d-flex justify-content-between align-items-center border">
                         <small class="text-muted fw-bold">👨‍🏫 المدرب:</small>
                         {% if t.trainer %}
-                            <span class="fw-bold text-dark">{{ t.trainer }}</span>
+                        <span class="fw-bold text-dark">{{ t.trainer }}</span>
                         {% else %}
-                            <button class="btn btn-sm btn-outline-secondary py-0" onclick="openTrainerModal('{{ t.id }}', '{{ t.name }}')">
-                                + تعيين مدرب
-                            </button>
+                        <button class="btn btn-sm btn-outline-secondary py-0"
+                            onclick="openTrainerModal('{{ t.id }}', '{{ t.name }}')">
+                            + تعيين مدرب
+                        </button>
                         {% endif %}
                     </div>
 
@@ -130,30 +184,30 @@
                         <span>التقدم ({{ t.percent }}%)</span>
                         <span>باقي {{ t.days_left }} يوم</span>
                     </label>
-                    <div class="progress progress-thin">
-                        <div class="progress-bar bg-{{ t.color }} progress-bar-striped progress-bar-animated" 
-                             role="progressbar" 
-                             style="width: {{ t.percent }}%">
+                    <div class="progress progress-thin bg-secondary bg-opacity-10">
+                        <div class="progress-bar bg-{{ t.color }} progress-bar-striped progress-bar-animated"
+                            role="progressbar" style="width: {{ t.percent }}%">
                         </div>
                     </div>
-                    
+
                     <div class="d-flex justify-content-between mt-2 small text-muted">
                         <span>البدء: {{ t.start_date }}</span>
                         <span class="fw-bold text-danger">النهاية: {{ t.end_date }}</span>
                     </div>
 
-                    <hr>
+                    <hr class="opacity-25">
 
                     <div class="d-grid gap-2">
-                        <button onclick="openMoveModal('{{ t.id }}', '{{ t.name }}', 'Offer')" 
-                                class="btn btn-success btn-sm">
+                        <button onclick="openMoveModal('{{ t.id }}', '{{ t.name }}', 'Offer')"
+                            class="btn btn-success btn-sm fw-bold">
                             ✅ اجتاز التدريب
                         </button>
-                        <button onclick="openMoveModal('{{ t.id }}', '{{ t.name }}', 'Rejected')" 
-                                class="btn btn-outline-danger btn-sm">
+                        <button onclick="openMoveModal('{{ t.id }}', '{{ t.name }}', 'Rejected')"
+                            class="btn btn-outline-danger btn-sm fw-bold">
                             ❌ لم يجتز
                         </button>
-                        <form action="{{ url_for('archive_candidate') }}" method="POST" onsubmit="return confirm('أرشفة هذا المتدرب؟');">
+                        <form action="{{ url_for('archive_candidate') }}" method="POST"
+                            onsubmit="return confirm('أرشفة هذا المتدرب؟');">
                             <input type="hidden" name="candidate_id" value="{{ t.id }}">
                             <button type="submit" class="btn btn-outline-secondary btn-sm w-100 mt-2">
                                 📦 أرشفة مؤقتة
@@ -166,9 +220,11 @@
         </div>
         {% else %}
         <div class="col-12 text-center py-5">
-            <div class="fs-1 text-muted opacity-50 mb-3">🎓</div>
-            <h4>لا يوجد متدربين حالياً</h4>
-            <p class="text-muted">قم بنقل المرشحين إلى مرحلة "التدريب" لتظهر بياناتهم هنا.</p>
+            <div class="glass-panel d-inline-block px-5">
+                <div class="fs-1 text-muted opacity-50 mb-3">🎓</div>
+                <h4>لا يوجد متدربين حالياً</h4>
+                <p class="text-muted">قم بنقل المرشحين إلى مرحلة "التدريب" لتظهر بياناتهم هنا.</p>
+            </div>
         </div>
         {% endfor %}
     </div>
@@ -207,7 +263,8 @@
                 <p class="text-center lead">القرار النهائي لـ: <strong id="moveCandidateName"></strong></p>
                 <div class="mb-3">
                     <label class="fw-bold">⭐ التقييم (1-10)</label>
-                    <input type="range" name="score" class="form-range" min="1" max="10" value="5" oninput="document.getElementById('scoreVal').innerText = this.value">
+                    <input type="range" name="score" class="form-range" min="1" max="10" value="5"
+                        oninput="document.getElementById('scoreVal').innerText = this.value">
                     <div class="text-center fw-bold fs-4 text-primary" id="scoreVal">5</div>
                 </div>
                 <div class="mb-3">
@@ -221,10 +278,10 @@
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         // --- 1. Collect Data from DOM (Safe Offline Method) ---
         const cards = document.querySelectorAll('.trainee-data-item');
-        
+
         let total = 0;
         let finishing = 0;
         const trainerCounts = {};
