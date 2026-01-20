@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>وثيقة التعارف دار الضيافة</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dar_al_diyafa.css') }}">
+    <!-- Toastify for notifications -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <style>
+        .search-container {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .search-box {
+            display: inline-flex;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .search-input {
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            width: 300px;
+            font-size: 16px;
+        }
+
+        .btn-search {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.2s;
+        }
+
+        .btn-search:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Hide search in print */
+        @media print {
+
+            .search-container,
+            .actions,
+            .toastify {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+
+        <!-- Search Bar -->
+        <div class="search-container">
+            <div class="search-box">
+                <input type="text" id="searchInput" class="search-input" placeholder="بحث بالاسم أو رقم الملف...">
+                <button type="button" onclick="searchEmployee()" class="btn-search">بحث</button>
+            </div>
+        </div>
+
+        <!-- Header -->
+        <header>
+            <div class="header-text">
+                <h3>الإدارة العامة لأندية وفنادق الشرطة</h3>
+                <h4>قسم الأمن (دار الضيافة لضباط الشرطة)</h4>
+            </div>
+            <div class="logo">
+                <img src="{{ url_for('static', filename='assets/logo_new.png') }}" class="logo-img" alt="Logo"
+                    style="width:80px; height:80px; object-fit:contain;">
+            </div>
+        </header>
+
+        <div class="page-title"
+            style="display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 20px;">
+            <h1 style="white-space: nowrap;">وثيقة التعارف دار الضيافة (</h1>
+            <!-- This user_id field is CRITICAL for saving -->
+            <input type="hidden" id="user_id" name="user_id">
+            <input type="text" name="employee_name" id="employee_name" placeholder="الاسم الرباعي"
+                style="flex-grow: 1; max-width: 600px; font-size: 1.2em; border: none; border-bottom: 2px solid #000; background: transparent; text-align: center; padding: 5px;">
+            <h1 style="white-space: nowrap;">) /</h1>
+        </div>
+
+        <form id="mainForm" action="{{ url_for('generate_pdf') }}" method="POST">
+            <!-- Main Personal Info Table -->
+            <div class="glass-card print-no-shadow">
+                <h2 class="print-hide-header">البيانات الشخصية</h2>
+                <table class="info-table">
+                    <tbody>
+                        <tr>
+                            <td class="label-cell">الجهة الفرعية:</td>
+                            <td><input type="text" name="sub_department" id="sub_department"></td>
+                            <td class="label-cell">تاريخ الحاقه:</td>
+                            <td><input type="date" name="join_date" id="join_date"></td>
+                            <td class="label-cell">تاريخ الميلاد:</td>
+                            <td><input type="date" name="birth_date" id="birth_date"></td>
+                        </tr>
+                        <tr>
+                            <td class="label-cell">الرقم القومي:</td>
+                            <td><input type="text" name="national_id" id="national_id"></td>
+                            <td class="label-cell">رقم الهاتف:</td>
+                            <td><input type="text" name="phone" id="phone"></td>
+                            <td class="label-cell">طبيعة العمل:</td>
+                            <td><input type="text" name="job_nature" id="job_nature"></td>
+                        </tr>
+                        <tr>
+                            <td class="label-cell">العنوان الحالي:</td>
+                            <td colspan="5"><input type="text" name="current_address" id="current_address"></td>
+                        </tr>
+                        <tr>
+                            <td class="label-cell">العنوان السابق:</td>
+                            <td colspan="5"><input type="text" name="previous_address" id="previous_address"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Helper Macro for Tables -->
+            {% macro info_table(title, prefix, initial_rows, show_labels=False) %}
+            <div class="glass-card print-no-shadow" id="section-{{ prefix }}">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h2 class="section-title">{{ title }} :</h2>
+                    <button type="button" class="btn-add-row print-hide" onclick="addInfoRow('{{ prefix }}')"
+                        title="إضافة صف جديد">+</button>
+                </div>
+                <table class="data-table" id="table-{{ prefix }}">
+                    <thead>
+                        <tr>
+                            <th>الاسم</th>
+                            <th>تاريخ الميلاد</th>
+                            <th>المهنة</th>
+                            <th>محل الإقامة</th>
+                            <th>رقم الهاتف</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-{{ prefix }}">
+                        {% for i in range(1, initial_rows + 1) %}
+                        {% set label_text = '' %}
+                        {% if show_labels and prefix=='parent' %}
+                        {% if i==1 %}{% set label_text = 'الأب' %}{% else %}{% set label_text = 'الأم' %}{% endif %}
+                        {% endif %}
+                        <tr class="data-row" data-index="{{ i }}" data-prefix="{{ prefix }}">
+                            <td {% if label_text %}data-label="{{ label_text }}" {% endif %}>
+                                <input type="text" name="{{ prefix }}_name_{{ i }}" class="field-name" {% if label_text
+                                    %}placeholder="{{ label_text }}" {% endif %}>
+                            </td>
+                            <td><input type="date" name="{{ prefix }}_dob_{{ i }}" class="field-dob"></td>
+                            <td><input type="text" name="{{ prefix }}_job_{{ i }}" class="field-job"></td>
+                            <td><input type="text" name="{{ prefix }}_address_{{ i }}" class="field-address"></td>
+                            <td><input type="text" name="{{ prefix }}_phone_{{ i }}" class="field-phone"></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endmacro %}
+
+            <!-- Spouse Info (1 Row) -->
+            {{ info_table("بيانات الزوجة أو الزوج", "spouse", 1) }}
+
+            <!-- Parents Info (2 Rows) -->
+            {{ info_table("بيانات الوالدين", "parent", 2, show_labels=True) }}
+
+            <!-- Siblings Info (4 Rows) -->
+            {{ info_table("بيانات الأخوة والأخوات", "sibling", 4) }}
+
+            <!-- Children Info (3 Rows) -->
+            {{ info_table("بيانات الابناء", "child", 3) }}
+
+            <!-- Paternal Uncles/Aunts (3 Rows) -->
+            {{ info_table("بيانات الاعمام والعمات", "p_uncle", 3) }}
+
+            <!-- Paternal Cousins (6 Rows - split? The image shows continuation. I'll just put 6 rows) -->
+            <div class="page-break"></div>
+            {{ info_table("بيانات ابناء الاعمام والعمات", "p_cousin", 6) }}
+
+            <!-- Maternal Uncles/Aunts (4 Rows) -->
+            {{ info_table("بيانات الاخوال والخالات", "m_uncle", 4) }}
+
+            <!-- Maternal Cousins (4 Rows) -->
+            {{ info_table("بيانات ابناء الاخوال والخالات", "m_cousin", 4) }}
+
+            <!-- Declaration Footer -->
+            <div class="glass-card print-no-shadow declaration-section">
+                <p class="declaration-text">
+                    اقر انا ( <input type="text" name="declarant_name" id="declarant_name"
+                        style="width: 200px; display: inline-block;"> )
+                    بصحة
+                    البيانات عالية واني لم اغفل ذكر أي من اقاربي واتعهد بأخطار جهة عملي باي متغيرات تطرأ على أي بيانات
+                    سالفة
+                    الذكر في موعد اقصاه 48 ساعة عقب التغير واتحمل اية تباعات واية نتائج قانونية او ادارية تنتج عن عدم
+                    الاخطار ... وهذا اقرار مني بذلك..
+                </p>
+                <div class="signature-block">
+                    <div>
+                        تحريرا &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; / &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                    </div>
+                    <div>
+                        المقر بما فيه/
+                    </div>
+                </div>
+            </div>
+
+            <div class="actions">
+                <button type="button" onclick="saveAndGeneratePDF()" class="btn-primary">حفظ / PDF</button>
+                <button type="button" class="btn-secondary" onclick="saveAndPrint()">حفظ وطباعة النموذج</button>
+                <a href="{{ url_for('dashboard') }}" class="btn-secondary">رجوع</a>
+            </div>
+        </form>
+    </div>
+
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Allow Enter key to trigger search
+            document.getElementById('searchInput').addEventListener('keypress', function (e) {
+                if (e.key === 'Enter') searchEmployee();
+            });
+
+            // Initial bind
+            bindDateInputs();
+        });
+
+        function bindDateInputs() {
+            const dateInputs = document.querySelectorAll('input[type="date"]');
+            dateInputs.forEach(input => {
+                updatePrintClass(input);
+                // Remove old listeners to avoid duplicates if any (simple approach)
+                input.onchange = () => updatePrintClass(input);
+                input.oninput = () => updatePrintClass(input);
+            });
+        }
+
+        function updatePrintClass(input) {
+            if (!input.value) {
+                input.classList.add('print-empty');
+            } else {
+                input.classList.remove('print-empty');
+            }
+        }
+
+        // --- NEW: Add Row Functionality ---
+        function addInfoRow(prefix) {
+            const tbody = document.getElementById(`tbody-${prefix}`);
+            if (!tbody) return;
+
+            // Get current count
+            const currentRows = tbody.querySelectorAll('tr.data-row').length;
+            const newIndex = currentRows + 1;
+
+            // Create new row
+            const tr = document.createElement('tr');
+            tr.className = 'data-row';
+            tr.setAttribute('data-index', newIndex);
+            tr.setAttribute('data-prefix', prefix); // Add data-prefix for consistency
+
+            // Build cells matched to macro structure
+            tr.innerHTML = `
+                <td><input type="text" name="${prefix}_name_${newIndex}" class="field-name"></td>
+                <td><input type="date" name="${prefix}_dob_${newIndex}" class="field-dob"></td>
+                <td><input type="text" name="${prefix}_job_${newIndex}" class="field-job"></td>
+                <td><input type="text" name="${prefix}_address_${newIndex}" class="field-address"></td>
+                <td><input type="text" name="${prefix}_phone_${newIndex}" class="field-phone"></td>
+            `;
+
+            tbody.appendChild(tr);
+            bindDateInputs(); // Re-bind for new date inputs
+        }
+        // ----------------------------------
+
+        function showToast(msg, type = 'info') {
+            Toastify({
+                text: msg,
+                duration: 3000,
+                gravity: "top",
+                position: "center",
+                backgroundColor: type === 'error' ? "linear-gradient(to right, #ff5f6d, #ffc371)" : "linear-gradient(to right, #00b09b, #96c93d)",
+            }).showToast();
+        }
+
+        async function searchEmployee() {
+            const query = document.getElementById('searchInput').value;
+            if (!query) return;
+
+            try {
+                const response = await fetch(`/api/employee/get_full_data?query=${encodeURIComponent(query)}`);
+                const data = await response.json();
+
+                if (!data.found) {
+                    showToast("لم يتم العثور على الموظف", "error");
+                    return;
+                }
+
+                showToast("تم العثور على البيانات", "success");
+
+                // Populate Basic Fields
+                document.getElementById('user_id').value = data.user_id;
+                document.getElementById('employee_name').value = data.name;
+                document.getElementById('declarant_name').value = data.name; // Also fill declarant name
+                document.getElementById('sub_department').value = data.sub_department || data.department;
+                document.getElementById('join_date').value = data.hired_date;
+                document.getElementById('birth_date').value = data.birth_date;
+                document.getElementById('national_id').value = data.ssn;
+                document.getElementById('phone').value = data.phone;
+                document.getElementById('job_nature').value = data.job_nature;
+                document.getElementById('current_address').value = data.address;
+                document.getElementById('previous_address').value = data.previous_address;
+
+                // Clear all previous family inputs first by emptying values
+                document.querySelectorAll('.data-row input').forEach(inp => inp.value = '');
+
+                // Populate Family Members
+                if (data.family) {
+                    for (const [type, members] of Object.entries(data.family)) {
+                        const tbodyIdx = `tbody-${type}`;
+                        const tbody = document.getElementById(tbodyIdx);
+                        if (!tbody) continue;
+
+                        // Clear existing rows for this section thoroughly to avoid duplicates/mismatches?
+                        // Actually, better to keep structure but clear values.
+                        // BUT, if user has MORE rows than default, we need to ADD them.
+
+                        // 1. Clear values of existing rows
+                        tbody.querySelectorAll('input').forEach(i => i.value = '');
+
+                        members.forEach((member, index) => {
+                            const rowIndex = index + 1;
+                            let row = tbody.querySelector(`tr[data-index="${rowIndex}"]`);
+
+                            // If row doesn't exist (e.g. 5th child), create it!
+                            if (!row) {
+                                addInfoRow(type);
+                                // Re-query for the newly added row
+                                row = tbody.querySelector(`tr[data-index="${rowIndex}"]`);
+                            }
+
+                            if (row) {
+                                row.querySelector('.field-name').value = member.name || '';
+                                row.querySelector('.field-dob').value = member.dob || '';
+                                row.querySelector('.field-job').value = member.job || '';
+                                row.querySelector('.field-address').value = member.address || '';
+                                row.querySelector('.field-phone').value = member.phone || '';
+                            }
+                        });
+                    }
+                }
+
+                // Re-bind dates just in case
+                bindDateInputs();
+
+            } catch (error) {
+                console.error("Search Error:", error);
+                showToast("حدث خطأ أثناء البحث", "error");
+            }
+        }
+
+        async function saveEmployeeData() {
+            const userId = document.getElementById('user_id').value;
+            if (!userId) {
+                showToast("يرجى اختيار موظف أولاً للبحث عنه", "error");
+                return false;
+            }
+
+            const payload = {
+                user_id: userId,
+                name: document.getElementById('employee_name').value,
+                sub_department: document.getElementById('sub_department').value,
+                join_date: document.getElementById('join_date').value,
+                birth_date: document.getElementById('birth_date').value,
+                national_id: document.getElementById('national_id').value,
+                phone: document.getElementById('phone').value,
+                job_nature: document.getElementById('job_nature').value,
+                address: document.getElementById('current_address').value,
+                previous_address: document.getElementById('previous_address').value,
+                family: {}
+            };
+
+            // Collect Family Data
+            const familyTypes = ['spouse', 'parent', 'sibling', 'child', 'p_uncle', 'p_cousin', 'm_uncle', 'm_cousin'];
+
+            familyTypes.forEach(type => {
+                const rows = document.querySelectorAll(`#tbody-${type} tr.data-row`);
+                const members = [];
+                rows.forEach(row => {
+                    const name = row.querySelector('.field-name').value;
+                    if (name) { // Only save rows with names
+                        members.push({
+                            name: name,
+                            dob: row.querySelector('.field-dob').value,
+                            job: row.querySelector('.field-job').value,
+                            address: row.querySelector('.field-address').value,
+                            phone: row.querySelector('.field-phone').value
+                        });
+                    }
+                });
+                if (members.length > 0) {
+                    payload.family[type] = members;
+                }
+            });
+
+            try {
+                const response = await fetch('/api/employee/save_full_data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+                if (result.status === 'success') {
+                    showToast("تم حفظ البيانات بنجاح", "success");
+                    return true;
+                } else {
+                    showToast("فشل الحفظ: " + result.message, "error");
+                    return false;
+                }
+            } catch (e) {
+                console.error("Save Error:", e);
+                showToast("حدث خطأ أثناء الحفظ", "error");
+                return false;
+            }
+        }
+
+        async function saveAndGeneratePDF() {
+            const saved = await saveEmployeeData();
+            if (saved) {
+                // Submit main form
+                document.getElementById('mainForm').submit();
+            }
+        }
+
+        async function saveAndPrint() {
+            const saved = await saveEmployeeData();
+            if (saved) {
+                window.print();
+            }
+        }
+    </script>
+</body>
+
+</html>

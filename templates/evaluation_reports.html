@@ -399,31 +399,54 @@
                     </tr>
                 </thead>
                 <tbody id="reportsTableBody">
-                    {% for report in reports %}
+                    {% for group in reports %}
+                    {% set report = group.latest %}
+                    <!-- Main Row (Latest Evaluation) -->
                     <tr class="report-row" data-score="{{ report.OverallScore }}"
                         data-rating="{{ report.OverallRating or 'غير محدد' }}"
                         data-rec="{{ report.RecommendationText or 'لا يوجد' }}"
-                        onclick="window.location='{{ url_for('evaluation_details', evaluation_id=report.EvaluationID) }}'"
-                        style="cursor: pointer; transition: background-color 0.2s;">
+                        style="transition: background-color 0.2s;">
 
-                        <td>{{ report.EvaluationID }}</td>
+                        <!-- ID + Collapse Toggle -->
+                        <td class="align-middle">
+                            <div class="d-flex flex-column align-items-center">
+                                <span class="fw-bold">{{ report.EvaluationID }}</span>
+                                {% if group.history %}
+                                <button class="btn btn-sm btn-link text-decoration-none p-0 mt-1" type="button"
+                                    data-bs-toggle="collapse" data-bs-target="#history-{{ report.EmployeeUserID }}"
+                                    aria-expanded="false" title="عرض السجل السابق">
+                                    🔽
+                                    <span style="font-size: 0.7rem;" class="badge bg-secondary rounded-pill">{{
+                                        group.history|length }}</span>
+                                </button>
+                                {% endif %}
+                            </div>
+                        </td>
 
-                        <td class="text-start">
+                        <td class="text-start align-middle"
+                            onclick="window.location='{{ url_for('evaluation_details', evaluation_id=report.EvaluationID) }}'"
+                            style="cursor: pointer;">
                             <div class="d-flex align-items-center">
                                 <img src="{{ url_for('user_pic', user_id=report.EmployeeUserID) }}" alt="img"
-                                    style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; margin-left: 8px; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.1);"
+                                    style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; margin-left: 10px; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.1);"
                                     onerror="this.src='{{ url_for('static', filename='images/default_user.png') }}'">
                                 <div>
                                     <div class="fw-bold text-primary">{{ report.EmployeeName or '--' }}</div>
-                                    <small class="text-muted">بواسطة: {{ report.EvaluatorName or '--' }}</small>
+                                    <small class="text-muted d-block">بواسطة: {{ report.EvaluatorName or '--' }}</small>
                                 </div>
                             </div>
                         </td>
 
-                        <td><span class="badge bg-light text-dark border">{{ report.EvaluationType or '--' }}</span>
+                        <td class="align-middle"
+                            onclick="window.location='{{ url_for('evaluation_details', evaluation_id=report.EvaluationID) }}'"
+                            style="cursor: pointer;">
+                            <span class="badge bg-light text-dark border">{{ report.EvaluationType or '--' }}</span>
+                            {% if group.history %}
+                            <div style="font-size: 0.7rem; color: green; margin-top: 2px;">(الأحدث)</div>
+                            {% endif %}
                         </td>
 
-                        <td style="text-align: right;">
+                        <td style="text-align: right;" class="align-middle">
                             {% if report.CoursesTaken %}
                             {% set courses = report.CoursesTaken.split('###') %}
                             <div style="display:flex; flex-wrap:wrap; gap:4px;">
@@ -441,10 +464,12 @@
                             {% endif %}
                         </td>
 
-                        <td class="small">{{ report.EvaluationDate.strftime('%Y-%m-%d') if report.EvaluationDate else
-                            '--' }}</td>
+                        <td class="small align-middle">{{ report.EvaluationDate.strftime('%Y-%m-%d') if
+                            report.EvaluationDate else '--' }}</td>
 
-                        <td style="width: 120px;">
+                        <td style="width: 120px;" class="align-middle"
+                            onclick="window.location='{{ url_for('evaluation_details', evaluation_id=report.EvaluationID) }}'"
+                            style="cursor: pointer;">
                             <div class="fw-bold">{{ "%.1f"|format(report.OverallScore|float) }}%</div>
                             <div class="score-bar-container">
                                 <div class="score-bar {% if report.OverallScore|float < 60 %}low{% elif report.OverallScore|float < 80 %}medium{% else %}high{% endif %}"
@@ -452,7 +477,7 @@
                             </div>
                         </td>
 
-                        <td>
+                        <td class="align-middle">
                             {% set r_class = 'default' %}
                             {% if report.OverallRating == 'ممتاز' %}{% set r_class = 'excellent' %}
                             {% elif report.OverallRating == 'جيد جدا' %}{% set r_class = 'very-good' %}
@@ -465,14 +490,14 @@
                             </span>
                         </td>
 
-                        <td>{{ report.RecommendationText or '--' }}</td>
+                        <td class="align-middle">{{ report.RecommendationText or '--' }}</td>
 
-                        <td class="text-start small text-truncate" style="max-width: 150px;"
+                        <td class="text-start small text-truncate align-middle" style="max-width: 150px;"
                             title="{{ report.ManagerComments }}">
                             {{ report.ManagerComments or '--' }}
                         </td>
 
-                        <td onclick="event.stopPropagation()">
+                        <td class="align-middle" onclick="event.stopPropagation()">
                             <div class="d-flex justify-content-center gap-1">
                                 <a href="{{ url_for('evaluation_details', evaluation_id=report.EvaluationID) }}"
                                     class="btn btn-sm btn-outline-info" title="عرض">
@@ -487,9 +512,85 @@
                             </div>
                         </td>
                     </tr>
+
+                    <!-- History Rows (Hidden by default) -->
+                    {% if group.history %}
+                    <tr class="collapse bg-light" id="history-{{ report.EmployeeUserID }}">
+                        <td colspan="10" class="p-3">
+                            <div class="card border-0 shadow-sm">
+                                <div class="card-header bg-white fw-bold text-muted small">
+                                    📜 أرشيف التقييمات السابقة لهذا الموظف
+                                </div>
+                                <div class="card-body p-0">
+                                    <table class="table table-sm table-hover mb-0 text-center"
+                                        style="font-size: 0.9rem;">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>نوع التقييم</th>
+                                                <th>التاريخ</th>
+                                                <th>النتيجة</th>
+                                                <th>التقدير</th>
+                                                <th>التوصية</th>
+                                                <th>ملاحظات</th>
+                                                <th>إجراء</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for h_report in group.history %}
+                                            <tr class="report-row" data-score="{{ h_report.OverallScore }}"
+                                                data-rating="{{ h_report.OverallRating or 'غير محدد' }}"
+                                                data-rec="{{ h_report.RecommendationText or 'لا يوجد' }}"
+                                                style="border-left: 4px solid #6c757d;">
+
+                                                <td>{{ h_report.EvaluationType or '--' }}</td>
+                                                <td>{{ h_report.EvaluationDate.strftime('%Y-%m-%d') if
+                                                    h_report.EvaluationDate else '--' }}</td>
+
+                                                <td>
+                                                    <span class="fw-bold">{{ "%.1f"|format(h_report.OverallScore|float)
+                                                        }}%</span>
+                                                </td>
+
+                                                <td>
+                                                    <span class="badge bg-secondary">{{ h_report.OverallRating or '--'
+                                                        }}</span>
+                                                </td>
+
+                                                <td>{{ h_report.RecommendationText or '-' }}</td>
+                                                <td class="text-truncate" style="max-width: 150px;">{{
+                                                    h_report.ManagerComments or '-' }}</td>
+
+                                                <td>
+                                                    <div class="d-flex justify-content-center gap-1">
+                                                        <a href="{{ url_for('evaluation_details', evaluation_id=h_report.EvaluationID) }}"
+                                                            class="btn btn-sm btn-outline-secondary p-0 px-1"
+                                                            title="عرض">
+                                                            👁️
+                                                        </a>
+                                                        {% if is_admin %}
+                                                        <form
+                                                            action="{{ url_for('evaluation_delete', evaluation_id=h_report.EvaluationID) }}"
+                                                            method="POST" onsubmit="return confirm('حذف نهائي؟');">
+                                                            <button type="submit"
+                                                                class="btn btn-sm btn-link text-danger p-0 px-1"
+                                                                title="حذف">✕</button>
+                                                        </form>
+                                                        {% endif %}
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endif %}
+
                     {% else %}
                     <tr>
-                        <td colspan="9" class="py-5 text-muted">
+                        <td colspan="10" class="py-5 text-muted">
                             <div class="fs-1 mb-2">📭</div>
                             لا توجد تقارير مطابقة.
                         </td>

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
+
 <head>
     <meta charset="UTF-8">
     <title>كشف حضور تدريبي - {{ training_session.TrainingCourseText }}</title>
@@ -7,112 +8,156 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/cairo.css') }}">
 
     <style>
-        body { 
-            font-family: 'Cairo', sans-serif; 
-            background: white; 
-            color: black; 
+        body {
+            font-family: 'Cairo', sans-serif;
+            background: white;
+            color: black;
             line-height: 1.7;
             padding: 20px;
         }
-        
-        .header { 
-            text-align: center; 
-            border-bottom: 3px double #000; 
-            padding-bottom: 20px; 
-            margin-bottom: 30px; 
+
+        .header {
+            text-align: center;
+            border-bottom: 3px double #000;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
         }
-        
-        .header h1 { 
-            font-size: 28px; 
-            font-weight: 900; 
-            margin: 0; 
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 900;
+            margin: 0;
         }
-        
-        .header h3 { 
-            font-size: 20px; 
-            margin: 10px 0 0; 
-            font-weight: 700; 
+
+        .header h3 {
+            font-size: 20px;
+            margin: 10px 0 0;
+            font-weight: 700;
         }
-        
-        .meta-info { 
-            display: grid; 
-            grid-template-columns: repeat(2, 1fr); 
-            gap: 20px; 
-            margin: 30px 0; 
-            padding: 20px; 
-            border: 2px solid #333; 
-            border-radius: 10px; 
-            background-color: #f8f9fa; 
+
+        .meta-info {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin: 30px 0;
+            padding: 20px;
+            border: 2px solid #333;
+            border-radius: 10px;
+            background-color: #f8f9fa;
         }
-        
-        .meta-item { 
-            text-align: right; 
+
+        .meta-item {
+            text-align: right;
         }
-        
-        .meta-item strong { 
-            display: inline-block; 
-            width: 100px; 
-            font-weight: 800; 
+
+        .meta-item strong {
+            display: inline-block;
+            width: 100px;
+            font-weight: 800;
         }
-        
-        table { 
-            width: 100%; 
-            border-collapse: collapse; 
-            margin: 30px 0; 
-            font-size: 15px; 
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 30px 0;
+            font-size: 15px;
         }
-        
-        th, td { 
-            border: 1.5px solid #000; 
-            padding: 14px 10px; 
-            text-align: center; 
-            vertical-align: middle; 
+
+        th,
+        td {
+            border: 1.5px solid #000;
+            padding: 14px 10px;
+            text-align: center;
+            vertical-align: middle;
         }
-        
-        th { 
-            background-color: #e9ecef; 
-            font-weight: 900; 
-            font-size: 16px; 
+
+        th {
+            background-color: #e9ecef;
+            font-weight: 900;
+            font-size: 16px;
         }
-        
-        .signature-section { 
-            display: flex; 
-            justify-content: space-between; 
-            margin-top: 80px; 
-            padding-top: 30px; 
-            border-top: 1px solid #000; 
+
+        .signature-section {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 80px;
+            padding-top: 30px;
+            border-top: 1px solid #000;
         }
-        
-        .signature-box { 
-            text-align: center; 
-            width: 45%; 
+
+        .signature-box {
+            text-align: center;
+            width: 45%;
         }
-        
-        .signature-box p { 
-            margin: 40px 0 10px; 
-            font-weight: bold; 
-            font-size: 16px; 
+
+        .signature-box p {
+            margin: 40px 0 10px;
+            font-weight: bold;
+            font-size: 16px;
         }
-        
-        .signature-line { 
-            border-bottom: 1px solid #000; 
-            width: 80%; 
-            margin: 0 auto; 
+
+        .signature-line {
+            border-bottom: 1px solid #000;
+            width: 80%;
+            margin: 0 auto;
         }
-        
-        @media print { 
-            @page { size: A4 portrait; margin: 15mm; }
-            body { padding: 10px; }
-            .no-print { display: none !important; }
+
+        @media print {
+            @page {
+                size: A4 portrait;
+                margin: 15mm;
+            }
+
+            body {
+                padding: 10px;
+            }
+
+            .no-print {
+                display: none !important;
+            }
+
+            .print-footer {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                width: 100%;
+                display: flex !important;
+                justify-content: space-between;
+                padding: 10px;
+                background: white;
+                border-top: 1px solid #000;
+                font-weight: bold;
+                font-family: sans-serif;
+                font-size: 14px;
+            }
+
+            /* Add padding to bottom of page content to prevent overlap with fixed footer */
+            body {
+                padding-bottom: 50px;
+            }
+        }
+
+        /* Screen only styles for the footer */
+        .print-footer {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 50px;
+            font-weight: bold;
+            font-family: sans-serif;
+            font-size: 14px;
+            border-top: 1px solid #ddd;
+            padding-top: 10px;
         }
     </style>
 </head>
+
 <body>
 
     <div class="no-print text-center mb-4">
         <button onclick="window.print()" class="btn btn-success btn-lg px-5">🖨️ طباعة الكشف</button>
         &nbsp;
-        <a href="{{ url_for('training_session_detail', sid=training_session.SessionID) }}" class="btn btn-secondary btn-lg">رجوع</a>
+        <a href="{{ url_for('training_session_detail', sid=training_session.SessionID) }}"
+            class="btn btn-secondary btn-lg">رجوع</a>
     </div>
 
     <div class="header">
@@ -123,12 +168,13 @@
     <div class="meta-info">
         <div class="meta-item"><strong>اسم الدورة:</strong> {{ training_session.TrainingCourseText }}</div>
         <div class="meta-item"><strong>المدرب(ون):</strong> {{ trainer_display }}</div>
-        <div class="meta-item"><strong>تاريخ البداية:</strong> {{ training_session.SessionDate.strftime('%d/%m/%Y') }}</div>
-        <div class="meta-item"><strong>تاريخ الانتهاء:</strong> 
+        <div class="meta-item"><strong>تاريخ البداية:</strong> {{ training_session.SessionDate.strftime('%d/%m/%Y') }}
+        </div>
+        <div class="meta-item"><strong>تاريخ الانتهاء:</strong>
             {% if training_session.EndDate %}
-                {{ training_session.EndDate.strftime('%d/%m/%Y') }}
+            {{ training_session.EndDate.strftime('%d/%m/%Y') }}
             {% else %}
-                نفس يوم البداية
+            نفس يوم البداية
             {% endif %}
         </div>
         <div class="meta-item"><strong>المكان:</strong> {{ training_session.Location or 'غير محدد' }}</div>
@@ -163,7 +209,11 @@
             <!-- Extra empty rows for manual additions if needed -->
             {% for i in range(8 - (enrollments|length)) %}
             <tr style="height: 60px;">
-                <td></td><td></td><td></td><td></td><td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
             </tr>
             {% endfor %}
         </tbody>
@@ -182,9 +232,12 @@
         </div>
     </div>
 
-    <div class="text-center mt-5 text-muted small">
-    تاريخ الطباعة: {{ print_date }}
+    <div class="print-footer">
+        <div>Rev. No.: 0</div>
+        <div class="text-muted small">تاريخ الطباعة: {{ print_date }}</div>
+        <div>HRF-06-01-9</div>
     </div>
 
 </body>
+
 </html>

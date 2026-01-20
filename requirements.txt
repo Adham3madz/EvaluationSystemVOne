@@ -2,3 +2,6 @@ Flask
 pandas
 pyodbc
 Pillow
+reportlab
+arabic-reshaper
+python-bidi

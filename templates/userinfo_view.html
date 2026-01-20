@@ -1,0 +1,459 @@
+{% extends "layout.html" %}
+{% block title %}الملف الشخصي: {{ user.NAME }}{% endblock %}
+
+{% block content %}
+<style>
+    /* === Professional Enterprise Theme === */
+    :root {
+        --bg-body: #f4f6f9;
+        --bg-card: #ffffff;
+        --text-primary: #212529;
+        --text-secondary: #495057;
+        --border-color: #dcdcdc;
+        --header-bg: #2c3e50;
+        /* Dark Navy */
+        --header-text: #ffffff;
+        --accent-color: #3498db;
+    }
+
+    body {
+        background-color: var(--bg-body);
+        color: var(--text-primary);
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .container-formal {
+        max-width: 1100px;
+        margin: 40px auto;
+        padding: 0 20px;
+        direction: rtl;
+    }
+
+    /* === Header Section === */
+    .profile-header-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-top: 5px solid var(--header-bg);
+        border-radius: 4px;
+        padding: 30px;
+        display: flex;
+        align-items: center;
+        gap: 30px;
+        margin-bottom: 30px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    }
+
+    .profile-img {
+        width: 130px;
+        height: 130px;
+        border-radius: 4px;
+        /* Slight round, mostly square for formal look */
+        object-fit: cover;
+        border: 1px solid var(--border-color);
+        padding: 3px;
+        background: #fff;
+    }
+
+    .profile-details h1 {
+        margin: 0 0 10px;
+        font-size: 2rem;
+        color: var(--header-bg);
+        font-weight: 700;
+    }
+
+    .profile-badges {
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap;
+    }
+
+    .info-badge {
+        background: #e9ecef;
+        color: #333;
+        border: 1px solid #ced4da;
+        padding: 6px 15px;
+        border-radius: 3px;
+        font-weight: 600;
+        font-size: 0.95rem;
+    }
+
+    /* === Section Styling === */
+    .section-header {
+        background: var(--header-bg);
+        color: var(--header-text);
+        padding: 12px 20px;
+        border-radius: 4px 4px 0 0;
+        font-size: 1.1rem;
+        font-weight: 700;
+        margin-top: 30px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .section-body {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-top: none;
+        border-radius: 0 0 4px 4px;
+        padding: 25px;
+    }
+
+    /* === Data Grid === */
+    .data-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 25px;
+    }
+
+    .data-item {
+        border-bottom: 1px solid #eee;
+        padding-bottom: 8px;
+    }
+
+    .data-label {
+        display: block;
+        font-size: 0.9rem;
+        color: #6c757d;
+        font-weight: 700;
+        margin-bottom: 4px;
+    }
+
+    .data-value {
+        font-size: 1.1rem;
+        color: #000;
+        font-weight: 500;
+    }
+
+    /* === Formal Table === */
+    .formal-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.95rem;
+    }
+
+    .formal-table th {
+        background: #f8f9fa;
+        color: #333;
+        font-weight: 700;
+        text-align: right;
+        padding: 12px 15px;
+        border-bottom: 2px solid #ccc;
+    }
+
+    .formal-table td {
+        padding: 12px 15px;
+        border-bottom: 1px solid #ddd;
+        color: #333;
+    }
+
+    .formal-table tr:hover {
+        background-color: #f8f9fa;
+    }
+
+    /* === Buttons === */
+    .action-bar {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 20px;
+    }
+
+    .btn-std {
+        text-decoration: none;
+        padding: 10px 20px;
+        border-radius: 4px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: 0.2s;
+        cursor: pointer;
+        border: 1px solid transparent;
+    }
+
+    .btn-back {
+        background: #6c757d;
+        color: #fff;
+    }
+
+    .btn-back:hover {
+        background: #5a6268;
+        color: white;
+    }
+
+    .btn-print {
+        background: #0d6efd;
+        color: #fff;
+    }
+
+    .btn-print:hover {
+        background: #0b5ed7;
+        color: white;
+    }
+
+    /* === Status Colors === */
+    .status-pass {
+        color: #198754;
+        font-weight: bold;
+        background: #d1e7dd;
+        padding: 2px 8px;
+        border-radius: 4px;
+    }
+
+    .status-fail {
+        color: #dc3545;
+        font-weight: bold;
+        background: #f8d7da;
+        padding: 2px 8px;
+        border-radius: 4px;
+    }
+
+    /* === Print Styles === */
+    @media print {
+        @page {
+            size: A4;
+            margin: 10mm;
+        }
+
+        body {
+            background: white;
+            font-size: 11pt;
+            /* Slightly denser text */
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        .container-formal {
+            margin: 0;
+            padding: 0;
+            max-width: 100%;
+            width: 100%;
+        }
+
+        /* Hide Navigation */
+        .action-bar,
+        .navbar,
+        footer,
+        header {
+            display: none !important;
+        }
+
+        /* Flatten Cards */
+        .profile-header-card,
+        .section-body {
+            box-shadow: none;
+            border: 1px solid #000;
+            page-break-inside: avoid;
+            margin-bottom: 20px;
+        }
+
+        .section-header {
+            background: #eee !important;
+            color: #000 !important;
+            border: 1px solid #000;
+            border-bottom: none;
+            margin-top: 20px;
+            padding: 8px 15px;
+            page-break-after: avoid;
+        }
+
+        /* Compact Grid */
+        .data-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            /* Force 3 columns */
+            gap: 15px;
+        }
+
+        .data-item {
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 5px;
+        }
+
+        /* Table Styles */
+        .formal-table th {
+            background: #ddd !important;
+            color: #000 !important;
+            border: 1px solid #000;
+        }
+
+        .formal-table td {
+            border: 1px solid #000;
+        }
+
+        /* Misc */
+        .info-badge {
+            border: 1px solid #000;
+            background: #fff;
+            color: #000;
+        }
+
+        .profile-img {
+            width: 100px;
+            height: 100px;
+            border: 1px solid #000;
+        }
+
+        a {
+            text-decoration: none;
+            color: black;
+        }
+    }
+</style>
+
+<div class="container-formal">
+
+    <div class="action-bar">
+        <a href="{{ url_for('userinfo_list') }}" class="btn-std btn-back">
+            ⬅️ عودة للقائمة
+        </a>
+    </div>
+
+    <!-- Main Header -->
+    <div class="profile-header-card">
+        <img src="{{ url_for('user_pic', user_id=user.USERID) }}" class="profile-img"
+            onerror="this.src='https://via.placeholder.com/150?text=User'">
+
+        <div class="profile-details">
+            <h1>{{ user.NAME }}</h1>
+            <div class="profile-badges">
+                <span class="info-badge">المسمى الوظيفي: {{ user.TITLE or 'غير محدد' }}</span>
+                <span class="info-badge">الرقم الوظيفي: {{ user.BADGENUMBER }}</span>
+                <span class="info-badge">القسم: {{ dept_name }}</span>
+                {% if user.employee_class %}
+                <span class="info-badge">الفئة: {{ user.employee_class }}</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Personal Information -->
+    <div class="section-header">
+        👤 المعلومات الشخصية
+    </div>
+    <div class="section-body">
+        <div class="data-grid">
+            <div class="data-item">
+                <span class="data-label">الرقم القومي (SSN)</span>
+                <span class="data-value">{{ user.SSN or '-' }}</span>
+            </div>
+            <div class="data-item">
+                <span class="data-label">تاريخ الميلاد</span>
+                <span class="data-value">{{ user.BIRTHDAY.strftime('%Y-%m-%d') if user.BIRTHDAY else '-' }}</span>
+            </div>
+            <div class="data-item">
+                <span class="data-label">تاريخ التعيين</span>
+                <span class="data-value">{{ user.HIREDDAY.strftime('%Y-%m-%d') if user.HIREDDAY else '-' }}</span>
+            </div>
+            <div class="data-item">
+                <span class="data-label">النوع</span>
+                <span class="data-value">
+                    {% if user.GENDER == 'M' %}ذكر{% elif user.GENDER == 'F' %}أنثى{% else %}{{ user.GENDER or '-' }}{%
+                    endif %}
+                </span>
+            </div>
+            <div class="data-item">
+                <span class="data-label">العنوان</span>
+                <span class="data-value">{{ user.STREET or '-' }}</span>
+            </div>
+            <div class="data-item">
+                <span class="data-label">رقم الهاتف</span>
+                <span class="data-value">{{ user.PAGER or '-' }}</span>
+            </div>
+            <div class="data-item">
+                <span class="data-label">المدينة</span>
+                <span class="data-value">{{ user.CITY or '-' }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Training History -->
+    <div class="section-header">
+        🎓 سجل التدريب والدورات
+    </div>
+    <div class="section-body p-0">
+        {% if courses %}
+        <table class="formal-table">
+            <thead>
+                <tr>
+                    <th>اسم الدورة</th>
+                    <th>تاريخ البداية</th>
+                    <th>تاريخ النهاية</th>
+                    <th>الدرجة</th>
+                    <th>الحالة</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for course in courses %}
+                <tr>
+                    <td>{{ course.CourseName }}</td>
+                    <td>{{ course.SessionDate.strftime('%Y-%m-%d') if course.SessionDate else '-' }}</td>
+                    <td>{{ course.EndDate.strftime('%Y-%m-%d') if course.EndDate else '-' }}</td>
+                    <td>{{ course.Grade or '-' }}</td>
+                    <td>
+                        {% if course.PassStatus == 'Passed' %}
+                        <span class="status-pass">ناجح</span>
+                        {% elif course.PassStatus == 'Failed' %}
+                        <span class="status-fail">راسب</span>
+                        {% else %}
+                        <span style="background:#eee; padding:2px 8px; border-radius:4px;">{{ course.PassStatus or 'قيد
+                            التدريب' }}</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div style="padding: 20px; text-align: center; color: #666;">
+            لا توجد دورات تدريبية مسجلة.
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Evaluation History -->
+    <div class="section-header">
+        📊 سجل التقييمات السنوية
+    </div>
+    <div class="section-body p-0">
+        {% if evaluations %}
+        <table class="formal-table">
+            <thead>
+                <tr>
+                    <th>تاريخ التقييم</th>
+                    <th>المقيم</th>
+                    <th>الدرجة النهائية</th>
+                    <th>التقدير</th>
+                    <th>ملاحظات</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ev in evaluations %}
+                <tr>
+                    <td>{{ ev.EvaluationDate.strftime('%Y-%m-%d') }}</td>
+                    <td>{{ ev.EvaluatorName or 'غير معروف' }}</td>
+                    <td>
+                        <b
+                            style="color: {% if ev.OverallScore >= 85 %}#198754{% elif ev.OverallScore >= 70 %}#ffc107{% else %}#dc3545{% endif %};">
+                            {{ ev.OverallScore }}%
+                        </b>
+                    </td>
+                    <td>{{ ev.OverallRating or '-' }}</td>
+                    <td>{{ ev.ManagerComments or '-' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div style="padding: 20px; text-align: center; color: #666;">
+            لا توجد تقييمات سابقة.
+        </div>
+        {% endif %}
+    </div>
+
+    <div style="text-align: center; margin-top: 40px; color: #999; font-size: 0.85rem;" class="d-print-block">
+        تم استخراج التقرير في {{ "now" | date_format_arabic }}
+    </div>
+
+</div>
+{% endblock %}

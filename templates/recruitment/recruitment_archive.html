@@ -3,266 +3,454 @@
 
 {% block content %}
 <style>
-    /* === Glass Panel Theme === */
-    .glass-panel {
-        background: rgba(40, 44, 52, 0.95);
-        /* Dark Grey/Blue for better contrast */
-        backdrop-filter: blur(15px);
-        -webkit-backdrop-filter: blur(15px);
-        border: 1px solid rgba(255, 255, 255, 0.15);
-        border-radius: 16px;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-        padding: 25px;
-        margin-bottom: 20px;
-        color: white;
+    /* === Professional Minimalist Theme === */
+    /* FORCE OPAQUE BACKGROUND: Hide global background image for formal legibility */
+    .bg-animation,
+    .bg-overlay {
+        display: none !important;
     }
 
-    /* === Dashboard Cards === */
+    :root {
+        --formal-bg: #f4f6f9;
+        --formal-card-bg: #ffffff;
+        --formal-text: #343a40;
+        --formal-border: #e9ecef;
+        --formal-primary: #2c3e50;
+        /* Navy Blue */
+        --formal-accent: #6c757d;
+        /* Grey Accent */
+    }
+
+    body {
+        background-color: var(--formal-bg);
+    }
+
+    /* Override Glass Panel */
+    .glass-panel {
+        background: var(--formal-card-bg);
+        border: 1px solid var(--formal-border);
+        border-radius: 4px;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        padding: 24px;
+        margin-bottom: 24px;
+        color: var(--formal-text);
+        backdrop-filter: none;
+    }
+
+    /* Text Overrides */
+    .text-white,
+    .text-white-50 {
+        color: var(--formal-text) !important;
+        text-shadow: none !important;
+    }
+
+    h2.text-white {
+        color: var(--formal-primary) !important;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    p.text-white-50 {
+        color: #868e96 !important;
+        font-size: 0.9rem;
+    }
+
+    /* Stats */
     .stat-card {
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 12px;
-        padding: 15px;
-        transition: transform 0.2s;
+        background: #fff;
+        border: 1px solid var(--formal-border);
+        padding: 20px;
+        border-right: 4px solid var(--formal-border);
+        /* Subtle subtle bar */
     }
 
     .stat-card:hover {
-        background: rgba(255, 255, 255, 0.1);
-        transform: translateY(-2px);
+        border-right-color: var(--formal-primary);
     }
 
     .stat-value {
-        font-size: 2rem;
-        font-weight: 800;
-        margin-bottom: 0;
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: var(--formal-primary);
     }
 
     .stat-label {
-        font-size: 0.9rem;
-        opacity: 0.8;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #adb5bd;
     }
 
-    /* === Table Styling === */
+    /* Tables */
     .table-glass {
-        color: white !important;
-        /* Force white text */
-        margin-bottom: 0;
-        vertical-align: middle;
-        border-color: rgba(255, 255, 255, 0.1);
+        color: var(--formal-text);
+        background: #fff;
+        border: 1px solid var(--formal-border);
     }
 
     .table-glass thead th {
-        background: rgba(0, 0, 0, 0.6);
-        color: #ffc107 !important;
-        /* Gold for headers */
-        border: none;
-        padding: 15px;
-        font-weight: 800;
-        font-size: 1rem;
+        background: #f8f9fa;
+        color: var(--formal-primary) !important;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 1px;
+        border-bottom: 2px solid #dee2e6;
+        padding: 15px 12px;
     }
 
     .table-glass tbody td {
-        background: transparent;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-        padding: 15px;
-        color: white !important;
-        /* Force white text */
+        border-bottom: 1px solid var(--formal-border);
+        padding: 12px;
+        color: var(--formal-text) !important;
+        vertical-align: middle;
     }
 
     .table-glass tbody tr:hover td {
-        background: rgba(255, 255, 255, 0.1);
+        background-color: #f8f9fa;
     }
 
-    /* === Inputs & Selects === */
-    .search-glass,
-    .select-glass {
-        background: rgba(255, 255, 255, 0.1);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        color: white !important;
-        /* Force white text in inputs */
-        border-radius: 12px;
-        padding: 12px 20px;
+    /* Tabs (Minimalist) */
+    .nav-pills .nav-link {
+        color: #868e96;
+        background: transparent !important;
+        /* Force transparent */
+        font-weight: 600;
+        border-radius: 0;
+        border-bottom: 2px solid transparent;
+        padding-bottom: 12px;
+        margin-right: 20px;
+        font-size: 0.95rem;
     }
 
-    .search-glass::placeholder {
-        color: rgba(255, 255, 255, 0.5);
+    .nav-pills .nav-link.active {
+        color: var(--formal-primary) !important;
+        border-bottom: 2px solid var(--formal-primary);
     }
 
-    .select-glass option {
-        background: #333;
-        /* Dark background for dropdown options */
+    .nav-pills .nav-link:hover {
+        color: var(--formal-primary);
+    }
+
+    /* Buttons (Subtle) */
+    .btn {
+        border-radius: 2px;
+        text-transform: uppercase;
+        font-size: 0.8rem;
+        letter-spacing: 0.5px;
+        font-weight: 600;
+        box-shadow: none !important;
+        border: 1px solid transparent;
+    }
+
+    .btn-formal-primary {
+        background-color: var(--formal-primary);
+        color: white;
+        border-color: var(--formal-primary);
+    }
+
+    .btn-formal-primary:hover {
+        background-color: #1a252f;
         color: white;
     }
 
-    .search-glass:focus,
-    .select-glass:focus {
-        background: rgba(255, 255, 255, 0.2);
-        box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
-        border-color: #ffc107;
-        outline: none;
-        color: white !important;
+    .btn-formal-outline {
+        background: white;
+        color: var(--formal-primary);
+        border-color: #dee2e6;
     }
 
-    /* === Buttons === */
+    .btn-formal-outline:hover {
+        border-color: var(--formal-primary);
+        color: var(--formal-primary);
+    }
+
+    /* Restore Button Override */
     .btn-restore {
-        background: linear-gradient(135deg, #198754, #146c43);
-        color: white;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-        transition: 0.3s;
+        background: white;
+        color: #198754;
+        border: 1px solid #d1e7dd;
+        padding: 4px 12px;
     }
 
     .btn-restore:hover {
         background: #198754;
-        transform: translateY(-2px);
-        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
         color: white;
+        border-color: #198754;
+    }
+
+    /* Inputs */
+    .search-glass,
+    .select-glass {
+        background: #fff;
+        border: 1px solid #ced4da;
+        color: #495057;
+        border-radius: 2px;
+        padding: 10px 15px;
+        font-size: 0.9rem;
+    }
+
+    .search-glass:focus {
+        border-color: var(--formal-primary);
+        outline: none;
+    }
+
+    /* Modals */
+    .modal-content {
+        border-radius: 4px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        border: none;
+    }
+
+    .modal-header {
+        border-bottom: 1px solid #f1f3f5;
+    }
+
+    .modal-footer {
+        border-top: 1px solid #f1f3f5;
     }
 </style>
 
 <div class="container-fluid py-4" style="min-height: 100vh;">
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
         <div>
-            <h2 class="fw-bold text-white mb-1" style="text-shadow: 0 2px 4px rgba(0,0,0,0.5);">📦 أرشيف المرشحين</h2>
-            <p class="text-white-50">قائمة المرشحين المحفوظين وتحليل البيانات.</p>
+            <h2 class="fw-bold mb-1">📦 الأرشيف الموحد</h2>
+            <p class="text-white-50 mb-0">سجلات المرشحين والموظفين</p>
         </div>
         <div class="d-flex gap-2">
-            <button type="button" class="btn btn-warning rounded-pill px-4 shadow-sm fw-bold" onclick="openAddModal()">
-                ➕ أرشيف يدوي
+            <button type="button" class="btn btn-formal-primary px-4 py-2" onclick="openAddModal()">
+                أرشيف يدوي
             </button>
-            <a href="{{ url_for('recruitment_jobs') }}"
-                class="btn btn-outline-light rounded-pill px-4 shadow-sm fw-bold">
-                ⬅️ العودة للوظائف
+            <a href="{{ url_for('recruitment_jobs') }}" class="btn btn-formal-outline px-4 py-2">
+                عودة للوظائف
             </a>
         </div>
     </div>
 
-    <div class="glass-panel mb-4">
-        <h5 class="fw-bold mb-3 text-warning">📊 تحليل الأرشيف (HR Insights)</h5>
-        <div class="row g-3">
-            <div class="col-md-4">
-                <div class="stat-card text-center">
-                    <div class="fs-1 mb-1">📂</div>
-                    <div class="stat-value text-white" id="statTotal">0</div>
-                    <div class="stat-label text-white-50">إجمالي المؤرشفين</div>
+    <!-- Tabs -->
+    <ul class="nav nav-pills mb-4" id="archiveTabs" role="tablist" style="border-bottom: 1px solid #e9ecef;">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="candidates-tab" data-bs-toggle="pill" data-bs-target="#tab-candidates"
+                type="button" role="tab">
+                أرشيف المرشحين
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="employees-tab" data-bs-toggle="pill" data-bs-target="#tab-employees"
+                type="button" role="tab">
+                أرشيف الموظفين
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content">
+        <!-- === TAB 1: CANDIDATES === -->
+        <div class="tab-pane fade show active" id="tab-candidates" role="tabpanel">
+            <div class="glass-panel mb-4">
+                <h5 class="fw-bold mb-3 text-warning">📊 تحليل الأرشيف (HR Insights)</h5>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <div class="stat-card text-center">
+                            <div class="fs-1 mb-1">📂</div>
+                            <div class="stat-value text-white" id="statTotal">0</div>
+                            <div class="stat-label text-white-50">إجمالي المؤرشفين</div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="stat-card text-center">
+                            <div class="fs-1 mb-1">🏢</div>
+                            <div class="stat-value text-warning" id="statTopDept">-</div>
+                            <div class="stat-label text-white-50">القسم الأكثر أرشفة (تنبيه)</div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="stat-card text-center">
+                            <div class="fs-1 mb-1">🆔</div>
+                            <div class="stat-value text-danger" id="statNoID">0</div>
+                            <div class="stat-label text-white-50">ناقصي الرقم القومي</div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div class="col-md-4">
-                <div class="stat-card text-center">
-                    <div class="fs-1 mb-1">🏢</div>
-                    <div class="stat-value text-warning" id="statTopDept">-</div>
-                    <div class="stat-label text-white-50">القسم الأكثر أرشفة (تنبيه)</div>
-                </div>
-            </div>
-
-            <div class="col-md-4">
-                <div class="stat-card text-center">
-                    <div class="fs-1 mb-1">🆔</div>
-                    <div class="stat-value text-danger" id="statNoID">0</div>
-                    <div class="stat-label text-white-50">ناقصي الرقم القومي</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="glass-panel py-3 mb-4">
-        <div class="row g-3 align-items-center">
-            <div class="col-md-8">
-                <input type="text" id="archiveSearch" class="form-control search-glass"
-                    placeholder="🔍 ابحث بالاسم، الرقم القومي، أو الهاتف...">
-            </div>
-            <div class="col-md-4">
-                <select id="deptFilter" class="form-select select-glass">
-                    <option value="">🏢 كل الأقسام</option>
-                    {% set depts = [] %}
-                    {% for c in candidates %}
-                    {% if c.DEPTNAME and c.DEPTNAME not in depts %}
-                    {% set _ = depts.append(c.DEPTNAME) %}
-                    {% endif %}
-                    {% endfor %}
-                    {% for d in depts %}
-                    <option value="{{ d }}">{{ d }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-        </div>
-    </div>
-
-    <div class="glass-panel p-0 overflow-hidden">
-        <div class="table-responsive">
-            <table class="table table-glass text-center">
-                <thead>
-                    <tr>
-                        <th>الاسم</th>
-                        <th>🆔 الرقم القومي</th>
-                        <th>الوظيفة / القسم</th>
-                        <th>بيانات الاتصال</th>
-                        <th>التواريخ (تقديم/تعيين/إنهاء)</th>
-                        <th>آخر ملاحظة</th>
-                        <th>إجراءات</th>
-                    </tr>
-                </thead>
-                <tbody id="archiveTableBody">
-                    {% for c in candidates %}
-                    <tr data-dept="{{ c.DEPTNAME or '' }}" data-has-id="{{ 'yes' if c.NationalID else 'no' }}">
-                        <td class="fw-bold fs-6 text-white text-start align-middle">
-                            👤 {{ c.FullName }}
-                        </td>
-
-                        <td class="align-middle">
-                            {% if c.NationalID %}
-                            <span class="badge bg-light text-dark font-monospace fs-6 shadow-sm">{{ c.NationalID
-                                }}</span>
-                            {% else %}
-                            <span class="badge bg-danger bg-opacity-75 text-white">غير مسجل ⚠️</span>
+            <div class="glass-panel py-3 mb-4">
+                <div class="row g-3 align-items-center">
+                    <div class="col-md-8">
+                        <input type="text" id="archiveSearch" class="form-control search-glass"
+                            placeholder="🔍 ابحث بالاسم، الرقم القومي، أو الهاتف...">
+                    </div>
+                    <div class="col-md-4">
+                        <select id="deptFilter" class="form-select select-glass">
+                            <option value="">🏢 كل الأقسام</option>
+                            {% set depts = [] %}
+                            {% for c in candidates %}
+                            {% if c.DEPTNAME and c.DEPTNAME not in depts %}
+                            {% set _ = depts.append(c.DEPTNAME) %}
                             {% endif %}
-                        </td>
+                            {% endfor %}
+                            {% for d in depts %}
+                            <option value="{{ d }}">{{ d }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
 
-                        <td class="align-middle">
-                            <div class="fw-bold text-warning">{{ c.JobTitle }}</div>
-                            <small class="text-white-50">{{ c.DEPTNAME or 'عام' }}</small>
-                        </td>
+            <div class="glass-panel p-0 overflow-hidden">
+                <div class="table-responsive">
+                    <table class="table table-glass text-center">
+                        <thead>
+                            <tr>
+                                <th>الاسم</th>
+                                <th>🆔 الرقم القومي</th>
+                                <th>الوظيفة / القسم</th>
+                                <th>بيانات الاتصال</th>
+                                <th>التواريخ (تقديم/تعيين/إنهاء)</th>
+                                <th>آخر ملاحظة</th>
+                                <th>إجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="archiveTableBody">
+                            {% for c in candidates %}
+                            <tr data-dept="{{ c.DEPTNAME or '' }}" data-has-id="{{ 'yes' if c.NationalID else 'no' }}">
+                                <td class="fw-bold fs-6 text-white text-start align-middle">
+                                    👤 {{ c.FullName }}
+                                </td>
 
-                        <td class="text-start align-middle">
-                            <div class="small">📞 {{ c.Phone }}</div>
-                            {% if c.Email %}<div class="small text-white-50">📧 {{ c.Email }}</div>{% endif %}
-                        </td>
+                                <td class="align-middle">
+                                    {% if c.NationalID %}
+                                    <span class="badge bg-light text-dark font-monospace fs-6 shadow-sm">{{ c.NationalID
+                                        }}</span>
+                                    {% else %}
+                                    <span class="badge bg-danger bg-opacity-75 text-white">غير مسجل ⚠️</span>
+                                    {% endif %}
+                                </td>
 
-                        <td class="text-white-50 align-middle">
-                            <div class="small">📥 {{ c.ApplicationDate.strftime('%Y-%m-%d') }}</div>
-                            {% if c.HireDate %}<div class="small text-success">✅ {{ c.HireDate.strftime('%Y-%m-%d') }}
-                            </div>{% endif %}
-                            {% if c.EndDate %}<div class="small text-danger">❌ {{ c.EndDate.strftime('%Y-%m-%d') }}
-                            </div>{% endif %}
-                        </td>
+                                <td class="align-middle">
+                                    <div class="fw-bold text-warning">{{ c.JobTitle }}</div>
+                                    <small class="text-white-50">{{ c.DEPTNAME or 'عام' }}</small>
+                                </td>
 
-                        <td class="text-white-50 fst-italic small align-middle" style="max-width: 200px;">
-                            "{{ c.LastNote or 'لا يوجد' }}"
-                        </td>
+                                <td class="text-start align-middle">
+                                    <div class="small">📞 {{ c.Phone }}</div>
+                                    {% if c.Email %}<div class="small text-white-50">📧 {{ c.Email }}</div>{% endif %}
+                                </td>
 
-                        <td class="align-middle">
-                            <form action="{{ url_for('restore_candidate') }}" method="POST" class="d-inline"
-                                onsubmit="return confirm('هل أنت متأكد من استعادة هذا المرشح؟');">
-                                <input type="hidden" name="candidate_id" value="{{ c.CandidateID }}">
-                                <button type="submit" class="btn btn-sm btn-restore rounded-pill px-3 fw-bold"
-                                    title="استعادة إلى قائمة الطلبات الجديدة">
-                                    ♻️ استعادة
-                                </button>
-                            </form>
-                        </td>
-                    </tr>
-                    {% else %}
-                    <tr>
-                        <td colspan="7" class="py-5 text-white-50">
-                            <div class="fs-1 mb-2">📭</div>
-                            الأرشيف فارغ حالياً.
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+                                <td class="text-white-50 align-middle">
+                                    <div class="small">📥 {{ c.ApplicationDate.strftime('%Y-%m-%d') }}</div>
+                                    {% if c.HireDate %}<div class="small text-success">✅ {{
+                                        c.HireDate.strftime('%Y-%m-%d') }}
+                                    </div>{% endif %}
+                                    {% if c.EndDate %}<div class="small text-danger">❌ {{ c.EndDate.strftime('%Y-%m-%d')
+                                        }}
+                                    </div>{% endif %}
+                                </td>
+
+                                <td class="text-white-50 fst-italic small align-middle" style="max-width: 200px;">
+                                    "{{ c.LastNote or 'لا يوجد' }}"
+                                </td>
+
+                                <td class="align-middle">
+                                    <form action="{{ url_for('restore_candidate') }}" method="POST" class="d-inline"
+                                        onsubmit="return confirm('هل أنت متأكد من استعادة هذا المرشح؟');">
+                                        <input type="hidden" name="candidate_id" value="{{ c.CandidateID }}">
+                                        <button type="submit" class="btn btn-sm btn-restore rounded-pill px-3 fw-bold"
+                                            title="استعادة إلى قائمة الطلبات الجديدة">
+                                            ♻️ استعادة
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="7" class="py-5 text-white-50">
+                                    <div class="fs-1 mb-2">📭</div>
+                                    الأرشيف فارغ حالياً.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- === TAB 2: EMPLOYEES === -->
+        <div class="tab-pane fade" id="tab-employees" role="tabpanel">
+            <div class="glass-panel">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold text-danger">🗄️ سجل الموظفين المؤرشفين ({{ archived_employees|length }})</h5>
+                    <input type="text" id="empSearch" class="form-control search-glass" style="width: 300px;"
+                        placeholder="🔍 ابحث في الموظفين...">
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-glass text-center">
+                        <thead>
+                            <tr>
+                                <th>رقم المستخدم</th>
+                                <th>الرقم الوظيفي</th>
+                                <th>الاسم</th>
+                                <th>القسم</th>
+                                <th>تاريخ التعيين</th>
+                                <th>تاريخ الأرشفة</th>
+                                <th>سبب الأرشفة</th>
+                                <th>إجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="empTableBody">
+                            {% for u in archived_employees %}
+                            <tr>
+                                <td>{{ u.USERID }}</td>
+                                <td class="font-monospace text-warning fw-bold">{{ u.BADGENUMBER }}</td>
+                                <td class="fw-bold">{{ u.NAME or '-' }}</td>
+                                <td>{{ u.DEPTNAME or '-' }}</td>
+                                <td>{{ u.HIREDDAY.strftime('%Y-%m-%d') if u.HIREDDAY else '-' }}</td>
+                                <td class="text-danger">{{ u.EndDay.strftime('%Y-%m-%d') if u.EndDay else '-' }}</td>
+                                <td>
+                                    {% if u.ReasonText %}
+                                    <span class="badge bg-danger bg-opacity-25 text-white">
+                                        {{ u.ReasonText }}
+                                    </span>
+                                    {% if u.ArchiveComment %}
+                                    <span title="{{ u.ArchiveComment }}" style="cursor:help;">📝</span>
+                                    {% endif %}
+                                    {% else %}
+                                    -
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="d-flex justify-content-center gap-2">
+                                        <!-- Edit Action (Opens Modal) -->
+                                        <button type="button" class="btn btn-sm btn-outline-info rounded-pill" onclick="openEditModal('{{ u.USERID }}', 
+                                                       '{{ u.HIREDDAY.strftime('%Y-%m-%d') if u.HIREDDAY else '' }}', 
+                                                       '{{ u.DEFAULTDEPTID or '' }}', 
+                                                       '{{ u.EndDay.strftime('%Y-%m-%d') if u.EndDay else '' }}', 
+                                                       '{{ u.ArchiveReasonID or '' }}')">
+                                            ✏️
+                                        </button>
+
+                                        <!-- Restore Action -->
+                                        <form action="{{ url_for('userinfo_restore', uid=u.USERID) }}" method="POST"
+                                            onsubmit="return confirm('هل أنت متأكد من استعادة هذا الموظف؟\nسيصبح نشطاً مرة أخرى.');">
+                                            <button type="submit"
+                                                class="btn btn-sm btn-outline-success rounded-pill">♻️</button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="8" class="py-5 text-white-50">
+                                    🤷‍♂️ لا يوجد موظفين في الأرشيف.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -345,30 +533,34 @@
 
 <!-- Manual Add Modal -->
 <div id="manualAddModal"
-    style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); z-index: 9999; align-items: center; justify-content: center;">
+    style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(2px); z-index: 9999; align-items: center; justify-content: center;">
     <div class="glass-panel"
-        style="width: 500px; max-width: 90%; background: #212529; border: 1px solid rgba(255,255,255,0.15);">
-        <h4 class="text-warning mb-4 fw-bold">📝 إضافة للأرشيف يدوياً</h4>
+        style="width: 500px; max-width: 90%; background: #ffffff; border: 1px solid #dee2e6; box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
+        <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+            <h5 class="fw-bold mb-0 text-dark">📝 إضافة للأرشيف يدوياً</h5>
+            <button type="button" class="btn-close" onclick="closeAddModal()"></button>
+        </div>
 
         <form action="{{ url_for('recruitment_archive_add') }}" method="POST">
             <div class="mb-3">
-                <label class="text-white-50 small mb-1">الاسم بالكامل <span class="text-danger">*</span></label>
+                <label class="form-label small fw-bold text-secondary">الاسم بالكامل <span
+                        class="text-danger">*</span></label>
                 <input type="text" name="fullname" class="form-control search-glass" required>
             </div>
 
             <div class="row">
                 <div class="col-md-6 mb-3">
-                    <label class="text-white-50 small mb-1">الهاتف</label>
+                    <label class="form-label small fw-bold text-secondary">الهاتف</label>
                     <input type="text" name="phone" class="form-control search-glass">
                 </div>
                 <div class="col-md-6 mb-3">
-                    <label class="text-white-50 small mb-1">الرقم القومي</label>
+                    <label class="form-label small fw-bold text-secondary">الرقم القومي</label>
                     <input type="text" name="national_id" class="form-control search-glass">
                 </div>
             </div>
 
             <div class="mb-3">
-                <label class="text-white-50 small mb-1">الوظيفة (اختياري)</label>
+                <label class="form-label small fw-bold text-secondary">الوظيفة (اختياري)</label>
                 <select name="job_id" class="form-select select-glass">
                     <option value="">-- بدون وظيفة محددة --</option>
                     {% for job in jobs %}
@@ -379,26 +571,102 @@
 
             <div class="row">
                 <div class="col-md-6 mb-3">
-                    <label class="text-white-50 small mb-1">تاريخ التعيين (Hire Date)</label>
+                    <label class="form-label small fw-bold text-secondary">تاريخ التعيين (Hire Date)</label>
                     <input type="date" name="hire_date" class="form-control search-glass">
                 </div>
                 <div class="col-md-6 mb-3">
-                    <label class="text-white-50 small mb-1">تاريخ الإنهاء (Fire Date)</label>
+                    <label class="form-label small fw-bold text-secondary">تاريخ الإنهاء (Fire Date)</label>
                     <input type="date" name="end_date" class="form-control search-glass">
                 </div>
             </div>
 
             <div class="mb-3">
-                <label class="text-white-50 small mb-1">ملاحظات / سبب الأرشفة</label>
+                <label class="form-label small fw-bold text-secondary">ملاحظات / سبب الأرشفة</label>
                 <textarea name="note" class="form-control search-glass" rows="2"></textarea>
             </div>
 
-            <div class="d-flex gap-2 mt-4">
-                <button type="submit" class="btn btn-warning fw-bold flex-grow-1">حفظ في الأرشيف</button>
-                <button type="button" class="btn btn-outline-light flex-grow-1" onclick="closeAddModal()">إلغاء</button>
+            <div class="d-flex gap-2 mt-4 pt-3 border-top">
+                <button type="submit" class="btn btn-formal-primary flex-grow-1">حفظ في الأرشيف</button>
+                <button type="button" class="btn btn-outline-secondary flex-grow-1"
+                    onclick="closeAddModal()">إلغاء</button>
             </div>
         </form>
     </div>
 </div>
+
+<!-- Edit Employee Archive Modal -->
+<div class="modal fade" id="editArchiveModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background: #ffffff; border: 1px solid #dee2e6;">
+            <div class="modal-header border-bottom">
+                <h5 class="modal-title fw-bold text-dark">✏️ تعديل بيانات الأرشيف (موظف)</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="editArchiveForm" method="POST">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-secondary">تاريخ التعيين</label>
+                        <input type="date" name="hired_day" id="editHiredDay" class="form-control search-glass">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-secondary">القسم</label>
+                        <select name="dept_id" id="editDeptId" class="form-select select-glass">
+                            <option value="">-- اختر القسم --</option>
+                            {% for d in departments %}
+                            <option value="{{ d.DEPTID }}">{{ d.DEPTNAME }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-secondary">تاريخ الأرشفة</label>
+                        <input type="date" name="end_day" id="editEndDay" class="form-control search-glass">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-secondary">سبب الأرشفة</label>
+                        <select name="reason_id" id="editReasonId" class="form-select select-glass">
+                            <option value="">-- اختر السبب --</option>
+                            {% for r in reasons %}
+                            <option value="{{ r.ReasonID }}">{{ r.ReasonText }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer border-top">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-success">حفظ التغييرات</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // === Employee Search Script ===
+    document.getElementById('empSearch').addEventListener('keyup', function () {
+        const val = this.value.toLowerCase();
+        const rows = document.querySelectorAll('#empTableBody tr');
+        rows.forEach(row => {
+            if (row.innerText.includes('لا يوجد موظفين')) return;
+            const text = row.innerText.toLowerCase();
+            row.style.display = text.includes(val) ? '' : 'none';
+        });
+    });
+
+    // === Open Edit Modal Script ===
+    function openEditModal(uid, hiredDay, deptId, endDay, reasonId) {
+        // Use userinfo_archive_update route
+        document.getElementById('editArchiveForm').action = "{{ url_for('userinfo_archive_update', uid=0) }}".replace('0', uid);
+        document.getElementById('editHiredDay').value = hiredDay;
+        document.getElementById('editDeptId').value = deptId;
+        document.getElementById('editEndDay').value = endDay;
+        document.getElementById('editReasonId').value = reasonId;
+
+        var myModal = new bootstrap.Modal(document.getElementById('editArchiveModal'));
+        myModal.show();
+    }
+</script>
 
 {% endblock %}

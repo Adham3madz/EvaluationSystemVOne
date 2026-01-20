@@ -421,7 +421,7 @@
                         <li><a href="{{ url_for('recruitment_waiting') }}">⏳ قائمة الانتظار</a></li>
                         <li><a href="{{ url_for('recruitment_training') }}">🎓 مركز التدريب</a></li>
                         <li><a href="{{ url_for('recruitment_analytics') }}">📈 الإحصائيات</a></li>
-                        <li><a href="{{ url_for('recruitment_archive') }}">📦 الأرشيف</a></li>
+                        <li><a href="{{ url_for('recruitment_archive') }}">📦 الأرشيف الموحد</a></li>
                         <li><a href="{{ url_for('recruitment_history') }}">📜 السجل والمتابعة</a></li>
                         <li><a href="{{ url_for('recruitment_settings') }}">⚙️ الإعدادات</a></li>
                     </ul>
@@ -486,6 +486,17 @@
                         <li><a href="{{ url_for('recommendations_list') }}">💡 التوصيات</a></li>
                         <li><a href="{{ url_for('logs_dashboard') }}">🛡️ سجلات النظام</a></li>
                     </ul>
+                </li>
+                {% endif %}
+
+                {% if session.get('role_id') == 1 %}
+                <li class="nav-item">
+                    <a href="{{ url_for('dar_al_diyafa') }}" class="nav-link">
+                        <div class="nav-content">
+                            <span class="nav-icon">🏨</span>
+                            <span class="nav-text">وثيقة دار الضيافة</span>
+                        </div>
+                    </a>
                 </li>
                 {% endif %}
 

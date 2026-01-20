@@ -226,8 +226,10 @@
                         <label class="form-label">النوع</label>
                         <select class="form-select" name="gender">
                             <option value="">-- اختر --</option>
-                            <option value="M" {% if user and user.GENDER=='M' %}selected{% endif %}>ذكر</option>
-                            <option value="F" {% if user and user.GENDER=='F' %}selected{% endif %}>أنثى</option>
+                            <option value="M" {% if user and user.GENDER and user.GENDER.strip() in ['M', 'Male' , 'ذكر'
+                                ] %}selected{% endif %}>ذكر</option>
+                            <option value="F" {% if user and user.GENDER and user.GENDER.strip() in ['F', 'Female'
+                                , 'انثى' , 'أنثى' ] %}selected{% endif %}>أنثى</option>
                         </select>
                     </div>
 

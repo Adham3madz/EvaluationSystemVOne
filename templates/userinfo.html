@@ -459,6 +459,14 @@
             onmouseout="this.style.background='rgba(239, 68, 68, 0.1)'">
             📂 الأرشيف
         </a>
+
+
+        {% if is_admin %}
+        <button onclick="openImportModal()" class="btn-glass"
+            style="background: rgba(16, 185, 129, 0.1); color: #34d399; border: 1px solid rgba(52, 211, 153, 0.3); border-radius: 50px; font-weight: bold; font-size: 0.9rem; padding: 8px 16px;">
+            � استيراد (Excel/CSV)
+        </button>
+        {% endif %}
     </div>
 
     {% if users %}
@@ -570,6 +578,12 @@
                 </div>
 
                 <div>
+                    <label class="filter-label">الرقم الوظيفي</label>
+                    <input type="text" name="badge_number" class="filter-input" placeholder="بحث بالرقم"
+                        value="{{ request.args.get('badge_number', '') }}">
+                </div>
+
+                <div>
                     <label class="filter-label">المسمى الوظيفي</label>
                     <input type="text" name="title" class="filter-input" placeholder="مثال: مهندس"
                         value="{{ request.args.get('title', '') }}">
@@ -660,7 +674,8 @@
 
                         <td>
                             <div style="display: flex; gap: 5px; justify-content: center;">
-                                <!--<a href="{{ url_for('userinfo_view', uid=u.USERID) }}" class="action-btn action-view" title="عرض التفاصيل">👁️</a>-->
+                                <a href="{{ url_for('userinfo_view', uid=u.USERID) }}" class="action-btn action-view"
+                                    title="عرض التفاصيل">👁️</a>
                                 {% if is_admin %}
                                 <a href="{{ url_for('userinfo_edit', uid=u.USERID) }}" class="action-btn action-edit"
                                     title="تعديل">✏️</a>
@@ -671,6 +686,12 @@
                                     onclick="openArchiveModal('{{ u.USERID }}', '{{ u.NAME }}', '{{ u.BADGENUMBER }}')">
                                     📂
                                 </button>
+                                {% endif %}
+
+                                {% if session.get('role_id') == 2 %}
+                                <a href="{{ url_for('new_evaluation', badgenumber_str=u.BADGENUMBER) }}?is_manager=true"
+                                    class="action-btn" style="background: rgba(16, 185, 129, 0.15); color: #34d399;"
+                                    title="تقييم">📝</a>
                                 {% endif %}
                             </div>
                         </td>
@@ -1005,4 +1026,116 @@
     });
 </script>
 
+<!-- Import Modal -->
+<div class="modal fade" id="importModal" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content"
+            style="background: #1e293b; color: white; border-radius: 15px; border: 1px solid rgba(255,255,255,0.1);">
+            <div class="modal-header" style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                <h5 class="modal-title" style="color:#cbd5e1;">� استيراد موظفين من ملف</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="importForm">
+                    <div class="mb-3">
+                        <label class="form-label" style="color: #e2e8f0;">اختر ملف Excel أو CSV</label>
+                        <input type="file" class="form-control" id="importFile" accept=".csv, .xlsx, .xls" required>
+                        <div class="form-text text-light opacity-50">
+                            يجب أن يحتوي الملف على الأعمدة: USERID, NAME (اختياري: BADGENUMBER, SSN, GENDER, TITLE,
+                            DEFAULTDEPTID, HIREDDAY)
+                        </div>
+                    </div>
+                    <div id="importLoading" style="display:none; text-align: center; margin-top: 15px;">
+                        <div class="spinner-border text-primary" role="status"></div>
+                        <p>جاري رفع ومعالجة الملف...</p>
+                    </div>
+                    <div id="importResult" style="display:none; margin-top: 15px; max-height: 200px; overflow-y: auto;">
+                        <div id="importSummary" style="font-weight: bold; margin-bottom: 10px;"></div>
+                        <ul id="importDetailsList" style="font-size: 0.9rem; padding-right: 20px;"></ul>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer" style="border-top: 1px solid rgba(255,255,255,0.1);">
+                <button type="button" onclick="submitImport()" class="btn btn-primary" id="btnUpload">رفع
+                    واستيراد</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
+                    onclick="window.location.reload()">إغلاق</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openImportModal() {
+        var myModal = new bootstrap.Modal(document.getElementById('importModal'));
+        myModal.show();
+        // Reset
+        document.getElementById('importFile').value = '';
+        document.getElementById('importLoading').style.display = 'none';
+        document.getElementById('importResult').style.display = 'none';
+        document.getElementById('btnUpload').disabled = false;
+    }
+
+    function submitImport() {
+        const fileInput = document.getElementById('importFile');
+        if (!fileInput.files[0]) {
+            alert("Please select a file first.");
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('file', fileInput.files[0]);
+
+        document.getElementById('importLoading').style.display = 'block';
+        document.getElementById('importResult').style.display = 'none';
+        document.getElementById('btnUpload').disabled = true;
+
+        fetch('/userinfo/import', {
+            method: 'POST',
+            body: formData
+        })
+            .then(async response => {
+                const text = await response.text();
+                try {
+                    return JSON.parse(text);
+                } catch (e) {
+                    throw new Error(`Server Error: ${text.substring(0, 200)}`);
+                }
+            })
+            .then(data => {
+                document.getElementById('importLoading').style.display = 'none';
+                document.getElementById('importResult').style.display = 'block';
+
+                const summary = document.getElementById('importSummary');
+                const list = document.getElementById('importDetailsList');
+                list.innerHTML = '';
+
+                if (data.status === 'success') {
+                    summary.innerHTML = data.added_count > 0
+                        ? `✅ تم استيراد ${data.added_count} موظف بنجاح.`
+                        : '⚠️ لم يتم إضافة موظفين جدد (قد يكونوا موجودين بالفعل).';
+                    summary.style.color = '#34d399';
+
+                    data.details.forEach(msg => {
+                        let li = document.createElement('li');
+                        li.innerText = msg;
+                        list.appendChild(li);
+                    });
+                } else {
+                    summary.innerHTML = `❌ فشل الاستيراد: ${data.message}`;
+                    summary.style.color = '#f87171';
+                }
+            })
+            .catch(err => {
+                document.getElementById('importLoading').style.display = 'none';
+                document.getElementById('importResult').style.display = 'block';
+                document.getElementById('importSummary').innerHTML = `❌ خطأ في الاتصال: ${err.message}`;
+                document.getElementById('importSummary').style.color = '#f87171';
+            })
+            .finally(() => {
+                document.getElementById('btnUpload').disabled = false;
+            });
+    }
+</script>
 {% endblock %}
