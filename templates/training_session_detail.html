@@ -6,8 +6,8 @@
 
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h4 class="fw-bold mb-1 text-light">🎓 {{ training_session.TrainingCourseText }}</h4>
-            <span class="text-white">
+            <h4 class="fw-bold mb-1" style="color: #ebe9e9">🎓 {{ training_session.TrainingCourseText }}</h4>
+            <span style="color: white;">
                 {{ training_session.SessionDate }}
                 {% if training_session.EndDate %} - {{ training_session.EndDate }} {% endif %}
             </span>
@@ -40,117 +40,86 @@
                 📊 الدرجات والنتيجة
             </button>
         </li>
+        <li class="nav-item">
+            <button class="nav-link fw-bold" id="form-tab" data-bs-toggle="tab" data-bs-target="#form-view"
+                type="button">
+                📄 نموذج التقييم (طباعة)
+            </button>
+        </li>
     </ul>
 
     <div class="tab-content" id="myTabContent">
 
-        <!-- ==================== جدول الأيام ==================== -->
         <div class="tab-pane fade show active" id="schedule">
             <div class="card shadow-sm p-4">
                 <h5 class="fw-bold text-primary mb-3">🛠️ إدارة الأيام والأوقات</h5>
 
                 <form method="POST" action="{{ url_for('training_day_add', sid=training_session.SessionID) }}"
-                    class="row g-3 align-items-end mb-5 bg-light p-3 rounded border">
+                    class="row g-2 align-items-end mb-4 bg-light p-3 rounded border">
                     <div class="col-md-3">
-                        <label class="form-label fw-bold small">التاريخ</label>
+                        <label class="small fw-bold">التاريخ</label>
                         <input type="date" name="day_date" class="form-control" required>
                     </div>
                     <div class="col-md-2">
-                        <label class="form-label fw-bold small">من</label>
+                        <label class="small fw-bold">من</label>
                         <input type="time" name="start_time" class="form-control">
                     </div>
                     <div class="col-md-2">
-                        <label class="form-label fw-bold small">إلى</label>
+                        <label class="small fw-bold">إلى</label>
                         <input type="time" name="end_time" class="form-control">
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label fw-bold small">الموضوع (Topic)</label>
+                        <label class="small fw-bold">الموضوع (Topic)</label>
                         <input type="text" name="topic" class="form-control" placeholder="مثال: مقدمة">
                     </div>
                     <div class="col-md-2">
-                        <button type="submit" class="btn btn-success w-100 fw-bold">➕ إضافة</button>
+                        <button class="btn btn-success w-100">➕ إضافة</button>
                     </div>
                 </form>
 
-                <h5 class="fw-bold text-dark mb-3">📅 الأيام المجدولة</h5>
-
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle">
-                        <thead class="table-light">
-                            <tr>
-                                <th>#</th>
-                                <th>التاريخ</th>
-                                <th>التوقيت</th>
-                                <th>الموضوع</th>
-                                <th class="text-center">إجراء</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for day in session_days %}
-                            <tr>
-                                <td>{{ loop.index }}</td>
-                                <td class="fw-bold">{{ day.DayDate }}</td>
-                                <td class="text-muted small">
-                                    {% if day.StartTime %}{{ day.StartTime }}{% endif %}
-                                    {% if day.EndTime %} - {{ day.EndTime }}{% endif %}
-                                </td>
-                                <td>{{ day.Topic or '-' }}</td>
-                                <td class="text-center">
-                                    <!-- زر حذف يوم مع تأكيد Modal آمن -->
-                                    <button type="button" class="btn btn-sm btn-outline-danger border-0"
-                                        data-bs-toggle="modal" data-bs-target="#deleteDayModal{{ day.DayID }}">
-                                        🗑️
-                                    </button>
-
-                                    <!-- Modal تأكيد حذف اليوم -->
-                                    <div class="modal fade" id="deleteDayModal{{ day.DayID }}" tabindex="-1"
-                                        aria-hidden="true">
-                                        <div class="modal-dialog modal-dialog-centered">
-                                            <div class="modal-content">
-                                                <div class="modal-header bg-danger text-white">
-                                                    <h5 class="modal-title">تأكيد حذف اليوم</h5>
-                                                    <button type="button" class="btn-close btn-close-white"
-                                                        data-bs-dismiss="modal"></button>
-                                                </div>
-                                                <div class="modal-body text-center py-4">
-                                                    <p>هل أنت متأكد من حذف هذا اليوم؟</p>
-                                                    <p class="fw-bold">{{ day.DayDate }} {% if day.Topic %} - {{
-                                                        day.Topic }}{% endif %}</p>
-                                                    <p class="text-muted small">سيتم حذف جميع بيانات الحضور لهذا اليوم
-                                                        نهائيًا.</p>
-                                                </div>
-                                                <div class="modal-footer justify-content-center">
-                                                    <button type="button" class="btn btn-secondary"
-                                                        data-bs-dismiss="modal">إلغاء</button>
-                                                    <form method="POST"
-                                                        action="{{ url_for('training_day_delete', did=day.DayID) }}"
-                                                        class="d-inline">
-                                                        <button type="submit" class="btn btn-danger">نعم، احذف</button>
-                                                    </form>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </td>
-                            </tr>
-                            {% else %}
-                            <tr>
-                                <td colspan="5" class="text-center text-muted py-5">لم يتم إضافة أي أيام للجدول بعد.
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>التاريخ</th>
+                            <th>التوقيت</th>
+                            <th>الموضوع</th>
+                            <th class="text-center">حذف</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for day in session_days %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td class="fw-bold">{{ day.DayDate }}</td>
+                            <td>
+                                {% if day.StartTime %}{{ day.StartTime }}{% endif %}
+                                {% if day.EndTime %} - {{ day.EndTime }}{% endif %}
+                            </td>
+                            <td>{{ day.Topic or '-' }}</td>
+                            <td class="text-center">
+                                <form method="POST" action="{{ url_for('training_day_delete', did=day.DayID) }}"
+                                    onsubmit="return confirm('حذف هذا اليوم؟ سيتم حذف بيانات حضور هذا اليوم أيضاً.')">
+                                    <button class="btn btn-sm btn-outline-danger border-0"><i
+                                            class="fa-solid fa-trash"></i></button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted py-3">لم يتم إضافة أيام للجدول بعد.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
 
-        <!-- ==================== تبويب الحضور ==================== -->
         <div class="tab-pane fade" id="attendance">
             <div class="card shadow-sm p-4">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="fw-bold text-success mb-0">📝 تسجيل الحضور اليومي</h5>
-                    <button form="attendanceForm" class="btn btn-success fw-bold">💾 حفظ الحضور</button>
+                <div class="d-flex justify-content-between mb-3">
+                    <h5 class="fw-bold text-success">📝 تسجيل الحضور</h5>
+                    <button form="attendanceForm" class="btn btn-success">💾 حفظ الحضور</button>
                 </div>
 
                 {% if session_days and enrollments %}
@@ -160,11 +129,12 @@
                         <table class="table table-bordered text-center align-middle">
                             <thead class="table-dark">
                                 <tr>
-                                    <th style="position: sticky; left: 0; background: #343a40; z-index: 10;">الموظف</th>
+                                    <th style="width: 200px; position: sticky; left: 0; z-index: 10;">الموظف</th>
                                     {% for day in session_days %}
                                     <th>
-                                        <div class="small fw-bold">{{ day.DayDate }}</div>
-                                        {% if day.Topic %}<small class="text-light">{{ day.Topic }}</small>{% endif %}
+                                        <span style="font-size: 12px; display:block;">{{ day.DayDate }}</span>
+                                        <small class="text-muted" style="font-size: 10px;">{{ day.Topic or 'Day ' ~
+                                            loop.index }}</small>
                                     </th>
                                     {% endfor %}
                                 </tr>
@@ -172,12 +142,14 @@
                             <tbody>
                                 {% for emp in enrollments %}
                                 <tr>
-                                    <td class="bg-light fw-bold text-start ps-3"
-                                        style="position: sticky; left: 0; z-index: 5;">{{ emp.NAME }}</td>
+                                    <td class="bg-light fw-bold text-start ps-3" style="position: sticky; left: 0;">
+                                        {{ emp.NAME }}
+                                    </td>
+
                                     {% for day in session_days %}
                                     <td>
                                         <input type="checkbox" name="attend_{{ day.DayID }}_{{ emp.EnrollmentID }}"
-                                            class="form-check-input" style="width: 22px; height: 22px; cursor: pointer;"
+                                            class="form-check-input" style="width: 20px; height: 20px; cursor: pointer;"
                                             {% if (day.DayID, emp.EnrollmentID) in attendance_set %}checked{% endif %}>
                                     </td>
                                     {% endfor %}
@@ -188,119 +160,307 @@
                     </div>
                 </form>
                 {% else %}
-                <div class="alert alert-warning text-center">
-                    ⚠️ يرجى <strong>إضافة أيام للجدول</strong> و <strong>تسجيل طلاب</strong> أولاً لتفعيل كشف الحضور.
+                <div class="alert alert-warning">
+                    يرجى التأكد من إضافة <strong>أيام للجدول</strong> و <strong>تسجيل طلاب</strong> أولاً لتفعيل كشف
+                    الحضور.
                 </div>
                 {% endif %}
             </div>
         </div>
 
-        <!-- ==================== تبويب الدرجات ==================== -->
         <div class="tab-pane fade" id="grading">
             <div class="card shadow-sm p-4">
-
-                <form id="bulkUpdateForm" method="POST"
-                    action="{{ url_for('training_session_bulk_update_grades', sid=training_session.SessionID) }}">
-                </form>
-
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="fw-bold mb-0">📊 النتائج النهائية</h5>
-                    <button type="submit" form="bulkUpdateForm" class="btn btn-primary fw-bold">
-                        💾 حفظ الكل (Save All)
-                    </button>
-                </div>
+                <h5 class="fw-bold mb-3">📊 النتائج النهائية</h5>
 
                 {% if enrollments %}
-                <div class="table-responsive">
-                    <table class="table table-bordered text-center align-middle">
-                        <thead class="table-secondary">
-                            <tr>
-                                <th style="width: 25%;">الموظف</th>
-                                <th style="width: 15%;">الدرجة</th>
-                                <th style="width: 20%;">النتيجة</th>
-                                <th>نسبة الحضور</th>
-                                <th>إجراءات</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for e in enrollments %}
-                            <tr>
-                                <td class="fw-bold text-start ps-3">{{ e.NAME }}</td>
-
-                                <td>
-                                    <input type="number" name="grade_{{ e.EnrollmentID }}" form="bulkUpdateForm"
-                                        class="form-control text-center" placeholder="0-100" value="{{ e.Grade or '' }}"
-                                        min="0" max="100">
-                                </td>
-
-                                <td>
-                                    <select name="pass_status_{{ e.EnrollmentID }}" form="bulkUpdateForm"
-                                        class="form-select">
-                                        <option value="">---</option>
-                                        <option value="Passed" {% if e.PassStatus=='Passed' %}selected{% endif %}>ناجح
-                                        </option>
-                                        <option value="Failed" {% if e.PassStatus=='Failed' %}selected{% endif %}>راسب
-                                        </option>
-                                        <option value="Excuse" {% if e.PassStatus=='Excuse' %}selected{% endif %}>اعتذار
-                                        </option>
-                                        <option value="Canceled" {% if e.PassStatus=='Canceled' %}selected{% endif %}>
-                                            ملغى</option>
-                                    </select>
-                                </td>
-
-                                <td>
-                                    {% if (e.AttendancePercent or 0) >= 75 %}
-                                    <span class="badge bg-success">{{ e.AttendancePercent|default('0') }}%</span>
-                                    {% elif (e.AttendancePercent or 0) >= 50 %}
-                                    <span class="badge bg-warning text-dark">{{ e.AttendancePercent|default('0')
-                                        }}%</span>
-                                    {% else %}
-                                    <span class="badge bg-danger">{{ e.AttendancePercent|default('0') }}%</span>
-                                    {% endif %}
-                                </td>
-
-                                <td>
-                                    <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal"
-                                        data-bs-target="#cancelEnrollmentModal{{ e.EnrollmentID }}">
-                                        🚫 إلغاء
-                                    </button>
-
-                                    <div class="modal fade" id="cancelEnrollmentModal{{ e.EnrollmentID }}"
-                                        tabindex="-1">
-                                        <div class="modal-dialog modal-dialog-centered">
-                                            <div class="modal-content">
-                                                <div class="modal-header bg-danger text-white">
-                                                    <h5 class="modal-title">تأكيد إلغاء التسجيل</h5>
-                                                    <button type="button" class="btn-close btn-close-white"
-                                                        data-bs-dismiss="modal"></button>
-                                                </div>
-                                                <div class="modal-body text-center py-4">
-                                                    <p>هل أنت متأكد من إلغاء تسجيل <strong>{{ e.NAME }}</strong>؟</p>
-                                                </div>
-                                                <div class="modal-footer justify-content-center">
-                                                    <button type="button" class="btn btn-secondary"
-                                                        data-bs-dismiss="modal">تراجع</button>
-                                                    <form method="POST"
-                                                        action="{{ url_for('training_enrollment_cancel', eid=e.EnrollmentID) }}">
-                                                        <button type="submit" class="btn btn-danger">نعم، ألغِ
-                                                            التسجيل</button>
-                                                    </form>
-                                                </div>
-                                            </div>
-                                        </div>
+                <table class="table table-bordered text-center align-middle">
+                    <thead class="table-secondary">
+                        <tr>
+                            <th>الموظف</th>
+                            <th>الدرجة</th>
+                            <th>النتيجة</th>
+                            <th>نسبة الحضور (Auto)</th>
+                            <th>إجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for e in enrollments %}
+                        <tr>
+                            <td class="fw-bold">{{ e.NAME }}</td>
+                            <td>{{ e.Grade or '-' }}</td>
+                            <td>
+                                {% if e.PassStatus == 'Passed' %}
+                                <span class="badge bg-success">ناجح</span>
+                                {% elif e.PassStatus == 'Failed' %}
+                                <span class="badge bg-danger">راسب</span>
+                                {% elif e.PassStatus == 'Excuse' %}
+                                <span class="badge bg-warning text-dark">اعتذار</span>
+                                {% elif e.PassStatus == 'Canceled' %}
+                                <span class="badge bg-secondary">ملغى</span>
+                                {% else %}
+                                -
+                                {% endif %}
+                            </td>
+                            <td>{{ e.AttendancePercent }}%</td>
+                            <td>
+                                <!-- Form لتحديث الدرجة والحالة (أضفنا خيار Canceled) -->
+                                <form method="POST"
+                                    action="{{ url_for('training_enrollment_update', eid=e.EnrollmentID) }}"
+                                    class="mb-2">
+                                    <div class="input-group input-group-sm">
+                                        <input type="number" name="grade" class="form-control" placeholder="Score"
+                                            value="{{ e.Grade }}">
+                                        <select name="pass_status" class="form-select">
+                                            <option value="">الحالة</option>
+                                            <option value="Passed" {% if e.PassStatus=='Passed' %}selected{% endif %}>
+                                                ناجح</option>
+                                            <option value="Failed" {% if e.PassStatus=='Failed' %}selected{% endif %}>
+                                                راسب</option>
+                                            <option value="Excuse" {% if e.PassStatus=='Excuse' %}selected{% endif %}>
+                                                اعتذار</option>
+                                            <option value="Canceled" {% if e.PassStatus=='Canceled' %}selected{% endif
+                                                %}>ملغى (خطأ تسجيل)</option>
+                                        </select>
+                                        <button class="btn btn-primary btn-sm">تحديث</button>
                                     </div>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
+                                </form>
+
+                                <!-- Form جديد لحذف التسجيل نهائياً (إذا أردت الحذف الكامل) -->
+                                <form method="POST"
+                                    action="{{ url_for('training_enrollment_delete', eid=e.EnrollmentID) }}"
+                                    onsubmit="return confirm('⚠️ هل أنت متأكد من حذف تسجيل هذا الموظف نهائياً من الجلسة؟ (سيتم مسح السجل تماماً)');"
+                                    class="d-inline">
+                                    <button type="submit" class="btn btn-danger btn-sm">🗑️ حذف نهائي</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
                 {% else %}
-                <div class="alert alert-info text-center py-4">
-                    لا يوجد طلاب مسجلين في هذه الجلسة حاليًا.
-                </div>
+                <p class="text-muted">لا يوجد طلاب.</p>
                 {% endif %}
             </div>
+        </div>
+
+        <div class="tab-pane fade" id="form-view">
+            <div class="card shadow-sm p-4">
+                <div class="d-flex justify-content-end mb-3 no-print">
+                    <button onclick="printDiv('printableArea')" class="btn btn-dark"><i class="fa-solid fa-print"></i>
+                        طباعة النموذج</button>
+                </div>
+
+                <style>
+                    @media print {
+                        @page {
+                            size: A4;
+                            margin: 0;
+                            /* Removing margin hides browser headers/footers */
+                        }
+
+                        body * {
+                            visibility: hidden;
+                        }
+
+                        #printableArea,
+                        #printableArea * {
+                            visibility: visible;
+                        }
+
+                        #printableArea {
+                            position: absolute;
+                            left: 0;
+                            top: 0;
+                            width: 100%;
+                            border: none !important;
+                            padding: 15mm !important;
+                            /* Restore visual margin manually */
+                        }
+
+                        /* Adjust structural elements to fit */
+                        .table-responsive {
+                            margin-bottom: 10px !important;
+                        }
+
+                        table {
+                            font-size: 11pt !important;
+                            /* Slightly smaller text */
+                        }
+
+                        th,
+                        td {
+                            padding: 2px 4px !important;
+                            /* Tighter padding */
+                            height: auto !important;
+                        }
+
+                        .signatures-block {
+                            margin-top: 20px !important;
+                            page-break-inside: avoid;
+                        }
+                    }
+                </style>
+
+                <div id="printableArea"
+                    style="direction: rtl; font-family: 'Times New Roman', serif; color: #000; background: white; padding: 15px; border: 1px solid #ddd; max-width: 210mm; margin: auto;">
+                    <!-- Header -->
+                    <div class="d-flex justify-content-between align-items-start mb-4">
+                        <div class="text-center" style="width: 150px;">
+                            <!-- Placeholder for Logo if needed -->
+                        </div>
+                        <div class="text-center flex-grow-1">
+                            <h2 style="font-weight: bold; text-decoration: underline; margin-bottom: 5px;">تقييم التدريب
+                            </h2>
+                            <!-- <h5 style="margin:0;">(Training Evaluation)</h5> -->
+                        </div>
+                        <div class="text-center fw-bold" style="width: 250px; line-height: 1.6;">
+                            دار الضيافة لضباط الشرطة<br>
+                            بمدينة نصر
+                        </div>
+                    </div>
+
+                    <!-- Table -->
+                    <div class="table-responsive">
+                        <table class="table-bordered"
+                            style="width: 100%; text-align: center; border-color: #000; font-size: 14px;">
+                            <thead>
+                                <tr style="background-color: #f8f9fa;">
+                                    <th rowspan="2" style="width: 30px; border: 1px solid #000;">م</th>
+                                    <th rowspan="2" style="border: 1px solid #000;">الاسم</th>
+                                    <th rowspan="2" style="width: 100px; border: 1px solid #000;">الوظيفة</th>
+                                    <th rowspan="2" style="width: 100px; border: 1px solid #000;">القسم</th>
+
+                                    <!-- Trainee Evaluation Group -->
+                                    <th colspan="5" style="background-color: #e0e0e0; border: 1px solid #000;">تقييم
+                                        المتدرب (من 1 إلى 5)</th>
+
+                                    <!-- Training Evaluation Group (Implied) -->
+                                    <th colspan="3" style="border: 1px solid #000;">تقييم التدريب</th>
+                                </tr>
+                                <tr style="font-size: 12px; font-weight: bold;">
+                                    <!-- Trainee Sub-cols -->
+                                    <th style="background-color: #e0e0e0; border: 1px solid #000; padding: 2px;">
+                                        الحضور<br>في الموعد</th>
+                                    <th style="background-color: #e0e0e0; border: 1px solid #000; padding: 2px;">
+                                        الانتباه</th>
+                                    <th style="background-color: #e0e0e0; border: 1px solid #000; padding: 2px;">التجاوب
+                                    </th>
+                                    <th style="background-color: #e0e0e0; border: 1px solid #000; padding: 2px;">
+                                        الاستيعاب</th>
+                                    <th style="background-color: #e0e0e0; border: 1px solid #000; padding: 2px;">المادة
+                                        التدريبية</th>
+
+                                    <!-- Training Sub-cols -->
+                                    <th style="border: 1px solid #000; padding: 2px;">وقت<br>التدريب</th>
+                                    <th style="border: 1px solid #000; padding: 2px;">وسائل<br>التدريب</th>
+                                    <th style="border: 1px solid #000; padding: 2px;">مكان<br>التدريب</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Generating 15 Dummy Rows -->
+                                <!-- Dynamic Enrolled Rows -->
+                                {% for e in enrollments %}
+                                <tr>
+                                    <td style="border: 1px solid #000;" contenteditable="true">{{ loop.index }}</td>
+                                    <td style="border: 1px solid #000; text-align: right; padding-right: 5px;"
+                                        contenteditable="true">{{ e.NAME
+                                        }}</td>
+                                    <td style="border: 1px solid #000;" contenteditable="true">{{ e.TITLE or '' }}</td>
+                                    <td style="border: 1px solid #000;" contenteditable="true">{{ e.DEPTNAME or '' }}
+                                    </td>
+                                    <td style="background-color: #e0e0e0; border: 1px solid #000;"
+                                        contenteditable="true"></td>
+                                    <td style="background-color: #e0e0e0; border: 1px solid #000;"
+                                        contenteditable="true"></td>
+                                    <td style="background-color: #e0e0e0; border: 1px solid #000;"
+                                        contenteditable="true"></td>
+                                    <td style="background-color: #e0e0e0; border: 1px solid #000;"
+                                        contenteditable="true"></td>
+                                    <td style="background-color: #e0e0e0; border: 1px solid #000;"
+                                        contenteditable="true"></td>
+                                    <td style="border: 1px solid #000;" contenteditable="true"></td>
+                                    <td style="border: 1px solid #000;" contenteditable="true"></td>
+                                    <td style="border: 1px solid #000;" contenteditable="true"></td>
+                                </tr>
+                                {% endfor %}
+
+                                <!-- Filler Empty Rows (Fill up to 15) -->
+                                {% for i in range(enrollments|length + 1, 16) %}
+                                <tr style="height: 30px;">
+                                    <td style="border: 1px solid #000;" contenteditable="true">{{ i }}</td>
+                                    <td style="border: 1px solid #000;" contenteditable="true"></td>
+                                    <td style="border: 1px solid #000;" contenteditable="true"></td>
+                                    <td style="border: 1px solid #000;" contenteditable="true"></td>
+                                    <td style="background-color: #e0e0e0; border: 1px solid #000;"
+                                        contenteditable="true"></td>
+                                    <td style="background-color: #e0e0e0; border: 1px solid #000;"
+                                        contenteditable="true"></td>
+                                    <td style="background-color: #e0e0e0; border: 1px solid #000;"
+                                        contenteditable="true"></td>
+                                    <td style="background-color: #e0e0e0; border: 1px solid #000;"
+                                        contenteditable="true"></td>
+                                    <td style="background-color: #e0e0e0; border: 1px solid #000;"
+                                        contenteditable="true"></td>
+                                    <td style="border: 1px solid #000;" contenteditable="true"></td>
+                                    <td style="border: 1px solid #000;" contenteditable="true"></td>
+                                    <td style="border: 1px solid #000;" contenteditable="true"></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Notes Section -->
+                    <div style="margin-top: 20px; border: 2px solid #000; height: 100px; padding: 10px; position: relative;"
+                        contenteditable="true">
+                        <span
+                            style="position: absolute; top: -12px; right: 20px; background: white; padding: 0 5px; font-weight: bold;">//
+                            ملاحظات</span>
+                        <p style="text-align: right; color: #555;">لا توجد ملاحظات إضافية لهذا اليوم.</p>
+                    </div>
+
+                    <!-- Signatures -->
+                    <!-- Signatures -->
+                    <div class="signatures-block">
+                        <div
+                            style="margin-top: 30px; display: flex; justify-content: space-between; text-align: center; font-weight: bold;">
+                            <div style="width: 30%;" contenteditable="true">
+                                توقيع قسم الجودة<br>
+                                مهندس / مروان شريف
+                            </div>
+                            <div style="width: 30%;" contenteditable="true">
+                                أخصائي تدريب<br>
+                                أ/ نورهان محمد هوفي
+                            </div>
+                        </div>
+
+                        <div
+                            style="margin-top: 40px; display: flex; justify-content: space-between; text-align: center; font-weight: bold;">
+                            <div style="width: 30%;" contenteditable="true">
+                                م . الموارد البشرية<br>
+                                أ/ صلاح الدين مدحت
+                            </div>
+                            <div style="width: 30%;"></div>
+                            <div style="width: 30%;" contenteditable="true">
+                                رئيس قسم الشؤون الادارية<br>
+                                مقدم / محمود عبد العزيز سامي
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <script>
+                function printDiv(divName) {
+                    var printContents = document.getElementById(divName).innerHTML;
+                    var originalContents = document.body.innerHTML;
+                    document.body.innerHTML = printContents;
+                    window.print();
+                    document.body.innerHTML = originalContents;
+                    location.reload(); // Reload to restore event listeners
+                }
+            </script>
         </div>
 
     </div>

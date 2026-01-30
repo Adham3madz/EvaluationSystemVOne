@@ -179,17 +179,31 @@
       <div class="mb-4">
         <label for="evaluation_type_id" class="fw-bold">🔹 نوع التقييم:</label>
         
-        <select name="evaluation_type_id" id="evaluation_type_id" required>
+        <select name="evaluation_type_id" id="evaluation_type_id" required onchange="updateCriteria(this)">
           <option value="">-- اختر نوع التقييم --</option>
           
           {% for eval in available_evals %}
-          <option value="{{ eval.id }}" {% if eval.disabled %}disabled{% endif %}>
+          <option value="{{ eval.id }}" 
+            {% if selected_eval_type_id == eval.id %}selected{% endif %}
+            {% if eval.disabled and selected_eval_type_id != eval.id %}disabled{% endif %}>
             {{ eval.name }} {{ eval.note }}
           </option>
           {% endfor %}
           
         </select>
       </div>
+      
+      <script>
+      function updateCriteria(selectObj) {
+        var typeId = selectObj.value;
+        if (typeId) {
+            // Append type_id to URL and reload
+            var currentUrl = new URL(window.location.href);
+            currentUrl.searchParams.set('eval_type_id', typeId);
+            window.location.href = currentUrl.toString();
+        }
+      }
+      </script>
 
       <div class="card mb-4 shadow-sm border-0">
         <div class="card-header text-white" style="background-color: #17a2b8;">
@@ -268,6 +282,11 @@
           {% endfor %}
         </tbody>
       </table>
+      {% if not criteria %}
+      <div class="alert alert-warning text-center mt-3">
+        <i class="fas fa-exclamation-triangle"></i> اختر نوع التقييم أولاً، أو لا توجد معايير مخصصة لهذا النوع والفئة الوظيفية.
+      </div>
+      {% endif %}
       <div class="mb-3 mt-3">
         <label for="recommendation_id">💡 التوصية (اختياري):</label>
         <select name="recommendation_id" id="recommendation_id">

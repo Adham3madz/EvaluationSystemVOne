@@ -304,6 +304,20 @@
         <small class="form-text">سيظهر هذا المعيار فقط للموظفين التابعين للفئات المختارة هنا.</small>
       </div>
 
+      <!-- Evaluation Types Multi-Select (NEW) -->
+      <div class="mb-4">
+        <label class="form-label">📌 أنواع التقييم (Evaluation Types)</label>
+        <select name="type_ids" class="form-control select2" multiple="multiple" style="width: 100%;">
+          {% for type in all_types %}
+          {% set t_id = type.EvaluationTypeID %}
+          <option value="{{ t_id }}" {% if selected_type_ids and t_id in selected_type_ids %}selected{% endif %}>
+            {{ type.DisplayName }}
+          </option>
+          {% endfor %}
+        </select>
+        <small class="form-text">حدد أنواع التقييم التي يشملها هذا المعيار (مثلاً: 15 يوم، 3 شهور...).</small>
+      </div>
+
       <!-- Actions -->
       <div class="form-actions">
         <a href="{{ url_for('criteria_list') }}" class="btn-custom btn-cancel">

@@ -164,6 +164,33 @@ input:focus {
     text-align: center;
 }
 
+/* Specific Column Widths */
+.data-table th:nth-child(1) {
+    width: 25%;
+}
+
+/* Name */
+.data-table th:nth-child(2) {
+    width: 15%;
+}
+
+/* DOB */
+.data-table th:nth-child(3) {
+    width: 15%;
+}
+
+/* Job */
+.data-table th:nth-child(4) {
+    width: 31%;
+}
+
+/* Address - Bigger */
+.data-table th:nth-child(5) {
+    width: 14%;
+}
+
+/* Phone - Example 01012345678 fits well */
+
 .data-table th {
     background: #edf2f7;
     color: #2d3748;
@@ -462,7 +489,8 @@ input:focus {
 
 /* START Added styles for Dynamic Rows */
 .btn-add-row {
-    background-color: #48bb78; /* Green */
+    background-color: #48bb78;
+    /* Green */
     color: white;
     border: none;
     border-radius: 50%;
@@ -488,4 +516,5 @@ input:focus {
         display: none !important;
     }
 }
+
 /* END Added styles for Dynamic Rows */

@@ -286,6 +286,7 @@
             <th width="10%">أقصى درجة</th>
             <th width="20%">القسم المطبق</th>
             <th width="15%">فئة الموظف</th>
+            <th width="15%">أنواع التقييم</th>
             <th width="15%">الإجراءات</th>
           </tr>
         </thead>
@@ -312,6 +313,11 @@
             <td>
               <span class="badge badge-custom bg-class">
                 <i class="fas fa-tag me-1"></i> {{ c.employee_class or 'لم تضاف' }}
+              </span>
+            </td>
+            <td>
+              <span class="badge badge-custom bg-info text-dark">
+                {{ c.Types or 'All' }}
               </span>
             </td>
             <td>

@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>بطاقة تدريبية - {{ employee.NAME }}</title>
+    <style>
+        /* Print-Specific Styles */
+        @media print {
+            @page {
+                size: A4 portrait;
+                margin: 0;
+            }
+
+            body {
+                background: white !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+
+            .no-print {
+                display: none !important;
+            }
+
+            .print-container {
+                width: 210mm !important;
+                height: 297mm !important;
+                margin: 0 !important;
+                padding: 10mm 15mm !important;
+                box-shadow: none !important;
+                border: none !important;
+                position: relative;
+                box-sizing: border-box;
+                display: flex !important;
+                flex-direction: column !important;
+            }
+        }
+
+        /* Screen & Shared Styles */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #000;
+            background: #555;
+            /* Dark background to make the paper pop */
+            margin: 0;
+            padding: 20px;
+        }
+
+        .print-container {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: white;
+            width: 210mm;
+            min-height: 297mm;
+            margin: 0 auto;
+            padding: 15mm 20mm;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            direction: rtl;
+            box-sizing: border-box;
+        }
+
+        /* 1. Header Area */
+        .form-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+            flex-shrink: 0;
+        }
+
+        .header-right {
+            text-align: right;
+            font-weight: bold;
+            font-size: 14px;
+            line-height: 1.4;
+            width: 30%;
+        }
+
+        .header-center {
+            text-align: center;
+            width: 40%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 5px;
+        }
+
+        .header-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .title-bar {
+            width: 100%;
+            max-width: 220px;
+            height: 8px;
+            /* Thicker bar */
+            background-color: black;
+            position: relative;
+            border: 1px solid black;
+        }
+
+        .title-bar::before,
+        .title-bar::after {
+            content: '';
+            position: absolute;
+            width: 6px;
+            height: 18px;
+            background-color: #888;
+            top: -6px;
+            border: 1px solid black;
+        }
+
+        .title-bar::before {
+            left: -3px;
+        }
+
+        .title-bar::after {
+            right: -3px;
+        }
+
+        .header-left {
+            width: 30%;
+            text-align: left;
+        }
+
+        .header-logo {
+            width: 90px;
+            height: auto;
+        }
+
+        /* 2. Info Section (Staggered Layout) */
+        .info-section {
+            margin-bottom: 20px;
+            margin-top: 20px;
+            font-size: 16px;
+            font-weight: 600;
+            line-height: 1.8;
+            flex-shrink: 0;
+            padding-right: 0;
+        }
+
+        .info-row {
+            display: flex;
+            align-items: flex-end;
+            margin-bottom: 12px;
+            position: relative;
+        }
+
+        /* Indentation spacers */
+        .spacer-1 {
+            width: 0;
+        }
+
+        .spacer-2 {
+            width: 15%;
+        }
+
+        .spacer-3 {
+            width: 30%;
+        }
+
+        .info-label {
+            font-weight: bold;
+            margin-left: 10px;
+            white-space: nowrap;
+        }
+
+        .info-value {
+            flex-grow: 1;
+            border-bottom: 1px solid black;
+            text-align: center;
+            padding-bottom: 2px;
+            font-weight: normal;
+            font-size: 18px;
+        }
+
+
+        /* 3. Table Section */
+        .table-container {
+            flex-grow: 1;
+            display: block;
+            padding: 2px;
+            /* For the double border effect */
+        }
+
+        .training-table {
+            width: 100%;
+            border-collapse: collapse;
+            /* Essential for cell borders */
+            font-size: 13px;
+            margin-bottom: 10px;
+            border: 3px double black;
+            /* The thick outer border */
+        }
+
+        .training-table th,
+        .training-table td {
+            border: 1px solid black;
+            padding: 4px;
+            text-align: center;
+            vertical-align: middle;
+            color: #000;
+            height: 28px;
+        }
+
+        .training-table thead th {
+            background-color: #bfbfbf !important;
+            /* Darker gray header */
+            font-weight: bold;
+            border-bottom: 1px solid black;
+            padding: 8px 4px;
+        }
+
+        /* Columns */
+        .col-id {
+            width: 35px;
+        }
+
+        .col-prog {
+            width: 42%;
+        }
+
+        .col-dur-main {
+            width: 20%;
+        }
+
+        .col-loc {
+            width: 18%;
+        }
+
+        .col-note {
+            width: 12%;
+        }
+
+        /* 4. Footer */
+        .form-footer {
+            flex-shrink: 0;
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            font-size: 12px;
+            font-weight: bold;
+            border-top: 3px solid black;
+            /* Thick footer line */
+            padding-top: 5px;
+            width: 100%;
+        }
+
+        /* Custom Button Styles (Since we removed Bootstrap Layout) */
+        .btn-container {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            font-family: inherit;
+            font-weight: bold;
+            text-decoration: none;
+            border-radius: 5px;
+            cursor: pointer;
+            border: none;
+            margin: 0 5px;
+            transition: background 0.2s;
+        }
+
+        .btn-primary {
+            background-color: #0d6efd;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #0b5ed7;
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background-color: #5c636a;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="btn-container no-print">
+        <button class="btn btn-primary" onclick="window.print()">🖨️ طباعة الصفحة / Print</button>
+        <button class="btn btn-secondary" onclick="window.close()">إغلاق / Close</button>
+    </div>
+
+    <div class="print-container">
+        <!-- Header -->
+        <div class="form-header">
+            <div class="header-right">
+                <div>دار الضيافة لضباط الشرطة</div>
+                <div>بمدينة نصر</div>
+                <div>قسم الموارد البشرية والتدريب</div>
+            </div>
+            <div class="header-center">
+                <div class="header-title">بطاقة تدريبية</div>
+                <div class="title-bar"></div>
+            </div>
+            <div class="header-left">
+                <img src="{{ url_for('static', filename='images/header_logo_new.png') }}" class="header-logo"
+                    alt="Logo">
+            </div>
+        </div>
+
+        <!-- Info Section -->
+        <div class="info-section">
+            <!-- Row 1 -->
+            <div class="info-row">
+                <div class="spacer-1"></div>
+                <div class="info-label">اسم المتدرب:</div>
+                <div class="info-value">{{ employee.NAME }}</div>
+                <div style="width: 2%;"></div> <!-- Right edge buffer -->
+            </div>
+            <!-- Row 2 -->
+            <div class="info-row">
+                <div class="spacer-2"></div>
+                <div class="info-label">الوظيفة:</div>
+                <div class="info-value">{{ employee.TITLE or '' }}</div>
+                <div style="width: 2%;"></div>
+            </div>
+            <!-- Row 3 -->
+            <div class="info-row">
+                <div class="spacer-3"></div>
+                <div class="info-label">القسم التابع له:</div>
+                <div class="info-value">{{ employee.DEPTNAME or '' }}</div>
+                <div style="width: 2%;"></div>
+            </div>
+        </div>
+
+        <!-- Table -->
+        <div class="table-container">
+            <table class="training-table">
+                <thead>
+                    <tr>
+                        <th rowspan="2" class="col-id">م</th>
+                        <th rowspan="2" class="col-prog">بيان البرنامج التدريبي</th>
+                        <th colspan="2" class="col-dur-main">مدة البرنامج</th>
+                        <th rowspan="2" class="col-loc">جهة الانعقاد</th>
+                        <th rowspan="2" class="col-note">ملاحظات</th>
+                    </tr>
+                    <tr>
+                        <th>من</th>
+                        <th>الى</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for i in range(15) %}
+                    {% set course = courses[i] if courses|length > i else None %}
+                    <tr>
+                        <td>{{ i + 1 }}</td>
+                        <td class="text-start px-2 fw-bold">{{ course.TrainingCourseText if course else '' }}</td>
+                        <td>
+                            {% if course and course.SessionDate %}
+                            {{ course.SessionDate.strftime('%Y-%m-%d') }}
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if course and course.EndDate %}
+                            {{ course.EndDate.strftime('%Y-%m-%d') }}
+                            {% endif %}
+                        </td>
+                        <td>{{ course.Location or 'داخلي' if course else '' }}</td>
+                        <td>
+                            {% if course %}
+                            {% if course.PassStatus == 'Passed' %}ناجح{% endif %}
+                            {% if course.PassStatus == 'Failed' %}راسب{% endif %}
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Footer -->
+        <div class="form-footer">
+            <div>HRF-06-01-05</div>
+            <div>Rev. No.: 0</div>
+        </div>
+    </div>
+
+    <script>
+        // Auto-print when loaded
+        window.onload = function () {
+            setTimeout(function () {
+                window.print();
+            }, 500); // Small delay to ensure styles/images load
+        };
+    </script>
+</body>
+
+</html>

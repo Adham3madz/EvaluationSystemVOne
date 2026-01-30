@@ -67,6 +67,14 @@
                 <input type="text" id="searchInput" class="search-input" placeholder="بحث بالاسم أو رقم الملف...">
                 <button type="button" onclick="searchEmployee()" class="btn-search">بحث</button>
             </div>
+            <div style="margin-top: 10px;">
+                <label
+                    style="display: inline-flex; align-items: center; cursor: pointer; background: white; padding: 5px 10px; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                    <input type="checkbox" id="toggleCousinSection" checked onchange="toggleCousinContinuation()"
+                        style="width: auto; margin-left: 8px;">
+                    إظهار "تابع >> بيانات ابناء الاعمام والعمات"
+                </label>
+            </div>
         </div>
 
         <!-- Header -->
@@ -82,13 +90,13 @@
         </header>
 
         <div class="page-title"
-            style="display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 20px;">
-            <h1 style="white-space: nowrap;">وثيقة التعارف دار الضيافة (</h1>
+            style="display: flex; align-items: center; justify-content: start; gap: 10px; margin-bottom: 20px; direction: rtl;">
             <!-- This user_id field is CRITICAL for saving -->
             <input type="hidden" id="user_id" name="user_id">
-            <input type="text" name="employee_name" id="employee_name" placeholder="الاسم الرباعي"
-                style="flex-grow: 1; max-width: 600px; font-size: 1.2em; border: none; border-bottom: 2px solid #000; background: transparent; text-align: center; padding: 5px;">
-            <h1 style="white-space: nowrap;">) /</h1>
+            <h1 style="white-space: nowrap; font-size: 1.4rem; font-weight: bold; margin: 0;">وثيقة التعارف الخاصة
+                (الاسم الرباعي)/</h1>
+            <input type="text" name="employee_name" id="employee_name"
+                style="flex-grow: 1; border: none; border-bottom: 2px solid #000; background: transparent; text-align: right; padding: 5px; font-weight: bold; font-size: 1.2rem;">
         </div>
 
         <form id="mainForm" action="{{ url_for('generate_pdf') }}" method="POST">
@@ -99,11 +107,13 @@
                     <tbody>
                         <tr>
                             <td class="label-cell">الجهة الفرعية:</td>
-                            <td><input type="text" name="sub_department" id="sub_department"></td>
+                            <td><input type="text" name="sub_department" id="sub_department"
+                                    value="دار الضيافة لضباط الشرطة م.نصر" readonly
+                                    style="background-color: transparent; border: none; font-weight: bold;"></td>
                             <td class="label-cell">تاريخ الحاقه:</td>
-                            <td><input type="date" name="join_date" id="join_date"></td>
+                            <td><input type="text" name="join_date" id="join_date" placeholder="DD/MM/YYYY"></td>
                             <td class="label-cell">تاريخ الميلاد:</td>
-                            <td><input type="date" name="birth_date" id="birth_date"></td>
+                            <td><input type="text" name="birth_date" id="birth_date" placeholder="DD/MM/YYYY"></td>
                         </tr>
                         <tr>
                             <td class="label-cell">الرقم القومي:</td>
@@ -154,7 +164,8 @@
                                 <input type="text" name="{{ prefix }}_name_{{ i }}" class="field-name" {% if label_text
                                     %}placeholder="{{ label_text }}" {% endif %}>
                             </td>
-                            <td><input type="date" name="{{ prefix }}_dob_{{ i }}" class="field-dob"></td>
+                            <td><input type="text" name="{{ prefix }}_dob_{{ i }}" class="field-dob"
+                                    placeholder="تاريخ الميلاد / السن"></td>
                             <td><input type="text" name="{{ prefix }}_job_{{ i }}" class="field-job"></td>
                             <td><input type="text" name="{{ prefix }}_address_{{ i }}" class="field-address"></td>
                             <td><input type="text" name="{{ prefix }}_phone_{{ i }}" class="field-phone"></td>
@@ -180,9 +191,11 @@
             <!-- Paternal Uncles/Aunts (3 Rows) -->
             {{ info_table("بيانات الاعمام والعمات", "p_uncle", 3) }}
 
-            <!-- Paternal Cousins (6 Rows - split? The image shows continuation. I'll just put 6 rows) -->
-            <div class="page-break"></div>
-            {{ info_table("بيانات ابناء الاعمام والعمات", "p_cousin", 6) }}
+            <!-- Paternal Cousins (6 Rows) -->
+            <div id="p_cousin_continuation_wrapper">
+                <div class="page-break"></div>
+                {{ info_table("تابع >> بيانات ابناء الاعمام والعمات", "p_cousin", 6) }}
+            </div>
 
             <!-- Maternal Uncles/Aunts (4 Rows) -->
             {{ info_table("بيانات الاخوال والخالات", "m_uncle", 4) }}
@@ -222,10 +235,34 @@
 
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
     <script>
+        // Helper to convert English digits to Hindi digits
+        function toHindiDigits(str) {
+            if (!str) return '';
+            const map = {
+                '0': '٠', '1': '١', '2': '٢', '3': '٣', '4': '٤',
+                '5': '٥', '6': '٦', '7': '٧', '8': '٨', '9': '٩'
+            };
+            return str.toString().replace(/\d/g, (d) => map[d]);
+        }
+
         document.addEventListener('DOMContentLoaded', function () {
             // Allow Enter key to trigger search
             document.getElementById('searchInput').addEventListener('keypress', function (e) {
                 if (e.key === 'Enter') searchEmployee();
+            });
+
+            // Auto-convert numbers in the form to Hindi digits on typing
+            document.getElementById('mainForm').addEventListener('input', function (e) {
+                if (e.target.tagName === 'INPUT' && e.target.type === 'text') {
+                    // Only convert if it has English digits
+                    if (/[0-9]/.test(e.target.value)) {
+                        const start = e.target.selectionStart;
+                        const end = e.target.selectionEnd;
+                        e.target.value = toHindiDigits(e.target.value);
+                        // Restore cursor position (simple approximation)
+                        e.target.setSelectionRange(start, end);
+                    }
+                }
             });
 
             // Initial bind
@@ -233,7 +270,7 @@
         });
 
         function bindDateInputs() {
-            const dateInputs = document.querySelectorAll('input[type="date"]');
+            const dateInputs = document.querySelectorAll('.field-dob, input[name="join_date"], input[name="birth_date"]');
             dateInputs.forEach(input => {
                 updatePrintClass(input);
                 // Remove old listeners to avoid duplicates if any (simple approach)
@@ -268,7 +305,7 @@
             // Build cells matched to macro structure
             tr.innerHTML = `
                 <td><input type="text" name="${prefix}_name_${newIndex}" class="field-name"></td>
-                <td><input type="date" name="${prefix}_dob_${newIndex}" class="field-dob"></td>
+                <td><input type="text" name="${prefix}_dob_${newIndex}" class="field-dob" placeholder="تاريخ الميلاد / السن"></td>
                 <td><input type="text" name="${prefix}_job_${newIndex}" class="field-job"></td>
                 <td><input type="text" name="${prefix}_address_${newIndex}" class="field-address"></td>
                 <td><input type="text" name="${prefix}_phone_${newIndex}" class="field-phone"></td>
@@ -278,6 +315,16 @@
             bindDateInputs(); // Re-bind for new date inputs
         }
         // ----------------------------------
+
+        function toggleCousinContinuation() {
+            const wrapper = document.getElementById('p_cousin_continuation_wrapper');
+            const checkbox = document.getElementById('toggleCousinSection');
+            if (checkbox.checked) {
+                wrapper.style.display = 'block';
+            } else {
+                wrapper.style.display = 'none';
+            }
+        }
 
         function showToast(msg, type = 'info') {
             Toastify({
@@ -304,20 +351,21 @@
 
                 showToast("تم العثور على البيانات", "success");
 
-                // Populate Basic Fields
+                // Populate Basic Fields with Hindi Conversion
                 document.getElementById('user_id').value = data.user_id;
                 document.getElementById('employee_name').value = data.name;
-                document.getElementById('declarant_name').value = data.name; // Also fill declarant name
-                document.getElementById('sub_department').value = data.sub_department || data.department;
-                document.getElementById('join_date').value = data.hired_date;
-                document.getElementById('birth_date').value = data.birth_date;
-                document.getElementById('national_id').value = data.ssn;
-                document.getElementById('phone').value = data.phone;
-                document.getElementById('job_nature').value = data.job_nature;
-                document.getElementById('current_address').value = data.address;
-                document.getElementById('previous_address').value = data.previous_address;
+                document.getElementById('declarant_name').value = data.name;
+                // FORCE STATIC SUB DEPARTMENT - Ignore DB value
+                document.getElementById('sub_department').value = 'دار الضيافة لضباط الشرطة م.نصر';
+                document.getElementById('join_date').value = toHindiDigits(data.hired_date || '');
+                document.getElementById('birth_date').value = toHindiDigits(data.birth_date || '');
+                document.getElementById('national_id').value = toHindiDigits(data.ssn || '');
+                document.getElementById('phone').value = toHindiDigits(data.phone || '');
+                document.getElementById('job_nature').value = toHindiDigits(data.job_nature || '');
+                document.getElementById('current_address').value = toHindiDigits(data.address || '');
+                document.getElementById('previous_address').value = toHindiDigits(data.previous_address || '');
 
-                // Clear all previous family inputs first by emptying values
+                // Clear all previous inputs
                 document.querySelectorAll('.data-row input').forEach(inp => inp.value = '');
 
                 // Populate Family Members
@@ -327,11 +375,7 @@
                         const tbody = document.getElementById(tbodyIdx);
                         if (!tbody) continue;
 
-                        // Clear existing rows for this section thoroughly to avoid duplicates/mismatches?
-                        // Actually, better to keep structure but clear values.
-                        // BUT, if user has MORE rows than default, we need to ADD them.
-
-                        // 1. Clear values of existing rows
+                        // Clear values
                         tbody.querySelectorAll('input').forEach(i => i.value = '');
 
                         members.forEach((member, index) => {
@@ -347,17 +391,22 @@
 
                             if (row) {
                                 row.querySelector('.field-name').value = member.name || '';
-                                row.querySelector('.field-dob').value = member.dob || '';
-                                row.querySelector('.field-job').value = member.job || '';
-                                row.querySelector('.field-address').value = member.address || '';
-                                row.querySelector('.field-phone').value = member.phone || '';
+                                row.querySelector('.field-dob').value = toHindiDigits(member.dob || '');
+                                row.querySelector('.field-job').value = toHindiDigits(member.job || '');
+                                row.querySelector('.field-address').value = toHindiDigits(member.address || '');
+                                row.querySelector('.field-phone').value = toHindiDigits(member.phone || '');
                             }
                         });
                     }
                 }
 
-                // Re-bind dates just in case
+                // Re-bind dates
                 bindDateInputs();
+                // Ensure print classes updated for newly filled fields
+                document.querySelectorAll('input').forEach(inp => {
+                    updatePrintClass(inp);
+                });
+
 
             } catch (error) {
                 console.error("Search Error:", error);

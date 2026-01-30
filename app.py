@@ -162,7 +162,7 @@ def get_available_evaluation_types(conn, employee_id, manager_dept_id):
         today = datetime.now().date()
         
         # 1. Get employee's completed evals with dates to check against cycles
-        cursor.execute("SELECT EvaluationTypeID, EvaluationDate FROM [Zktime_Copy].[dbo].[Evaluations] WHERE EmployeeUserID = ?", (employee_id,))
+        cursor.execute("SELECT EvaluationTypeID, EvaluationDate FROM [Optima].[dbo].[Evaluations] WHERE EmployeeUserID = ?", (employee_id,))
         completed_evals = []
         for row in cursor.fetchall():
             e_date = row.EvaluationDate
@@ -173,15 +173,25 @@ def get_available_evaluation_types(conn, employee_id, manager_dept_id):
         # Set of IDs for quick prerequisite checks
         completed_eval_ids = {e['id'] for e in completed_evals}
         
-        # 2. Get all rules
-        cursor.execute("SELECT * FROM [Zktime_Copy].[dbo].[EvaluationTypes] ORDER BY SortOrder")
+        # 2. Get all rules (Updated to fetch new columns)
+        cursor.execute("SELECT * FROM [Optima].[dbo].[EvaluationTypes] ORDER BY SortOrder")
         all_types_rules = cursor.fetchall()
+
+        # 2b. Get Employee Class and Hire Date
+        cursor.execute("SELECT employee_class, HiredDay FROM [Optima].[dbo].[USERINFO] WHERE USERID = ?", (employee_id,))
+        emp_data = cursor.fetchone()
+        emp_class = emp_data.employee_class if emp_data and emp_data.employee_class else 'لم تضاف'
+        hire_date = emp_data.HiredDay if emp_data and emp_data.HiredDay else None
         
+        # Ensure hire_date is a date object
+        if hire_date and isinstance(hire_date, datetime):
+            hire_date = hire_date.date()
+
         # 3. Get all active, open cycles including StartDate and EndDate
         cursor.execute("""
             SELECT C.EvaluationTypeID, CD.DepartmentID, C.StartDate, C.EndDate
-            FROM [Zktime_Copy].[dbo].[EvaluationCycles] C
-            LEFT JOIN [Zktime_Copy].[dbo].[CycleDepartments] CD ON C.CycleID = CD.CycleID
+            FROM [Optima].[dbo].[EvaluationCycles] C
+            LEFT JOIN [Optima].[dbo].[CycleDepartments] CD ON C.CycleID = CD.CycleID
             WHERE C.IsEnabled = 1 AND ? BETWEEN C.StartDate AND C.EndDate
         """, (today,))
         active_cycles = cursor.fetchall()
@@ -209,57 +219,120 @@ def get_available_evaluation_types(conn, employee_id, manager_dept_id):
             eval_id = rule.EvaluationTypeID
             prereq_id = rule.PrerequisiteTypeID
             is_repeatable = rule.IsRepeatable
+            days_after = rule.DaysAfterPrerequisite 
+            included_classes_str = rule.IncludedClasses
             
-            # Check 1: Prerequisite
-            prereq_met = (prereq_id is None) or (prereq_id in completed_eval_ids)
+            # --- Check 0: Class Inclusion ---
+            # IMPORTANT: Correct Logic for Mixed Classes
+            # If "IncludedClasses" is set (e.g., 'A,B,C'), ONLY those classes see it.
+            # If "IncludedClasses" is EMPTY or NULL, EVERYONE sees it.
             
-            # Check 2: Repeatability (Basic check: if not repeatable and ever done, block)
+            if included_classes_str:
+                # Normalize separators (allow comma or space-comma)
+                allowed_list = [c.strip() for c in included_classes_str.replace('،', ',').split(',')]
+                
+                # Check if current employee's class is in the allowed list
+                # Use partial match or exact? Let's use exact substring check for safety
+                # e.g. emp_class='مساعد مدير', allowed='مدير' -> This might be tricky.
+                # Let's assume exact string match for the defined classes codes.
+                
+                is_allowed = False
+                for allowed in allowed_list:
+                    if allowed == emp_class or allowed in emp_class:
+                        is_allowed = True
+                        break
+                
+                if not is_allowed:
+                    # Skip this evaluation type for this user
+                    continue
+
+            # --- Check 1: Prerequisite ---
+            prereq_met = False
+            prereq_date = None
+            
+            if prereq_id is None:
+                prereq_met = True
+                # If no prereq, fallback to Hire Date for timing
+                prereq_date = hire_date
+            else:
+                 # Check if Prereq ID is in completed list
+                 # We need the DATE of that completion too
+                 for c in completed_evals:
+                     if c['id'] == prereq_id:
+                         prereq_met = True
+                         prereq_date = c['date']
+                         break
+            
+            # --- Check 2: Repeatability ---
             is_completed_ever = eval_id in completed_eval_ids
             repeat_met = is_repeatable or (not is_completed_ever)
             
-            # Check 3: Cycle & Cycle-Specific Duplication
+            # --- Check 3: Cycle OR Auto-Time Trigger ---
             is_open = False
             already_done_in_cycle = False
-            
-            if eval_id in open_cycle_depts:
-                cycle_info = open_cycle_depts[eval_id]
-                linked_depts = cycle_info['depts']
-                
-                # Check Department Match
-                if not linked_depts: # Empty list means "all departments"
-                    is_open = True
-                elif manager_dept_id in linked_depts:
-                    is_open = True
-                
-                # If cycle is open, check if we already did it IN THIS CYCLE
-                if is_open:
-                    for ce in completed_evals:
-                        if ce['id'] == eval_id:
-                            # Check if evaluation date falls within this cycle's window
-                            if cycle_info['start'] <= ce['date'] <= cycle_info['end']:
-                                already_done_in_cycle = True
-                                break
+            status_note = ''
+
+            # Logic: If 'DaysAfter' is set, we use Time-Based Logic. Otherwise, we use Cycle Logic.
+            if days_after is not None:
+                # === TIME BASED LOGIC ===
+                if prereq_met and prereq_date:
+                    # Calculate Due Date
+                    due_date = prereq_date + timedelta(days=days_after)
+                    
+                    # Logic: Is it DUE yet? (Today >= Due Date)
+                    # And maybe we want a window? For now, just "Is it time?"
+                    if today >= due_date:
+                        is_open = True
+                        status_note = '(مستحق تلقائياً)'
+                    else:
+                        status_note = f'(يستحق في {due_date})'
+                else:
+                    status_note = '(بانتظار المتطلب)'
+                    
+                # For time-based, "Cycle" duplication check is simple: Have we done THIS specific step?
+                # If not repeatable, 'is_completed_ever' handles it.
+                # If repeatable, we might need complex "time window" logic, but user said "30 days then 3 months".
+                # These sound like ONE-OFF events per employee. So likely Valid only ONCE.
+                if is_completed_ever and not is_repeatable:
+                    already_done_in_cycle = True # Treat as done
+                    
             else:
-                # No cycle exists = open if other rules pass (sequential non-timed)
-                is_open = True
-                
+                # === TRADITIONAL CYCLE LOGIC ===
+                if eval_id in open_cycle_depts:
+                    cycle_info = open_cycle_depts[eval_id]
+                    linked_depts = cycle_info['depts']
+                    
+                    if not linked_depts or manager_dept_id in linked_depts:
+                        is_open = True
+                    
+                    if is_open:
+                        for ce in completed_evals:
+                            if ce['id'] == eval_id:
+                                if cycle_info['start'] <= ce['date'] <= cycle_info['end']:
+                                    already_done_in_cycle = True
+                                    break
+                else:
+                    is_open = True # Always open if no cycles defined (and no days_after)
+
             # Final decision logic
             if already_done_in_cycle:
-                # Even if repeatable, we did it for this cycle.
                 available_eval_list.append({
-                    'id': eval_id, 'name': rule.DisplayName, 'disabled': True, 'note': '(تم التقييم لهذه الدورة)'
+                    'id': eval_id, 'name': rule.DisplayName, 'disabled': True, 'note': '(تم التقييم)'
                 })
             elif prereq_met and repeat_met and is_open:
                 available_eval_list.append({
-                    'id': eval_id, 'name': rule.DisplayName, 'disabled': False, 'note': '(متاح)'
+                    'id': eval_id, 'name': rule.DisplayName, 'disabled': False, 
+                    'note': status_note if status_note else '(متاح)'
                 })
             else:
-                note = ''
-                if not prereq_met:
-                    prereq_name = next((t.DisplayName for t in all_types_rules if t.EvaluationTypeID == prereq_id), '')
-                    note = f'(متوقف على: {prereq_name})'
-                elif not repeat_met: note = '(تم إكماله)'
-                elif not is_open: note = '(خارج دورة التقييم)'
+                # Determine why it's closed for better UI
+                note = status_note
+                if not note:
+                    if not prereq_met: 
+                        prereq_name = next((t.DisplayName for t in all_types_rules if t.EvaluationTypeID == prereq_id), '')
+                        note = f'(متوقف على: {prereq_name})'
+                    elif not repeat_met: note = '(تم إكماله)'
+                    elif not is_open: note = '(خارج دورة التقييم)'
                     
                 available_eval_list.append({
                     'id': eval_id, 'name': rule.DisplayName, 'disabled': True, 'note': note
@@ -282,7 +355,7 @@ def get_rating_from_score(score):
 def get_employee_class(user_id):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT employee_class FROM [Zktime_Copy].[dbo].[USERINFO] WHERE USERID = ?", (user_id,))
+    cursor.execute("SELECT employee_class FROM [Optima].[dbo].[USERINFO] WHERE USERID = ?", (user_id,))
     result = cursor.fetchone()
     conn.close()
     return result.employee_class if result and result.employee_class else 'لم تضاف'
@@ -292,7 +365,7 @@ def get_all_classes():
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute("SELECT ClassID, ClassName, DisplayName FROM [Zktime_Copy].[dbo].[EmployeeClasses] ORDER BY ClassName")
+        cursor.execute("SELECT ClassID, ClassName, DisplayName FROM [Optima].[dbo].[EmployeeClasses] ORDER BY ClassName")
         classes = cursor.fetchall()
         conn.close()
         return classes
@@ -341,7 +414,7 @@ def login():
         try:
             conn = get_db_connection()
             cursor = conn.cursor()
-            cursor.execute("SELECT UserID, Username, PasswordHash, RoleID, Name FROM [Zktime_Copy].[dbo].[Users] WHERE Username = ?", (username,))
+            cursor.execute("SELECT UserID, Username, PasswordHash, RoleID, Name FROM [Optima].[dbo].[Users] WHERE Username = ?", (username,))
             user = cursor.fetchone()
         except Exception as e:
             flash('❌ حدث خطأ في قاعدة البيانات.', 'danger')
@@ -409,16 +482,16 @@ def dashboard():
             # KPI Logic: Count All
             sql_kpis = """
                 SELECT 
-                    (SELECT COUNT(*) FROM [Zktime_Copy].[dbo].[Users]) as UsersCount,
-                    (SELECT COUNT(*) FROM [Zktime_Copy].[dbo].[USERINFO] WHERE (IsActive = 1 OR IsActive IS NULL)) as ActiveCount,
-                    (SELECT COUNT(*) FROM [Zktime_Copy].[dbo].[USERINFO] WHERE IsActive = 0) as ArchivedCount,
-                    (SELECT COUNT(*) FROM [Zktime_Copy].[dbo].[Evaluations] WHERE OverallScore IS NOT NULL) as EvalsCount,
-                    (SELECT AVG(OverallScore) FROM [Zktime_Copy].[dbo].[Evaluations] WHERE OverallScore IS NOT NULL) as AvgScore
+                    (SELECT COUNT(*) FROM [Optima].[dbo].[Users]) as UsersCount,
+                    (SELECT COUNT(*) FROM [Optima].[dbo].[USERINFO] WHERE (IsActive = 1 OR IsActive IS NULL)) as ActiveCount,
+                    (SELECT COUNT(*) FROM [Optima].[dbo].[USERINFO] WHERE IsActive = 0) as ArchivedCount,
+                    (SELECT COUNT(*) FROM [Optima].[dbo].[Evaluations] WHERE OverallScore IS NOT NULL) as EvalsCount,
+                    (SELECT AVG(OverallScore) FROM [Optima].[dbo].[Evaluations] WHERE OverallScore IS NOT NULL) as AvgScore
             """
         else:
             # Manager Department Filters
             # Get Manager's Dept ID first
-            cursor.execute("SELECT DepartmentID FROM [Zktime_Copy].[dbo].[Users] WHERE UserID = ?", (ctx['user_id'],))
+            cursor.execute("SELECT DepartmentID FROM [Optima].[dbo].[Users] WHERE UserID = ?", (ctx['user_id'],))
             user_row = cursor.fetchone()
             dept_id = user_row.DepartmentID if user_row else None
             
@@ -434,11 +507,11 @@ def dashboard():
 
             sql_kpis = """
                 SELECT 
-                    (SELECT COUNT(*) FROM [Zktime_Copy].[dbo].[Users] WHERE DepartmentID = ?) as UsersCount,
-                    (SELECT COUNT(*) FROM [Zktime_Copy].[dbo].[USERINFO] WHERE DEFAULTDEPTID = ? AND (IsActive = 1 OR IsActive IS NULL)) as ActiveCount,
-                    (SELECT COUNT(*) FROM [Zktime_Copy].[dbo].[USERINFO] WHERE DEFAULTDEPTID = ? AND IsActive = 0) as ArchivedCount,
-                    (SELECT COUNT(*) FROM [Zktime_Copy].[dbo].[Evaluations] E JOIN [Zktime_Copy].[dbo].[USERINFO] UI ON E.EmployeeUserID = UI.USERID WHERE UI.DEFAULTDEPTID = ? AND E.OverallScore IS NOT NULL) as EvalsCount,
-                    (SELECT AVG(E.OverallScore) FROM [Zktime_Copy].[dbo].[Evaluations] E JOIN [Zktime_Copy].[dbo].[USERINFO] UI ON E.EmployeeUserID = UI.USERID WHERE UI.DEFAULTDEPTID = ? AND E.OverallScore IS NOT NULL) as AvgScore
+                    (SELECT COUNT(*) FROM [Optima].[dbo].[Users] WHERE DepartmentID = ?) as UsersCount,
+                    (SELECT COUNT(*) FROM [Optima].[dbo].[USERINFO] WHERE DEFAULTDEPTID = ? AND (IsActive = 1 OR IsActive IS NULL)) as ActiveCount,
+                    (SELECT COUNT(*) FROM [Optima].[dbo].[USERINFO] WHERE DEFAULTDEPTID = ? AND IsActive = 0) as ArchivedCount,
+                    (SELECT COUNT(*) FROM [Optima].[dbo].[Evaluations] E JOIN [Optima].[dbo].[USERINFO] UI ON E.EmployeeUserID = UI.USERID WHERE UI.DEFAULTDEPTID = ? AND E.OverallScore IS NOT NULL) as EvalsCount,
+                    (SELECT AVG(E.OverallScore) FROM [Optima].[dbo].[Evaluations] E JOIN [Optima].[dbo].[USERINFO] UI ON E.EmployeeUserID = UI.USERID WHERE UI.DEFAULTDEPTID = ? AND E.OverallScore IS NOT NULL) as AvgScore
             """
 
         # ==========================================
@@ -460,26 +533,26 @@ def dashboard():
         # Note: We must ensure the params list matches the order of '?' in the string
         
         base_joins = """
-            FROM [Zktime_Copy].[dbo].[Evaluations] E
-            LEFT JOIN [Zktime_Copy].[dbo].[USERINFO] UI ON E.EmployeeUserID = UI.USERID
-            LEFT JOIN [Zktime_Copy].[dbo].[Users] U ON E.EmployeeUserID = U.UserID
-            LEFT JOIN [Zktime_Copy].[dbo].[Users] Mgr ON E.EvaluatorUserID = Mgr.UserID
-            LEFT JOIN [Zktime_Copy].[dbo].[EvaluationTypes] ET ON E.EvaluationTypeID = ET.EvaluationTypeID
+            FROM [Optima].[dbo].[Evaluations] E
+            LEFT JOIN [Optima].[dbo].[USERINFO] UI ON E.EmployeeUserID = UI.USERID
+            LEFT JOIN [Optima].[dbo].[Users] U ON E.EmployeeUserID = U.UserID
+            LEFT JOIN [Optima].[dbo].[Users] Mgr ON E.EvaluatorUserID = Mgr.UserID
+            LEFT JOIN [Optima].[dbo].[EvaluationTypes] ET ON E.EvaluationTypeID = ET.EvaluationTypeID
         """
 
         sql_charts = f"""
         -- 1. Rating Distribution
         SELECT OverallRating, COUNT(*) as count 
-        FROM [Zktime_Copy].[dbo].[Evaluations] E 
-        LEFT JOIN [Zktime_Copy].[dbo].[USERINFO] UI ON E.EmployeeUserID = UI.USERID 
+        FROM [Optima].[dbo].[Evaluations] E 
+        LEFT JOIN [Optima].[dbo].[USERINFO] UI ON E.EmployeeUserID = UI.USERID 
         WHERE {chart_where} AND OverallRating IS NOT NULL 
         GROUP BY OverallRating;
 
         -- 2. Type Distribution
         SELECT COALESCE(ET.DisplayName, E.EvaluationType, 'غير محدد'), COUNT(*) as count 
-        FROM [Zktime_Copy].[dbo].[Evaluations] E 
-        LEFT JOIN [Zktime_Copy].[dbo].[USERINFO] UI ON E.EmployeeUserID = UI.USERID 
-        LEFT JOIN [Zktime_Copy].[dbo].[EvaluationTypes] ET ON E.EvaluationTypeID = ET.EvaluationTypeID 
+        FROM [Optima].[dbo].[Evaluations] E 
+        LEFT JOIN [Optima].[dbo].[USERINFO] UI ON E.EmployeeUserID = UI.USERID 
+        LEFT JOIN [Optima].[dbo].[EvaluationTypes] ET ON E.EvaluationTypeID = ET.EvaluationTypeID 
         WHERE {chart_where} 
         GROUP BY COALESCE(ET.DisplayName, E.EvaluationType, 'غير محدد') ORDER BY count DESC;
 
@@ -510,8 +583,8 @@ def dashboard():
         SELECT CASE WHEN OverallScore >= 90 THEN 'ممتاز (90-100)' WHEN OverallScore >= 80 THEN 'جيد جدا (80-89)'
                WHEN OverallScore >= 70 THEN 'جيد (70-79)' WHEN OverallScore >= 60 THEN 'مقبول (60-69)' ELSE 'ضعيف (أقل من 60)' END as score_range,
                COUNT(*) as count
-        FROM [Zktime_Copy].[dbo].[Evaluations] E 
-        LEFT JOIN [Zktime_Copy].[dbo].[USERINFO] UI ON E.EmployeeUserID = UI.USERID
+        FROM [Optima].[dbo].[Evaluations] E 
+        LEFT JOIN [Optima].[dbo].[USERINFO] UI ON E.EmployeeUserID = UI.USERID
         WHERE {chart_where} AND OverallScore IS NOT NULL
         GROUP BY CASE WHEN OverallScore >= 90 THEN 'ممتاز (90-100)' WHEN OverallScore >= 80 THEN 'جيد جدا (80-89)'
                  WHEN OverallScore >= 70 THEN 'جيد (70-79)' WHEN OverallScore >= 60 THEN 'مقبول (60-69)' ELSE 'ضعيف (أقل من 60)' END
@@ -548,9 +621,9 @@ def dashboard():
             # 1. Get Total Count
             cursor.execute("""
                 SELECT COUNT(*) 
-                FROM [Zktime_Copy].[dbo].[Users] U
+                FROM [Optima].[dbo].[Users] U
                 WHERE U.RoleID = 3 
-                AND U.UserID NOT IN (SELECT DISTINCT EvaluatorUserID FROM [Zktime_Copy].[dbo].[Evaluations] WHERE EvaluatorUserID IS NOT NULL)
+                AND U.UserID NOT IN (SELECT DISTINCT EvaluatorUserID FROM [Optima].[dbo].[Evaluations] WHERE EvaluatorUserID IS NOT NULL)
             """)
             managers_count = cursor.fetchone()[0]
             managers_total_pages = (managers_count + managers_limit - 1) // managers_limit
@@ -560,10 +633,10 @@ def dashboard():
             sql_admin = """
             -- Inactive Managers (Paginated)
             SELECT U.UserID, U.Name, D.DEPTNAME,
-                (SELECT COUNT(*) FROM [Zktime_Copy].[dbo].[USERINFO] WHERE DEFAULTDEPTID = U.DepartmentID AND IsActive = 1) as TotalEmployees
-            FROM [Zktime_Copy].[dbo].[Users] U
-            LEFT JOIN [Zktime_Copy].[dbo].[DEPARTMENTS] D ON U.DepartmentID = D.DEPTID
-            WHERE U.RoleID = 3 AND U.UserID NOT IN (SELECT DISTINCT EvaluatorUserID FROM [Zktime_Copy].[dbo].[Evaluations] WHERE EvaluatorUserID IS NOT NULL)
+                (SELECT COUNT(*) FROM [Optima].[dbo].[USERINFO] WHERE DEFAULTDEPTID = U.DepartmentID AND IsActive = 1) as TotalEmployees
+            FROM [Optima].[dbo].[Users] U
+            LEFT JOIN [Optima].[dbo].[DEPARTMENTS] D ON U.DepartmentID = D.DEPTID
+            WHERE U.RoleID = 3 AND U.UserID NOT IN (SELECT DISTINCT EvaluatorUserID FROM [Optima].[dbo].[Evaluations] WHERE EvaluatorUserID IS NOT NULL)
             ORDER BY U.Name
             OFFSET 0 ROWS FETCH NEXT 5 ROWS ONLY;
 
@@ -572,9 +645,9 @@ def dashboard():
                 COALESCE(Mgr.Name, Mgr.Username) AS EvaluatorName, 
                 COUNT(E.EvaluationID) as evaluation_count, 
                 COUNT(DISTINCT E.EmployeeUserID) as distinct_evaluated,
-                (SELECT COUNT(*) FROM [Zktime_Copy].[dbo].[USERINFO] WHERE DEFAULTDEPTID = Mgr.DepartmentID AND IsActive = 1) as total_dept_employees
-            FROM [Zktime_Copy].[dbo].[Evaluations] E
-            LEFT JOIN [Zktime_Copy].[dbo].[Users] Mgr ON E.EvaluatorUserID = Mgr.UserID
+                (SELECT COUNT(*) FROM [Optima].[dbo].[USERINFO] WHERE DEFAULTDEPTID = Mgr.DepartmentID AND IsActive = 1) as total_dept_employees
+            FROM [Optima].[dbo].[Evaluations] E
+            LEFT JOIN [Optima].[dbo].[Users] Mgr ON E.EvaluatorUserID = Mgr.UserID
             GROUP BY Mgr.UserID, Mgr.Name, Mgr.Username, Mgr.DepartmentID
             HAVING COALESCE(Mgr.Name, Mgr.Username) IS NOT NULL ORDER BY COUNT(E.EvaluationID) DESC;
             """
@@ -591,24 +664,24 @@ def dashboard():
         -- 1. Hires
         SELECT YEAR(HiredDay) as Yr, COUNT(*) as Count 
         FROM (
-            SELECT HiredDay FROM [Zktime_Copy].[dbo].[USERINFO] WHERE HiredDay IS NOT NULL AND DEFAULTDEPTID <> -1
+            SELECT HiredDay FROM [Optima].[dbo].[USERINFO] WHERE HiredDay IS NOT NULL AND DEFAULTDEPTID <> -1
             UNION ALL 
-            SELECT HiredDay FROM [Zktime_Copy].[dbo].[EmployeeArchive] WHERE HiredDay IS NOT NULL
+            SELECT HiredDay FROM [Optima].[dbo].[EmployeeArchive] WHERE HiredDay IS NOT NULL
         ) as AllHires 
         WHERE YEAR(HiredDay) > 1900 GROUP BY YEAR(HiredDay) ORDER BY Yr;
 
         -- 2. Leavers
-        SELECT YEAR(EndDay) as Yr, COUNT(*) as Count FROM [Zktime_Copy].[dbo].[EmployeeArchive] 
+        SELECT YEAR(EndDay) as Yr, COUNT(*) as Count FROM [Optima].[dbo].[EmployeeArchive] 
         WHERE EndDay IS NOT NULL AND YEAR(EndDay) > 1900 GROUP BY YEAR(EndDay) ORDER BY Yr;
 
         -- 3. Dept Turnover
-        SELECT D.DEPTNAME, COUNT(*) as Count FROM [Zktime_Copy].[dbo].[EmployeeArchive] A 
-        LEFT JOIN [Zktime_Copy].[dbo].[DEPARTMENTS] D ON A.ArchivedDeptID = D.DEPTID 
+        SELECT D.DEPTNAME, COUNT(*) as Count FROM [Optima].[dbo].[EmployeeArchive] A 
+        LEFT JOIN [Optima].[dbo].[DEPARTMENTS] D ON A.ArchivedDeptID = D.DEPTID 
         GROUP BY D.DEPTNAME ORDER BY Count DESC;
 
         -- 4. Pos Turnover
-        SELECT P.PositionName, COUNT(*) as Count FROM [Zktime_Copy].[dbo].[EmployeeArchive] A 
-        LEFT JOIN [Zktime_Copy].[dbo].[POSITIONS] P ON A.ArchivedPosID = P.PositionID 
+        SELECT P.PositionName, COUNT(*) as Count FROM [Optima].[dbo].[EmployeeArchive] A 
+        LEFT JOIN [Optima].[dbo].[POSITIONS] P ON A.ArchivedPosID = P.PositionID 
         GROUP BY P.PositionName ORDER BY Count DESC;
         """
         
@@ -674,9 +747,9 @@ def dashboard_managers_partial():
         # 1. Get Total Count
         cursor.execute("""
             SELECT COUNT(*) 
-            FROM [Zktime_Copy].[dbo].[Users] U
+            FROM [Optima].[dbo].[Users] U
             WHERE U.RoleID = 3 
-            AND U.UserID NOT IN (SELECT DISTINCT EvaluatorUserID FROM [Zktime_Copy].[dbo].[Evaluations] WHERE EvaluatorUserID IS NOT NULL)
+            AND U.UserID NOT IN (SELECT DISTINCT EvaluatorUserID FROM [Optima].[dbo].[Evaluations] WHERE EvaluatorUserID IS NOT NULL)
         """)
         total_count = cursor.fetchone()[0]
         total_pages = (total_count + limit - 1) // limit
@@ -684,11 +757,11 @@ def dashboard_managers_partial():
         # 2. Get Paginated Data
         sql = """
             SELECT U.UserID, U.Name, D.DEPTNAME,
-                (SELECT COUNT(*) FROM [Zktime_Copy].[dbo].[USERINFO] WHERE DEFAULTDEPTID = U.DepartmentID AND IsActive = 1) as TotalEmployees
-            FROM [Zktime_Copy].[dbo].[Users] U
-            LEFT JOIN [Zktime_Copy].[dbo].[DEPARTMENTS] D ON U.DepartmentID = D.DEPTID
+                (SELECT COUNT(*) FROM [Optima].[dbo].[USERINFO] WHERE DEFAULTDEPTID = U.DepartmentID AND IsActive = 1) as TotalEmployees
+            FROM [Optima].[dbo].[Users] U
+            LEFT JOIN [Optima].[dbo].[DEPARTMENTS] D ON U.DepartmentID = D.DEPTID
             WHERE U.RoleID = 3 
-            AND U.UserID NOT IN (SELECT DISTINCT EvaluatorUserID FROM [Zktime_Copy].[dbo].[Evaluations] WHERE EvaluatorUserID IS NOT NULL)
+            AND U.UserID NOT IN (SELECT DISTINCT EvaluatorUserID FROM [Optima].[dbo].[Evaluations] WHERE EvaluatorUserID IS NOT NULL)
             ORDER BY U.Name
             OFFSET ? ROWS FETCH NEXT ? ROWS ONLY
         """
@@ -717,7 +790,7 @@ def users():
     dept_id_filter = request.args.get('dept_id', '')
     conn = get_db_connection()
     cursor = conn.cursor()
-    query_base = "SELECT U.UserID, U.Username, COALESCE(U.Name, UI.NAME) AS FullName, U.DepartmentID, D.DEPTNAME, U.RoleID, R.RoleName FROM [Zktime_Copy].[dbo].[Users] U LEFT JOIN [Zktime_Copy].[dbo].[USERINFO] UI ON U.UserID = UI.USERID LEFT JOIN [Zktime_Copy].[dbo].[DEPARTMENTS] D ON U.DepartmentID = D.DEPTID LEFT JOIN [Zktime_Copy].[dbo].[Roles] R ON U.RoleID = R.RoleID"
+    query_base = "SELECT U.UserID, U.Username, COALESCE(U.Name, UI.NAME) AS FullName, U.DepartmentID, D.DEPTNAME, U.RoleID, R.RoleName FROM [Optima].[dbo].[Users] U LEFT JOIN [Optima].[dbo].[USERINFO] UI ON U.UserID = UI.USERID LEFT JOIN [Optima].[dbo].[DEPARTMENTS] D ON U.DepartmentID = D.DEPTID LEFT JOIN [Optima].[dbo].[Roles] R ON U.RoleID = R.RoleID"
     where_clauses = ["1=1"] 
     params = []
     if search:
@@ -732,9 +805,9 @@ def users():
     query = f"{query_base} WHERE {' AND '.join(where_clauses)} ORDER BY U.UserID"
     cursor.execute(query, params)
     users = cursor.fetchall()
-    cursor.execute("SELECT RoleID, RoleName FROM [Zktime_Copy].[dbo].[Roles] ORDER BY RoleID")
+    cursor.execute("SELECT RoleID, RoleName FROM [Optima].[dbo].[Roles] ORDER BY RoleID")
     roles = cursor.fetchall()
-    cursor.execute("SELECT DEPTID, DEPTNAME FROM [Zktime_Copy].[dbo].[DEPARTMENTS] ORDER BY DEPTID")
+    cursor.execute("SELECT DEPTID, DEPTNAME FROM [Optima].[dbo].[DEPARTMENTS] ORDER BY DEPTID")
     depts = cursor.fetchall()
     conn.close()
     return render_template('users.html', users=users, roles=roles, depts=depts, filters=request.args, is_admin=is_admin())
@@ -744,9 +817,9 @@ def users():
 def add_user():
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT RoleID, RoleName FROM [Zktime_Copy].[dbo].[Roles] ORDER BY RoleID")
+    cursor.execute("SELECT RoleID, RoleName FROM [Optima].[dbo].[Roles] ORDER BY RoleID")
     roles = cursor.fetchall()
-    cursor.execute("SELECT DEPTID, DEPTNAME FROM [Zktime_Copy].[dbo].[DEPARTMENTS] ORDER BY DEPTID")
+    cursor.execute("SELECT DEPTID, DEPTNAME FROM [Optima].[dbo].[DEPARTMENTS] ORDER BY DEPTID")
     depts = cursor.fetchall()
     if request.method == 'POST':
         username = request.form['username']
@@ -755,7 +828,7 @@ def add_user():
         role_id = request.form.get('role_id') or None
         dept_id = request.form.get('department_id') or None
         try:
-            cursor.execute("INSERT INTO [Zktime_Copy].[dbo].[Users] (Username, PasswordHash, RoleID, Name, DepartmentID) VALUES (?, ?, ?, ?, ?)", (username, password, role_id, name, dept_id))
+            cursor.execute("INSERT INTO [Optima].[dbo].[Users] (Username, PasswordHash, RoleID, Name, DepartmentID) VALUES (?, ?, ?, ?, ?)", (username, password, role_id, name, dept_id))
             conn.commit()
             flash('✅ User added successfully!', 'success')
             return redirect(url_for('users'))
@@ -770,11 +843,11 @@ def add_user():
 def edit_user(user_id):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT RoleID, RoleName FROM [Zktime_Copy].[dbo].[Roles] ORDER BY RoleID")
+    cursor.execute("SELECT RoleID, RoleName FROM [Optima].[dbo].[Roles] ORDER BY RoleID")
     roles = cursor.fetchall()
-    cursor.execute("SELECT DEPTID, DEPTNAME FROM [Zktime_Copy].[dbo].[DEPARTMENTS] ORDER BY DEPTID")
+    cursor.execute("SELECT DEPTID, DEPTNAME FROM [Optima].[dbo].[DEPARTMENTS] ORDER BY DEPTID")
     depts = cursor.fetchall()
-    cursor.execute("SELECT UserID, Username, RoleID, Name, DepartmentID FROM [Zktime_Copy].[dbo].[Users] WHERE UserID = ?", (user_id,))
+    cursor.execute("SELECT UserID, Username, RoleID, Name, DepartmentID FROM [Optima].[dbo].[Users] WHERE UserID = ?", (user_id,))
     user = cursor.fetchone()
     if request.method == 'POST':
         username = request.form['username']
@@ -783,9 +856,9 @@ def edit_user(user_id):
         dept_id = request.form.get('department_id') or None
         new_password = request.form.get('password') or None
         if new_password:
-            cursor.execute("UPDATE [Zktime_Copy].[dbo].[Users] SET Username = ?, Name = ?, RoleID = ?, DepartmentID = ?, PasswordHash = ? WHERE UserID = ?", (username, name, role_id, dept_id, new_password, user_id))
+            cursor.execute("UPDATE [Optima].[dbo].[Users] SET Username = ?, Name = ?, RoleID = ?, DepartmentID = ?, PasswordHash = ? WHERE UserID = ?", (username, name, role_id, dept_id, new_password, user_id))
         else:
-            cursor.execute("UPDATE [Zktime_Copy].[dbo].[Users] SET Username = ?, Name = ?, RoleID = ?, DepartmentID = ? WHERE UserID = ?", (username, name, role_id, dept_id, user_id))
+            cursor.execute("UPDATE [Optima].[dbo].[Users] SET Username = ?, Name = ?, RoleID = ?, DepartmentID = ? WHERE UserID = ?", (username, name, role_id, dept_id, user_id))
         conn.commit()
         conn.close()
         flash('User updated successfully!', 'success')
@@ -798,7 +871,7 @@ def edit_user(user_id):
 def delete_user(user_id):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("DELETE FROM [Zktime_Copy].[dbo].[Users] WHERE UserID = ?", (user_id,))
+    cursor.execute("DELETE FROM [Optima].[dbo].[Users] WHERE UserID = ?", (user_id,))
     conn.commit()
     conn.close()
     flash('User deleted successfully!', 'info')
@@ -842,7 +915,7 @@ def userinfo_list():
     if is_admin():
         where_clauses.append("(UI.IsActive = 1 OR UI.IsActive IS NULL)")
     elif is_officer():
-        cursor.execute("SELECT DepartmentID FROM [Zktime_Copy].[dbo].[Users] WHERE UserID = ?", (user_id,))
+        cursor.execute("SELECT DepartmentID FROM [Optima].[dbo].[Users] WHERE UserID = ?", (user_id,))
         user_row = cursor.fetchone()
         dept_id = user_row.DepartmentID if user_row else None
         
@@ -854,16 +927,16 @@ def userinfo_list():
         else:
             where_clauses.append("1=0")
     elif role_id == 3:
-        cursor.execute("SELECT DepartmentID FROM [Zktime_Copy].[dbo].[Users] WHERE UserID = ?", (user_id,))
+        cursor.execute("SELECT DepartmentID FROM [Optima].[dbo].[Users] WHERE UserID = ?", (user_id,))
         user_row = cursor.fetchone()
         dept_id = user_row.DepartmentID if user_row and user_row.DepartmentID else None
         
         if dept_id and dept_id != -1:
             hierarchy_query = """
                 WITH DeptHierarchy AS (
-                    SELECT DEPTID FROM [Zktime_Copy].[dbo].[DEPARTMENTS] WHERE DEPTID = ?
+                    SELECT DEPTID FROM [Optima].[dbo].[DEPARTMENTS] WHERE DEPTID = ?
                     UNION ALL
-                    SELECT d.DEPTID FROM [Zktime_Copy].[dbo].[DEPARTMENTS] d
+                    SELECT d.DEPTID FROM [Optima].[dbo].[DEPARTMENTS] d
                     INNER JOIN DeptHierarchy dh ON d.SUPDEPTID = dh.DEPTID
                 )
                 SELECT DEPTID FROM DeptHierarchy
@@ -926,21 +999,21 @@ def userinfo_list():
     batch_sql = f"""
         -- 1. Gender Stats
         SELECT UI.GENDER, COUNT(*) 
-        FROM [Zktime_Copy].[dbo].[USERINFO] UI
+        FROM [Optima].[dbo].[USERINFO] UI
         LEFT JOIN DEPARTMENTS D ON UI.DEFAULTDEPTID = D.DEPTID
         WHERE {where_sql}
         GROUP BY UI.GENDER;
 
         -- 2. Class Stats
         SELECT UI.employee_class, COUNT(*) 
-        FROM [Zktime_Copy].[dbo].[USERINFO] UI
+        FROM [Optima].[dbo].[USERINFO] UI
         LEFT JOIN DEPARTMENTS D ON UI.DEFAULTDEPTID = D.DEPTID
         WHERE {where_sql}
         GROUP BY UI.employee_class;
 
         -- 3. Top Depts
         SELECT TOP 5 D.DEPTNAME, COUNT(*) as cnt
-        FROM [Zktime_Copy].[dbo].[USERINFO] UI
+        FROM [Optima].[dbo].[USERINFO] UI
         LEFT JOIN DEPARTMENTS D ON UI.DEFAULTDEPTID = D.DEPTID
         WHERE {where_sql}
         GROUP BY D.DEPTNAME
@@ -949,7 +1022,7 @@ def userinfo_list():
         -- 4. Paged Data
         SELECT UI.USERID, UI.BADGENUMBER, UI.SSN, UI.NAME, UI.GENDER, UI.TITLE, UI.HIREDDAY,
                UI.DEFAULTDEPTID, UI.employee_class, D.DEPTNAME, UI.IsActive
-        FROM [Zktime_Copy].[dbo].[USERINFO] AS UI
+        FROM [Optima].[dbo].[USERINFO] AS UI
         LEFT JOIN DEPARTMENTS D ON UI.DEFAULTDEPTID = D.DEPTID
         WHERE {where_sql}
         ORDER BY {sort_field} {order_sql}
@@ -1033,9 +1106,9 @@ def userinfo_list():
 def userinfo_add():
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT DEPTID, DEPTNAME FROM [Zktime_Copy].[dbo].[DEPARTMENTS] ORDER BY DEPTID")
+    cursor.execute("SELECT DEPTID, DEPTNAME FROM [Optima].[dbo].[DEPARTMENTS] ORDER BY DEPTID")
     depts = cursor.fetchall()
-    cursor.execute("SELECT PositionID, PositionName, DeptID FROM [Zktime_Copy].[dbo].[POSITIONS] ORDER BY PositionName")
+    cursor.execute("SELECT PositionID, PositionName, DeptID FROM [Optima].[dbo].[POSITIONS] ORDER BY PositionName")
     positions_rows = cursor.fetchall()
     positions_list = [{'PositionID': p.PositionID, 'PositionName': p.PositionName, 'DeptID': p.DeptID} for p in positions_rows]
     
@@ -1052,7 +1125,7 @@ def userinfo_add():
         levels_list = request.form.getlist('employee_levels')
         employee_class = ",".join(levels_list) if levels_list else 'لم تضاف'
         cursor.execute("""
-    INSERT INTO [Zktime_Copy].[dbo].[USERINFO] 
+    INSERT INTO [Optima].[dbo].[USERINFO] 
     (BADGENUMBER, SSN, NAME, GENDER, TITLE, DEFAULTDEPTID, employee_class)
     VALUES (?, ?, ?, ?, ?, ?, ?)
 """, (badge, ssn, name, gender, title, defaultdept, employee_class))
@@ -1068,12 +1141,12 @@ def userinfo_add():
 def userinfo_edit(uid):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT DEPTID, DEPTNAME FROM [Zktime_Copy].[dbo].[DEPARTMENTS] ORDER BY DEPTID")
+    cursor.execute("SELECT DEPTID, DEPTNAME FROM [Optima].[dbo].[DEPARTMENTS] ORDER BY DEPTID")
     depts = cursor.fetchall()
-    cursor.execute("SELECT PositionID, PositionName, DeptID FROM [Zktime_Copy].[dbo].[POSITIONS] ORDER BY PositionName")
+    cursor.execute("SELECT PositionID, PositionName, DeptID FROM [Optima].[dbo].[POSITIONS] ORDER BY PositionName")
     positions_rows = cursor.fetchall()
     positions_list = [{'PositionID': p.PositionID, 'PositionName': p.PositionName, 'DeptID': p.DeptID} for p in positions_rows]
-    cursor.execute("SELECT USERID, BADGENUMBER, SSN, NAME, GENDER, TITLE, DEFAULTDEPTID, PositionID, employee_class FROM [Zktime_Copy].[dbo].[USERINFO] WHERE USERID = ?", (uid,))
+    cursor.execute("SELECT USERID, BADGENUMBER, SSN, NAME, GENDER, TITLE, DEFAULTDEPTID, PositionID, employee_class FROM [Optima].[dbo].[USERINFO] WHERE USERID = ?", (uid,))
     user = cursor.fetchone()
     
     classes = get_all_classes()
@@ -1089,7 +1162,7 @@ def userinfo_edit(uid):
         levels_list = request.form.getlist('employee_levels')
         employee_class = ",".join(levels_list) if levels_list else 'لم تضاف'
         cursor.execute("""
-    UPDATE [Zktime_Copy].[dbo].[USERINFO] SET 
+    UPDATE [Optima].[dbo].[USERINFO] SET 
     BADGENUMBER = ?, SSN = ?, NAME = ?, GENDER = ?, TITLE = ?, DEFAULTDEPTID = ?, employee_class = ?
     WHERE USERID = ?
     """, (badge, ssn, name, gender, title, defaultdept, employee_class, uid))
@@ -1106,13 +1179,13 @@ def userinfo_view(uid):
     conn = get_db_connection()
     cursor = conn.cursor()
     # Fetch user data (basic info)
-    cursor.execute("SELECT * FROM [Zktime_Copy].[dbo].[USERINFO] WHERE USERID = ?", (uid,))
+    cursor.execute("SELECT * FROM [Optima].[dbo].[USERINFO] WHERE USERID = ?", (uid,))
     user = cursor.fetchone()
     
     # Fetch department name
     dept_name = "N/A"
     if user and user.DEFAULTDEPTID:
-         cursor.execute("SELECT DEPTNAME FROM [Zktime_Copy].[dbo].[DEPARTMENTS] WHERE DEPTID = ?", (user.DEFAULTDEPTID,))
+         cursor.execute("SELECT DEPTNAME FROM [Optima].[dbo].[DEPARTMENTS] WHERE DEPTID = ?", (user.DEFAULTDEPTID,))
          d_row = cursor.fetchone()
          if d_row: dept_name = d_row[0]
 
@@ -1120,8 +1193,8 @@ def userinfo_view(uid):
     # FIXED: Removed Join on CycleID as it does not exist in Evaluations table
     cursor.execute("""
         SELECT E.*, U.Name as EvaluatorName
-        FROM [Zktime_Copy].[dbo].[Evaluations] E
-        LEFT JOIN [Zktime_Copy].[dbo].[Users] U ON E.EvaluatorUserID = U.UserID
+        FROM [Optima].[dbo].[Evaluations] E
+        LEFT JOIN [Optima].[dbo].[Users] U ON E.EvaluatorUserID = U.UserID
         WHERE E.EmployeeUserID = ?
         ORDER BY E.EvaluationDate DESC
     """, (uid,))
@@ -1135,9 +1208,9 @@ def userinfo_view(uid):
             TS.EndDate,
             TE.PassStatus,
             TE.Grade
-        FROM [Zktime_Copy].[dbo].[TrainingEnrollments] TE
-        LEFT JOIN [Zktime_Copy].[dbo].[TrainingSessions] TS ON TE.SessionID = TS.SessionID
-        LEFT JOIN [Zktime_Copy].[dbo].[TrainingCourses] TC ON TS.CourseID = TC.TrainingCourseID
+        FROM [Optima].[dbo].[TrainingEnrollments] TE
+        LEFT JOIN [Optima].[dbo].[TrainingSessions] TS ON TE.SessionID = TS.SessionID
+        LEFT JOIN [Optima].[dbo].[TrainingCourses] TC ON TS.CourseID = TC.TrainingCourseID
         WHERE TE.EmployeeUserID = ?
         ORDER BY TS.SessionDate DESC
     """, (uid,))
@@ -1154,7 +1227,7 @@ def userinfo_archive(uid):
     cursor = conn.cursor()
     try:
         # Get current info
-        cursor.execute("SELECT BADGENUMBER, NAME, SSN, DEFAULTDEPTID, HIREDDAY FROM [Zktime_Copy].[dbo].[USERINFO] WHERE USERID = ?", (uid,))
+        cursor.execute("SELECT BADGENUMBER, NAME, SSN, DEFAULTDEPTID, HIREDDAY FROM [Optima].[dbo].[USERINFO] WHERE USERID = ?", (uid,))
         row = cursor.fetchone()
         if not row:
             flash('User not found', 'danger')
@@ -1168,7 +1241,7 @@ def userinfo_archive(uid):
              new_badge_candidate = new_badge_candidate[:24]
 
         # Update UserInfo
-        cursor.execute("UPDATE [Zktime_Copy].[dbo].[USERINFO] SET IsActive = 0, BADGENUMBER = ? WHERE USERID = ?", (new_badge_candidate, uid))
+        cursor.execute("UPDATE [Optima].[dbo].[USERINFO] SET IsActive = 0, BADGENUMBER = ? WHERE USERID = ?", (new_badge_candidate, uid))
         
         # Insert into EmployeeArchive
         reason_id = request.form.get('reason_id')
@@ -1176,7 +1249,7 @@ def userinfo_archive(uid):
         
         if reason_id:
              cursor.execute("""
-                 INSERT INTO [Zktime_Copy].[dbo].[EmployeeArchive]
+                 INSERT INTO [Optima].[dbo].[EmployeeArchive]
                  (UserID, Name, ArchivedSSN, ArchivedDeptID, HiredDay, EndDay, ArchiveReasonID, ArchiveComment, AdminUserID)
                  VALUES (?, ?, ?, ?, ?, GETDATE(), ?, ?, ?)
              """, (uid, row.NAME, row.SSN, row.DEFAULTDEPTID, row.HIREDDAY, reason_id, note, session.get('user_id')))
@@ -1197,7 +1270,7 @@ def userinfo_restore(uid):
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
-        cursor.execute("SELECT BADGENUMBER FROM [Zktime_Copy].[dbo].[USERINFO] WHERE USERID = ?", (uid,))
+        cursor.execute("SELECT BADGENUMBER FROM [Optima].[dbo].[USERINFO] WHERE USERID = ?", (uid,))
         row = cursor.fetchone()
         current_badge = row.BADGENUMBER # e.g. "100_A"
         
@@ -1207,13 +1280,13 @@ def userinfo_restore(uid):
             possible_original = current_badge[:-2]
             
             # Check if this original badge is taken
-            cursor.execute("SELECT COUNT(*) FROM [Zktime_Copy].[dbo].[USERINFO] WHERE BADGENUMBER = ?", (possible_original,))
+            cursor.execute("SELECT COUNT(*) FROM [Optima].[dbo].[USERINFO] WHERE BADGENUMBER = ?", (possible_original,))
             if cursor.fetchone()[0] == 0:
                 new_badge = possible_original
             else:
                 flash(f'⚠️ Original badge "{possible_original}" is taken. Restoring with current badge "{current_badge}". Please update manually.', 'warning')
         
-        cursor.execute("UPDATE [Zktime_Copy].[dbo].[USERINFO] SET IsActive = 1, BADGENUMBER = ? WHERE USERID = ?", (new_badge, uid))
+        cursor.execute("UPDATE [Optima].[dbo].[USERINFO] SET IsActive = 1, BADGENUMBER = ? WHERE USERID = ?", (new_badge, uid))
         conn.commit()
         log_system_action('Users', 'Restore', f'Restored User ID {uid}. Badge updated to {new_badge}')
         flash('✅ User restored successfully!', 'success')
@@ -1242,13 +1315,13 @@ def userinfo_archive_update(uid):
         reason_id = request.form.get('reason_id') or None
         
         # 1. Update USERINFO
-        cursor.execute("UPDATE [Zktime_Copy].[dbo].[USERINFO] SET HIREDDAY = ?, DEFAULTDEPTID = ? WHERE USERID = ?", (hired_day, dept_id, uid))
+        cursor.execute("UPDATE [Optima].[dbo].[USERINFO] SET HIREDDAY = ?, DEFAULTDEPTID = ? WHERE USERID = ?", (hired_day, dept_id, uid))
         
         # 2. Update EmployeeArchive
         # Check if record exists first
-        cursor.execute("SELECT COUNT(*) FROM [Zktime_Copy].[dbo].[EmployeeArchive] WHERE UserID = ?", (uid,))
+        cursor.execute("SELECT COUNT(*) FROM [Optima].[dbo].[EmployeeArchive] WHERE UserID = ?", (uid,))
         if cursor.fetchone()[0] > 0:
-            cursor.execute("UPDATE [Zktime_Copy].[dbo].[EmployeeArchive] SET EndDay = ?, ArchiveReasonID = ? WHERE UserID = ?", (end_day, reason_id, uid))
+            cursor.execute("UPDATE [Optima].[dbo].[EmployeeArchive] SET EndDay = ?, ArchiveReasonID = ? WHERE UserID = ?", (end_day, reason_id, uid))
         else:
             # If for some reason missing, maybe insert? But let's just warn or ignore for now as it's an update action.
             # Ideally fetch NAME/SSN to insert if needed but let's stick to update.
@@ -1272,7 +1345,7 @@ def userinfo_archive_update(uid):
 def roles():
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT RoleID, RoleName FROM [Zktime_Copy].[dbo].[Roles] ORDER BY RoleID")
+    cursor.execute("SELECT RoleID, RoleName FROM [Optima].[dbo].[Roles] ORDER BY RoleID")
     rows = cursor.fetchall()
     conn.close()
     return render_template('roles.html', roles=rows)
@@ -1284,7 +1357,7 @@ def roles_add():
         name = request.form['rolename']
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute("INSERT INTO [Zktime_Copy].[dbo].[Roles] (RoleName) VALUES (?)", (name,))
+        cursor.execute("INSERT INTO [Optima].[dbo].[Roles] (RoleName) VALUES (?)", (name,))
         conn.commit()
         conn.close()
         flash('Role added successfully!', 'success')
@@ -1296,11 +1369,11 @@ def roles_add():
 def roles_edit(rid):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT RoleID, RoleName FROM [Zktime_Copy].[dbo].[Roles] WHERE RoleID = ?", (rid,))
+    cursor.execute("SELECT RoleID, RoleName FROM [Optima].[dbo].[Roles] WHERE RoleID = ?", (rid,))
     role = cursor.fetchone()
     if request.method == 'POST':
         name = request.form['rolename']
-        cursor.execute("UPDATE [Zktime_Copy].[dbo].[Roles] SET RoleName = ? WHERE RoleID = ?", (name, rid))
+        cursor.execute("UPDATE [Optima].[dbo].[Roles] SET RoleName = ? WHERE RoleID = ?", (name, rid))
         conn.commit()
         conn.close()
         flash('Role updated successfully!', 'success')
@@ -1313,7 +1386,7 @@ def roles_edit(rid):
 def roles_delete(rid):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("DELETE FROM [Zktime_Copy].[dbo].[Roles] WHERE RoleID = ?", (rid,))
+    cursor.execute("DELETE FROM [Optima].[dbo].[Roles] WHERE RoleID = ?", (rid,))
     conn.commit()
     conn.close()
     flash('Role deleted successfully!', 'info')
@@ -1339,11 +1412,11 @@ def classes_add():
         conn = get_db_connection()
         cursor = conn.cursor()
         # Check uniqueness
-        cursor.execute("SELECT Count(*) FROM [Zktime_Copy].[dbo].[EmployeeClasses] WHERE ClassName = ?", (class_name,))
+        cursor.execute("SELECT Count(*) FROM [Optima].[dbo].[EmployeeClasses] WHERE ClassName = ?", (class_name,))
         if cursor.fetchone()[0] > 0:
             flash(f'❌ الفئة "{class_name}" موجودة بالفعل.', 'danger')
         else:
-            cursor.execute("INSERT INTO [Zktime_Copy].[dbo].[EmployeeClasses] (ClassName, DisplayName) VALUES (?, ?)", (class_name, display_name or class_name))
+            cursor.execute("INSERT INTO [Optima].[dbo].[EmployeeClasses] (ClassName, DisplayName) VALUES (?, ?)", (class_name, display_name or class_name))
             conn.commit()
             flash('✅ تم إضافة الفئة بنجاح.', 'success')
         conn.close()
@@ -1469,12 +1542,12 @@ def classes_delete(id):
         cursor = conn.cursor()
         
         # Check if it's a core class, although UI prevents it, secure backend too
-        cursor.execute("SELECT ClassName FROM [Zktime_Copy].[dbo].[EmployeeClasses] WHERE ClassID = ?", (id,))
+        cursor.execute("SELECT ClassName FROM [Optima].[dbo].[EmployeeClasses] WHERE ClassID = ?", (id,))
         row = cursor.fetchone()
         if row and row.ClassName in ['A', 'B', 'C', 'مشرف', 'مدير']:
             flash('⚠️ لا يمكن حذف الفئات الأساسية للنظام.', 'warning')
         else:
-            cursor.execute("DELETE FROM [Zktime_Copy].[dbo].[EmployeeClasses] WHERE ClassID = ?", (id,))
+            cursor.execute("DELETE FROM [Optima].[dbo].[EmployeeClasses] WHERE ClassID = ?", (id,))
             conn.commit()
             flash('✅ تم حذف الفئة بنجاح.', 'success')
             
@@ -1489,7 +1562,7 @@ def classes_delete(id):
 def departments_manage():
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT DEPTID, DEPTNAME, SUPDEPTID FROM [Zktime_Copy].[dbo].[DEPARTMENTS] ORDER BY DEPTID")
+    cursor.execute("SELECT DEPTID, DEPTNAME, SUPDEPTID FROM [Optima].[dbo].[DEPARTMENTS] ORDER BY DEPTID")
     rows = cursor.fetchall()
     conn.close()
     return render_template('departments.html', departments=rows)
@@ -1506,14 +1579,14 @@ def departments_add():
         
         try:
             # 1. Calculate the next available DEPTID
-            cursor.execute("SELECT MAX(DEPTID) FROM [Zktime_Copy].[dbo].[DEPARTMENTS]")
+            cursor.execute("SELECT MAX(DEPTID) FROM [Optima].[dbo].[DEPARTMENTS]")
             row = cursor.fetchone()
             # If table is empty, start at 1, otherwise add 1 to the max ID
             new_dept_id = (row[0] or 0) + 1
             
             # 2. Insert with the manually generated DEPTID
             cursor.execute("""
-                INSERT INTO [Zktime_Copy].[dbo].[DEPARTMENTS] (DEPTID, DEPTNAME, SUPDEPTID) 
+                INSERT INTO [Optima].[dbo].[DEPARTMENTS] (DEPTID, DEPTNAME, SUPDEPTID) 
                 VALUES (?, ?, ?)
             """, (new_dept_id, name, sup))
             
@@ -1538,12 +1611,12 @@ def departments_add():
 def departments_edit(did):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT DEPTID, DEPTNAME, SUPDEPTID FROM [Zktime_Copy].[dbo].[DEPARTMENTS] WHERE DEPTID = ?", (did,))
+    cursor.execute("SELECT DEPTID, DEPTNAME, SUPDEPTID FROM [Optima].[dbo].[DEPARTMENTS] WHERE DEPTID = ?", (did,))
     dept = cursor.fetchone()
     if request.method == 'POST':
         name = request.form['deptname']
         sup = request.form.get('supdeptid') or None
-        cursor.execute("UPDATE [Zktime_Copy].[dbo].[DEPARTMENTS] SET DEPTNAME = ?, SUPDEPTID = ? WHERE DEPTID = ?", (name, sup, did))
+        cursor.execute("UPDATE [Optima].[dbo].[DEPARTMENTS] SET DEPTNAME = ?, SUPDEPTID = ? WHERE DEPTID = ?", (name, sup, did))
         conn.commit()
         conn.close()
         flash('Department updated successfully!', 'success')
@@ -1556,7 +1629,7 @@ def departments_edit(did):
 def departments_delete(did):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("DELETE FROM [Zktime_Copy].[dbo].[DEPARTMENTS] WHERE DEPTID = ?", (did,))
+    cursor.execute("DELETE FROM [Optima].[dbo].[DEPARTMENTS] WHERE DEPTID = ?", (did,))
     conn.commit()
     conn.close()
     flash('Department deleted successfully!', 'info')
@@ -1568,7 +1641,7 @@ def departments_delete(did):
 def recommendations_list():
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT R.RecommendationID, R.RecommendationText, R.AppliesToDeptID, D.DEPTNAME FROM [Zktime_Copy].[dbo].[Recommendations] R LEFT JOIN [Zktime_Copy].[dbo].[DEPARTMENTS] D ON R.AppliesToDeptID = D.DEPTID ORDER BY R.RecommendationID")
+    cursor.execute("SELECT R.RecommendationID, R.RecommendationText, R.AppliesToDeptID, D.DEPTNAME FROM [Optima].[dbo].[Recommendations] R LEFT JOIN [Optima].[dbo].[DEPARTMENTS] D ON R.AppliesToDeptID = D.DEPTID ORDER BY R.RecommendationID")
     recommendations = cursor.fetchall()
     conn.close()
     return render_template('recommendations_list.html', recommendations=recommendations)
@@ -1578,14 +1651,14 @@ def recommendations_list():
 def recommendations_add():
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT DEPTID, DEPTNAME FROM [Zktime_Copy].[dbo].[DEPARTMENTS] ORDER BY DEPTID")
+    cursor.execute("SELECT DEPTID, DEPTNAME FROM [Optima].[dbo].[DEPARTMENTS] ORDER BY DEPTID")
     departments = cursor.fetchall()
     if request.method == 'POST':
         text = request.form['text']
         dept_id = request.form.get('dept_id')
         dept_id = int(dept_id) if dept_id else None
         try:
-            cursor.execute("INSERT INTO [Zktime_Copy].[dbo].[Recommendations] (RecommendationText, AppliesToDeptID) VALUES (?, ?)", (text, dept_id))
+            cursor.execute("INSERT INTO [Optima].[dbo].[Recommendations] (RecommendationText, AppliesToDeptID) VALUES (?, ?)", (text, dept_id))
             conn.commit()
             flash('✅ تم إضافة التوصية بنجاح!', 'success')
             return redirect(url_for('recommendations_list'))
@@ -1602,9 +1675,9 @@ def recommendations_add():
 def recommendations_edit(rid):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT DEPTID, DEPTNAME FROM [Zktime_Copy].[dbo].[DEPARTMENTS] ORDER BY DEPTID")
+    cursor.execute("SELECT DEPTID, DEPTNAME FROM [Optima].[dbo].[DEPARTMENTS] ORDER BY DEPTID")
     departments = cursor.fetchall()
-    cursor.execute("SELECT * FROM [Zktime_Copy].[dbo].[Recommendations] WHERE RecommendationID = ?", (rid,))
+    cursor.execute("SELECT * FROM [Optima].[dbo].[Recommendations] WHERE RecommendationID = ?", (rid,))
     recommendation = cursor.fetchone()
     if not recommendation:
         flash('لم يتم العثور على التوصية!', 'warning')
@@ -1615,7 +1688,7 @@ def recommendations_edit(rid):
         dept_id = request.form.get('dept_id')
         dept_id = int(dept_id) if dept_id else None
         try:
-            cursor.execute("UPDATE [Zktime_Copy].[dbo].[Recommendations] SET RecommendationText = ?, AppliesToDeptID = ? WHERE RecommendationID = ?", (text, dept_id, rid))
+            cursor.execute("UPDATE [Optima].[dbo].[Recommendations] SET RecommendationText = ?, AppliesToDeptID = ? WHERE RecommendationID = ?", (text, dept_id, rid))
             conn.commit()
             flash('✅ تم تحديث التوصية بنجاح!', 'success')
             return redirect(url_for('recommendations_list'))
@@ -1633,11 +1706,11 @@ def recommendations_delete(rid):
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
-        cursor.execute("SELECT COUNT(*) as cnt FROM [Zktime_Copy].[dbo].[Evaluations] WHERE RecommendationID = ?", (rid,))
+        cursor.execute("SELECT COUNT(*) as cnt FROM [Optima].[dbo].[Evaluations] WHERE RecommendationID = ?", (rid,))
         if cursor.fetchone().cnt > 0:
             flash('لا يمكن حذف توصية مستخدمة في تقييمات سابقة.', 'danger')
         else:
-            cursor.execute("DELETE FROM [Zktime_Copy].[dbo].[Recommendations] WHERE RecommendationID = ?", (rid,))
+            cursor.execute("DELETE FROM [Optima].[dbo].[Recommendations] WHERE RecommendationID = ?", (rid,))
             conn.commit()
             flash('تم حذف التوصية بنجاح!', 'info')
     except Exception as e:
@@ -1655,15 +1728,15 @@ def criteria_list():
     conn = get_db_connection()
     cursor = conn.cursor()
     # 1. Fetch Criteria (No Join on Departments)
-    cursor.execute("SELECT CriteriaID, CriteriaName, CriteriaWeight, MaxScore, AppliesToDeptID, employee_class FROM [Zktime_Copy].[dbo].[EvaluationCriteria] ORDER BY CriteriaID")
+    cursor.execute("SELECT CriteriaID, CriteriaName, CriteriaWeight, MaxScore, AppliesToDeptID, employee_class FROM [Optima].[dbo].[EvaluationCriteria] ORDER BY CriteriaID")
     criteria_rows = cursor.fetchall()
     
     # 2. Fetch Departments Reference
-    cursor.execute("SELECT DEPTID, DEPTNAME FROM [Zktime_Copy].[dbo].[DEPARTMENTS]")
+    cursor.execute("SELECT DEPTID, DEPTNAME FROM [Optima].[dbo].[DEPARTMENTS]")
     depts_rows = cursor.fetchall()
     dept_map = {d.DEPTID: d.DEPTNAME for d in depts_rows}
     
-    conn.close()
+    # conn.close() Moved to end
 
     # 3. Process Data (Convert to dicts and map Dept Names)
     criteria = []
@@ -1688,11 +1761,34 @@ def criteria_list():
             except:
                 c_dict['DEPTNAME'] = row.AppliesToDeptID # Fallback
                 
+                
         criteria.append(c_dict)
+
+    # 3B. Fetch Linked Types for Display
+    # Efficiently fetch all links and map in Python
+    cursor.execute("""
+        SELECT ETC.CriteriaID, ET.DisplayName 
+        FROM [Optima].[dbo].[EvaluationTypeCriteria] ETC
+        JOIN [Optima].[dbo].[EvaluationTypes] ET ON ETC.EvaluationTypeID = ET.EvaluationTypeID
+    """)
+    links = cursor.fetchall()
+    
+    # Map CriteriaID -> List of Type Names
+    type_map = defaultdict(list)
+    for l in links:
+        type_map[l.CriteriaID].append(l.DisplayName)
+        
+    # Attach to criteria list
+    for c in criteria:
+        if c['CriteriaID'] in type_map:
+            c['Types'] = ", ".join(type_map[c['CriteriaID']])
+        else:
+            c['Types'] = "None"
 
     # 4. Fetch Classes for Filter
     classes = get_all_classes()
 
+    conn.close()
     return render_template('criteria_list.html', criteria=criteria, classes=classes, departments=depts_rows)
 
 @app.route('/evaluation/criteria/add', methods=['GET', 'POST'])
@@ -1701,15 +1797,21 @@ def criteria_add():
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
-        cursor.execute("SELECT DEPTID, DEPTNAME FROM [Zktime_Copy].[dbo].[DEPARTMENTS] ORDER BY DEPTID")
+        cursor.execute("SELECT DEPTID, DEPTNAME FROM [Optima].[dbo].[DEPARTMENTS] ORDER BY DEPTID")
         departments = cursor.fetchall()
         
+        cursor.execute("SELECT EvaluationTypeID, DisplayName FROM [Optima].[dbo].[EvaluationTypes] ORDER BY SortOrder")
+        all_types = cursor.fetchall()
+
         classes = get_all_classes() 
         
         if request.method == 'POST':
             name = request.form['name']
             weight = request.form['weight']
             max_score = request.form.get('max_score', 10)
+            
+            # Handle Types
+            type_ids = request.form.getlist('type_ids')
             
             # --- Handle Multiple Departments ---
             dept_ids_list = request.form.getlist('dept_ids')
@@ -1732,7 +1834,14 @@ def criteria_add():
                 if not employee_levels:
                     raise ValueError("Please select at least one employee level")
                     
-                cursor.execute("INSERT INTO [Zktime_Copy].[dbo].[EvaluationCriteria] (CriteriaName, CriteriaWeight, MaxScore, AppliesToDeptID, employee_class) VALUES (?, ?, ?, ?, ?)", (name, weight_float, max_score_int, applies_to_dept, employee_class))
+                cursor.execute("INSERT INTO [Optima].[dbo].[EvaluationCriteria] (CriteriaName, CriteriaWeight, MaxScore, AppliesToDeptID, employee_class) OUTPUT INSERTED.CriteriaID VALUES (?, ?, ?, ?, ?)", (name, weight_float, max_score_int, applies_to_dept, employee_class))
+                new_criteria_id = cursor.fetchone().CriteriaID
+                
+                # Insert Type Links
+                if type_ids:
+                    link_values = [(int(t), new_criteria_id) for t in type_ids]
+                    cursor.executemany("INSERT INTO [Optima].[dbo].[EvaluationTypeCriteria] (EvaluationTypeID, CriteriaID) VALUES (?, ?)", link_values)
+                
                 conn.commit()
                 flash('✅ Criterion added successfully!', 'success')
                 return redirect(url_for('criteria_list'))
@@ -1743,7 +1852,7 @@ def criteria_add():
                 conn.rollback()
                 flash(f'❌ Database error: {e}', 'danger')
 
-        return render_template('criteria_form.html', departments=departments, classes=classes, action='Add')
+        return render_template('criteria_form.html', departments=departments, classes=classes, all_types=all_types, action='Add')
     finally:
         conn.close()
 
@@ -1753,9 +1862,9 @@ def criteria_edit(cid):
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
-        cursor.execute("SELECT DEPTID, DEPTNAME FROM [Zktime_Copy].[dbo].[DEPARTMENTS] ORDER BY DEPTID")
+        cursor.execute("SELECT DEPTID, DEPTNAME FROM [Optima].[dbo].[DEPARTMENTS] ORDER BY DEPTID")
         departments = cursor.fetchall()
-        cursor.execute("SELECT * FROM [Zktime_Copy].[dbo].[EvaluationCriteria] WHERE CriteriaID = ?", (cid,))
+        cursor.execute("SELECT * FROM [Optima].[dbo].[EvaluationCriteria] WHERE CriteriaID = ?", (cid,))
         row = cursor.fetchone()
         if not row:
             flash('Criterion not found!', 'warning')
@@ -1765,6 +1874,12 @@ def criteria_edit(cid):
         if row.AppliesToDeptID:
             selected_depts = [x.strip() for x in str(row.AppliesToDeptID).split(',') if x.strip()]
 
+        cursor.execute("SELECT EvaluationTypeID FROM [Optima].[dbo].[EvaluationTypeCriteria] WHERE CriteriaID = ?", (cid,))
+        selected_type_ids = [r[0] for r in cursor.fetchall()]
+
+        cursor.execute("SELECT EvaluationTypeID, DisplayName FROM [Optima].[dbo].[EvaluationTypes] ORDER BY SortOrder")
+        all_types = cursor.fetchall()
+
         classes = get_all_classes() 
         
         if request.method == 'POST':
@@ -1772,6 +1887,9 @@ def criteria_edit(cid):
             weight = request.form['weight']
             max_score = request.form.get('max_score', 10)
             
+            # Handle Types
+            type_ids = request.form.getlist('type_ids')
+
             dept_ids_list = request.form.getlist('dept_ids')
             if not dept_ids_list or '' in dept_ids_list:
                  applies_to_dept = None
@@ -1791,7 +1909,14 @@ def criteria_edit(cid):
                 if not employee_levels:
                     raise ValueError("Please select at least one employee level")
                 
-                cursor.execute("UPDATE [Zktime_Copy].[dbo].[EvaluationCriteria] SET CriteriaName = ?, CriteriaWeight = ?, MaxScore = ?, AppliesToDeptID = ?, employee_class = ? WHERE CriteriaID = ?", (name, weight_float, max_score_int, applies_to_dept, employee_class, cid))
+                cursor.execute("UPDATE [Optima].[dbo].[EvaluationCriteria] SET CriteriaName = ?, CriteriaWeight = ?, MaxScore = ?, AppliesToDeptID = ?, employee_class = ? WHERE CriteriaID = ?", (name, weight_float, max_score_int, applies_to_dept, employee_class, cid))
+                
+                # Update Links (Delete all, re-insert)
+                cursor.execute("DELETE FROM [Optima].[dbo].[EvaluationTypeCriteria] WHERE CriteriaID = ?", (cid,))
+                if type_ids:
+                    link_values = [(int(t), cid) for t in type_ids]
+                    cursor.executemany("INSERT INTO [Optima].[dbo].[EvaluationTypeCriteria] (EvaluationTypeID, CriteriaID) VALUES (?, ?)", link_values)
+
                 conn.commit()
                 flash('✅ Criterion updated successfully!', 'success')
                 return redirect(url_for('criteria_list'))
@@ -1802,7 +1927,7 @@ def criteria_edit(cid):
                 conn.rollback()
                 flash(f'❌ Database error: {e}', 'danger')
 
-        return render_template('criteria_form.html', departments=departments, criterion=row, classes=classes, selected_depts=selected_depts, action='Edit')
+        return render_template('criteria_form.html', departments=departments, criterion=row, classes=classes, selected_depts=selected_depts, all_types=all_types, selected_type_ids=selected_type_ids, action='Edit')
     finally:
         conn.close()
 
@@ -1812,12 +1937,12 @@ def criteria_delete(cid):
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
-        cursor.execute("SELECT COUNT(*) as cnt FROM [Zktime_Copy].[dbo].[EvaluationDetails] WHERE CriteriaID = ?", (cid,))
+        cursor.execute("SELECT COUNT(*) as cnt FROM [Optima].[dbo].[EvaluationDetails] WHERE CriteriaID = ?", (cid,))
         usage_count = cursor.fetchone().cnt
         if usage_count > 0:
             flash('Cannot delete criterion, it is used in existing evaluations.', 'danger')
         else:
-            cursor.execute("DELETE FROM [Zktime_Copy].[dbo].[EvaluationCriteria] WHERE CriteriaID = ?", (cid,))
+            cursor.execute("DELETE FROM [Optima].[dbo].[EvaluationCriteria] WHERE CriteriaID = ?", (cid,))
             conn.commit()
             flash('Criterion deleted successfully!', 'info')
     except Exception as e:
@@ -1862,7 +1987,7 @@ def userinfo_sync():
         print(">>> REMOTE CONNECTED")
 
         # 3. Existing IDs
-        local_cursor.execute("SELECT USERID FROM [Zktime_Copy].[dbo].[USERINFO]")
+        local_cursor.execute("SELECT USERID FROM [Optima].[dbo].[USERINFO]")
         existing_ids = set(row[0] for row in local_cursor.fetchall())
         
         # 4. Fetch Remote
@@ -1875,11 +2000,11 @@ def userinfo_sync():
         added = 0
         
         if missing:
-            local_cursor.execute("SET IDENTITY_INSERT [Zktime_Copy].[dbo].[USERINFO] ON")
+            local_cursor.execute("SET IDENTITY_INSERT [Optima].[dbo].[USERINFO] ON")
             for u in missing:
                 try:
                     local_cursor.execute("""
-                        INSERT INTO [Zktime_Copy].[dbo].[USERINFO] 
+                        INSERT INTO [Optima].[dbo].[USERINFO] 
                         (USERID, BADGENUMBER, SSN, NAME, GENDER, TITLE, DEFAULTDEPTID, HIREDDAY, employee_class) 
                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'لم تضاف')
                     """, (u.USERID, u.BADGENUMBER, u.SSN, u.NAME, u.GENDER, u.TITLE, u.DEFAULTDEPTID, u.HIREDDAY))
@@ -1887,7 +2012,7 @@ def userinfo_sync():
                     details.append(f"Added: {u.NAME}")
                 except Exception as e_row:
                     details.append(f"Row Error {u.USERID}: {e_row}")
-            local_cursor.execute("SET IDENTITY_INSERT [Zktime_Copy].[dbo].[USERINFO] OFF")
+            local_cursor.execute("SET IDENTITY_INSERT [Optima].[dbo].[USERINFO] OFF")
             local_conn.commit()
         else:
             details.append("No new users found.")
@@ -1942,13 +2067,13 @@ def userinfo_import():
         cursor = conn.cursor()
         
         # Get existing IDs
-        cursor.execute("SELECT USERID FROM [Zktime_Copy].[dbo].[USERINFO]")
+        cursor.execute("SELECT USERID FROM [Optima].[dbo].[USERINFO]")
         existing_ids = set(row[0] for row in cursor.fetchall())
         
         added_count = 0
         details = []
         
-        cursor.execute("SET IDENTITY_INSERT [Zktime_Copy].[dbo].[USERINFO] ON")
+        cursor.execute("SET IDENTITY_INSERT [Optima].[dbo].[USERINFO] ON")
         
         for index, row in df.iterrows():
             uid = int(row['USERID'])
@@ -1956,17 +2081,34 @@ def userinfo_import():
                 continue # Skip existing
             
             try:
+                # Helper functions for sanitization
+                def clean_str(val):
+                    if pd.isna(val) or val is None or str(val).strip() == '':
+                        return None
+                    return str(val).strip()
+
+                def clean_int(val, default=1):
+                    if pd.isna(val) or val is None or str(val).strip() == '':
+                        return default
+                    try:
+                        return int(float(val))
+                    except:
+                        return default
+
                 # Safely get other fields or Default
-                badge = row.get('BADGENUMBER', None)
-                ssn = row.get('SSN', None)
+                badge = clean_str(row.get('BADGENUMBER'))
+                ssn = clean_str(row.get('SSN'))
                 name = row.get('NAME')
-                gender = row.get('GENDER', None)
-                title = row.get('TITLE', None)
-                dept = row.get('DEFAULTDEPTID', 1) # Default to 1 if missing
-                hired = row.get('HIREDDAY', None)
+                gender = clean_str(row.get('GENDER'))
+                title = clean_str(row.get('TITLE'))
+                dept = clean_int(row.get('DEFAULTDEPTID'), 1)
+                
+                hired = row.get('HIREDDAY')
+                if pd.isna(hired) or str(hired).strip() == '':
+                    hired = None
                 
                 cursor.execute("""
-                    INSERT INTO [Zktime_Copy].[dbo].[USERINFO] 
+                    INSERT INTO [Optima].[dbo].[USERINFO] 
                     (USERID, BADGENUMBER, SSN, NAME, GENDER, TITLE, DEFAULTDEPTID, HIREDDAY, employee_class) 
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'لم تضاف')
                 """, (uid, badge, ssn, name, gender, title, dept, hired))
@@ -1976,7 +2118,7 @@ def userinfo_import():
             except Exception as e_row:
                 details.append(f"Error Row {index}: {e_row}")
                 
-        cursor.execute("SET IDENTITY_INSERT [Zktime_Copy].[dbo].[USERINFO] OFF")
+        cursor.execute("SET IDENTITY_INSERT [Optima].[dbo].[USERINFO] OFF")
         conn.commit()
         
         return jsonify({'status': 'success', 'added_count': added_count, 'details': details})
@@ -2029,13 +2171,13 @@ def select_user_for_evaluation():
     page_title = "اختر موظف للتقييم"
     
     if role_id == 3:
-        cursor.execute("SELECT DepartmentID FROM [Zktime_Copy].[dbo].[Users] WHERE UserID = ?", (evaluator_user_id,))
+        cursor.execute("SELECT DepartmentID FROM [Optima].[dbo].[Users] WHERE UserID = ?", (evaluator_user_id,))
         user_record = cursor.fetchone()
         manager_dept_id = user_record.DepartmentID if user_record else None
         
         if manager_dept_id:
             # UPDATED QUERY: Now selects UI.BADGENUMBER
-            query = "SELECT UI.USERID, UI.NAME, UI.TITLE, UI.PositionID, P.PositionName, D.DEPTNAME, UI.BADGENUMBER FROM [Zktime_Copy].[dbo].[USERINFO] UI LEFT JOIN [dbo].[POSITIONS] P ON UI.PositionID = P.PositionID LEFT JOIN [dbo].[DEPARTMENTS] D ON UI.DEFAULTDEPTID = D.DEPTID WHERE UI.DEFAULTDEPTID = ? AND UI.USERID != ?"
+            query = "SELECT UI.USERID, UI.NAME, UI.TITLE, UI.PositionID, P.PositionName, D.DEPTNAME, UI.BADGENUMBER FROM [Optima].[dbo].[USERINFO] UI LEFT JOIN [dbo].[POSITIONS] P ON UI.PositionID = P.PositionID LEFT JOIN [dbo].[DEPARTMENTS] D ON UI.DEFAULTDEPTID = D.DEPTID WHERE UI.DEFAULTDEPTID = ? AND UI.USERID != ?"
             params = [manager_dept_id, evaluator_user_id]
             
             if search_query:
@@ -2050,7 +2192,7 @@ def select_user_for_evaluation():
     elif role_id == 2:
         page_title = "اختر مدير للتقييم"
         # UPDATED QUERY: Now selects UI.BADGENUMBER logic
-        query = "SELECT U.UserID, U.Name, U.Username, U.DepartmentID, D.DEPTNAME, UI.BADGENUMBER FROM [Zktime_Copy].[dbo].[Users] U LEFT JOIN [dbo].[DEPARTMENTS] D ON U.DepartmentID = D.DEPTID LEFT JOIN [Zktime_Copy].[dbo].[USERINFO] UI ON U.UserID = UI.USERID WHERE U.RoleID = 3 AND U.UserID != ?"
+        query = "SELECT U.UserID, U.Name, U.Username, U.DepartmentID, D.DEPTNAME, UI.BADGENUMBER FROM [Optima].[dbo].[Users] U LEFT JOIN [dbo].[DEPARTMENTS] D ON U.DepartmentID = D.DEPTID LEFT JOIN [Optima].[dbo].[USERINFO] UI ON U.UserID = UI.USERID WHERE U.RoleID = 3 AND U.UserID != ?"
         params = [evaluator_user_id]
         
         if search_query:
@@ -2092,7 +2234,7 @@ def new_evaluation(badgenumber_str):
     cursor = conn.cursor()
 
     # Get evaluator's department ID
-    cursor.execute("SELECT DepartmentID FROM [Zktime_Copy].[dbo].[Users] WHERE UserID = ?", (evaluator_user_id,))
+    cursor.execute("SELECT DepartmentID FROM [Optima].[dbo].[Users] WHERE UserID = ?", (evaluator_user_id,))
     manager_record = cursor.fetchone()
     manager_dept_id = manager_record.DepartmentID if manager_record else None
 
@@ -2113,7 +2255,7 @@ def new_evaluation(badgenumber_str):
     cursor.execute("""
         SELECT UI.USERID, UI.NAME, UI.DEFAULTDEPTID, UI.TITLE, D.DEPTNAME, UI.employee_class,
                 (SELECT COUNT(*) FROM TrainingEnrollments TE WHERE TE.EmployeeUserID = UI.USERID) AS TotalSessions
-        FROM [Zktime_Copy].[dbo].[USERINFO] UI
+        FROM [Optima].[dbo].[USERINFO] UI
         LEFT JOIN [dbo].[DEPARTMENTS] D ON UI.DEFAULTDEPTID = D.DEPTID
         WHERE UI.BADGENUMBER = ?
     """, (badgenumber_str,))
@@ -2228,7 +2370,7 @@ def new_evaluation(badgenumber_str):
     # --- MODIFIED CRITERIA FILTERING FOR MULTI-DEPT ---
     # Fetch ALL criteria matching the class (ignoring dept in SQL for now)
     
-    criteria_query = f"SELECT CriteriaID, CriteriaName, CriteriaWeight, MaxScore, AppliesToDeptID FROM [Zktime_Copy].[dbo].[EvaluationCriteria] WHERE {class_clause} ORDER BY CriteriaID"
+    criteria_query = f"SELECT CriteriaID, CriteriaName, CriteriaWeight, MaxScore, AppliesToDeptID FROM [Optima].[dbo].[EvaluationCriteria] WHERE {class_clause} ORDER BY CriteriaID"
     # We remove (AppliesToDeptID = ? OR AppliesToDeptID IS NULL) from SQL because we need to check CSV in Python
     
     cursor.execute(criteria_query, class_params)
@@ -2261,12 +2403,12 @@ def new_evaluation(badgenumber_str):
         conn.close()
         return redirect(url_for('select_user_for_evaluation'))
 
-    cursor.execute("SELECT RecommendationID, RecommendationText FROM [Zktime_Copy].[dbo].[Recommendations] WHERE AppliesToDeptID = ? OR AppliesToDeptID IS NULL ORDER BY RecommendationText", (employee_dept_id,))
+    cursor.execute("SELECT RecommendationID, RecommendationText FROM [Optima].[dbo].[Recommendations] WHERE AppliesToDeptID = ? OR AppliesToDeptID IS NULL ORDER BY RecommendationText", (employee_dept_id,))
     recommendations = cursor.fetchall()
     
     cursor.execute("""
         SELECT TrainingCourseID, TrainingCourseText 
-        FROM [Zktime_Copy].[dbo].[TrainingCourses] 
+        FROM [Optima].[dbo].[TrainingCourses] 
         WHERE (AppliesToDeptID = ? OR AppliesToDeptID IS NULL) 
         AND IsActive = 1 
         ORDER BY TrainingCourseText
@@ -2274,6 +2416,39 @@ def new_evaluation(badgenumber_str):
     training_courses = cursor.fetchall()
     
     available_evals = get_available_evaluation_types(conn, employee_user_id, manager_dept_id)
+    
+    # 5B. Handle Eval Type Selection (Refined Logic)
+    selected_eval_type_id = request.args.get('eval_type_id')
+    selected_eval_type_id = int(selected_eval_type_id) if selected_eval_type_id and selected_eval_type_id.isdigit() else None
+
+    # Filter Criteria based on Selected Type
+    final_criteria = []
+    
+    if selected_eval_type_id:
+        # Check if valid type
+        valid_type = any(e['id'] == selected_eval_type_id for e in available_evals)
+        # Note: We might want to allow viewing criteria even if disabled (e.g. for review), but for NEW evaluation, it should be enabled.
+        # However, let's just filter for now.
+        
+        # Helper list of criteria IDs linked to this type
+        cursor.execute("SELECT CriteriaID FROM [Optima].[dbo].[EvaluationTypeCriteria] WHERE EvaluationTypeID = ?", (selected_eval_type_id,))
+        linked_criteria_ids = {row[0] for row in cursor.fetchall()}
+        
+        # If no specific links exist (legacy support), maybe show all? 
+        # But we seeded links, so we should rely on links.
+        # If links exist, we intersect.
+        
+        if not linked_criteria_ids:
+            # Fallback: If table empty for this type, show NOTHING or ALL?
+            # User wants "different" evaluations. So showing NOTHING is correct if not configured.
+            pass
+        else:
+            for c in criteria:
+                if c.CriteriaID in linked_criteria_ids:
+                    final_criteria.append(c)
+    else:
+        # If no type selected, show NO criteria (force selection)
+        final_criteria = []
 
     # 5. POST Request Handling
     if request.method == 'POST':
@@ -2287,14 +2462,30 @@ def new_evaluation(badgenumber_str):
             recommendation_id = request.form.get('recommendation_id') or None
             training_course_id = request.form.get('training_course_id') or None
 
-            cursor.execute("INSERT INTO [Zktime_Copy].[dbo].[Evaluations] (EmployeeUserID, EvaluatorUserID, EvaluationTypeID, ManagerComments, RecommendationID, TrainingCourseID) OUTPUT INSERTED.EvaluationID VALUES (?, ?, ?, ?, ?, ?)", (employee_user_id, evaluator_user_id, eval_type_id, comments, recommendation_id, training_course_id))
+            cursor.execute("INSERT INTO [Optima].[dbo].[Evaluations] (EmployeeUserID, EvaluatorUserID, EvaluationTypeID, ManagerComments, RecommendationID, TrainingCourseID) OUTPUT INSERTED.EvaluationID VALUES (?, ?, ?, ?, ?, ?)", (employee_user_id, evaluator_user_id, eval_type_id, comments, recommendation_id, training_course_id))
             evaluation_id = cursor.fetchone().EvaluationID
 
             total_weighted_score = 0.0
             total_max_weighted_score = 0.0
             scores_data = []
 
-            for item in criteria:
+            total_weighted_score = 0.0
+            total_max_weighted_score = 0.0
+            scores_data = []
+
+            # Re-fetch criteria for validation (security) to ensure we check against what was actually valid for this type
+            # We can reuse the logic above efficiently if we trust the form, but double checking is better.
+            # Simplified: We just iterate over the form keys that match criteria pattern, 
+            # OR better, re-run the filter logic.
+            
+            # Re-filter 'criteria' list based on submitted ID
+            validation_criteria_ids = set()
+            cursor.execute("SELECT CriteriaID FROM [Optima].[dbo].[EvaluationTypeCriteria] WHERE EvaluationTypeID = ?", (eval_type_id,))
+            linked_ids = {row[0] for row in cursor.fetchall()}
+            
+            valid_criteria_for_type = [c for c in criteria if c.CriteriaID in linked_ids]
+            
+            for item in valid_criteria_for_type:
                 score_str = request.form.get(f'score_{item.CriteriaID}')
                 if score_str is None or not score_str.isdigit():
                     raise ValueError(f"الدرجة المدخلة للبند '{item.CriteriaName}' غير صحيحة.")
@@ -2312,12 +2503,12 @@ def new_evaluation(badgenumber_str):
                 total_max_weighted_score += weight
 
             if scores_data:
-                cursor.executemany("INSERT INTO [Zktime_Copy].[dbo].[EvaluationDetails] (EvaluationID, CriteriaID, ScoreGiven) VALUES (?, ?, ?)", scores_data)
+                cursor.executemany("INSERT INTO [Optima].[dbo].[EvaluationDetails] (EvaluationID, CriteriaID, ScoreGiven) VALUES (?, ?, ?)", scores_data)
 
             final_percentage = (total_weighted_score / total_max_weighted_score) * 100 if total_max_weighted_score > 0 else 0
             final_rating = get_rating_from_score(final_percentage)
 
-            cursor.execute("UPDATE [Zktime_Copy].[dbo].[Evaluations] SET OverallScore = ?, OverallRating = ? WHERE EvaluationID = ?", (final_percentage, final_rating, evaluation_id))
+            cursor.execute("UPDATE [Optima].[dbo].[Evaluations] SET OverallScore = ?, OverallRating = ? WHERE EvaluationID = ?", (final_percentage, final_rating, evaluation_id))
             
             conn.commit()
             flash('تم إرسال التقييم بنجاح!', 'success')
@@ -2335,7 +2526,8 @@ def new_evaluation(badgenumber_str):
     conn.close() # تأكد من إغلاق الاتصال في حالة GET أيضاً
     return render_template('new_evaluation_form.html', 
                            employee=employee_info, 
-                           criteria=criteria, 
+                           criteria=final_criteria, 
+                           selected_eval_type_id=selected_eval_type_id, 
                            recommendations=recommendations, 
                            training_courses=training_courses, 
                            employee_class=employee_class_string, 
@@ -2361,11 +2553,11 @@ def evaluation_reports():
         cursor = conn.cursor()
         role_id = session.get('role_id')
         user_id = session.get('user_id')
-        cursor.execute("SELECT RecommendationID, RecommendationText FROM [Zktime_Copy].[dbo].[Recommendations] ORDER BY RecommendationText")
+        cursor.execute("SELECT RecommendationID, RecommendationText FROM [Optima].[dbo].[Recommendations] ORDER BY RecommendationText")
         all_recommendations = cursor.fetchall()
-        cursor.execute("SELECT TrainingCourseID, TrainingCourseText FROM [Zktime_Copy].[dbo].[TrainingCourses] ORDER BY TrainingCourseText")
+        cursor.execute("SELECT TrainingCourseID, TrainingCourseText FROM [Optima].[dbo].[TrainingCourses] ORDER BY TrainingCourseText")
         all_training_courses = cursor.fetchall()
-        cursor.execute("SELECT EvaluationTypeID, DisplayName FROM [Zktime_Copy].[dbo].[EvaluationTypes] ORDER BY SortOrder")
+        cursor.execute("SELECT EvaluationTypeID, DisplayName FROM [Optima].[dbo].[EvaluationTypes] ORDER BY SortOrder")
         all_evaluation_types = cursor.fetchall()
         query = """
             SELECT E.EvaluationID, E.EvaluationDate, COALESCE(ET.DisplayName, E.EvaluationType) as EvaluationType,
@@ -2376,21 +2568,21 @@ def evaluation_reports():
                 (
                     SELECT STUFF((
                         SELECT '###' + TC_Sub.TrainingCourseText
-                        FROM [Zktime_Copy].[dbo].[TrainingEnrollments] TE_Sub 
-                        JOIN [Zktime_Copy].[dbo].[TrainingSessions] TS_Sub ON TE_Sub.SessionID = TS_Sub.SessionID
-                        JOIN [Zktime_Copy].[dbo].[TrainingCourses] TC_Sub ON TS_Sub.CourseID = TC_Sub.TrainingCourseID
+                        FROM [Optima].[dbo].[TrainingEnrollments] TE_Sub 
+                        JOIN [Optima].[dbo].[TrainingSessions] TS_Sub ON TE_Sub.SessionID = TS_Sub.SessionID
+                        JOIN [Optima].[dbo].[TrainingCourses] TC_Sub ON TS_Sub.CourseID = TC_Sub.TrainingCourseID
                         WHERE TE_Sub.EmployeeUserID = EmpInfo.USERID
                         ORDER BY TC_Sub.TrainingCourseText
                         FOR XML PATH('')
                     ), 1, 3, '')
                 ) as CoursesTaken
-            FROM [Zktime_Copy].[dbo].[Evaluations] E
-            LEFT JOIN [Zktime_Copy].[dbo].[Users] Mgr ON E.EvaluatorUserID = Mgr.UserID 
-            LEFT JOIN [Zktime_Copy].[dbo].[USERINFO] EmpInfo ON E.EmployeeUserID = EmpInfo.USERID
-            LEFT JOIN [Zktime_Copy].[dbo].[Users] EmpUser ON E.EmployeeUserID = EmpUser.UserID
-            LEFT JOIN [Zktime_Copy].[dbo].[Recommendations] R ON E.RecommendationID = R.RecommendationID
-            LEFT JOIN [Zktime_Copy].[dbo].[TrainingCourses] TC ON E.TrainingCourseID = TC.TrainingCourseID
-            LEFT JOIN [Zktime_Copy].[dbo].[EvaluationTypes] ET ON E.EvaluationTypeID = ET.EvaluationTypeID
+            FROM [Optima].[dbo].[Evaluations] E
+            LEFT JOIN [Optima].[dbo].[Users] Mgr ON E.EvaluatorUserID = Mgr.UserID 
+            LEFT JOIN [Optima].[dbo].[USERINFO] EmpInfo ON E.EmployeeUserID = EmpInfo.USERID
+            LEFT JOIN [Optima].[dbo].[Users] EmpUser ON E.EmployeeUserID = EmpUser.UserID
+            LEFT JOIN [Optima].[dbo].[Recommendations] R ON E.RecommendationID = R.RecommendationID
+            LEFT JOIN [Optima].[dbo].[TrainingCourses] TC ON E.TrainingCourseID = TC.TrainingCourseID
+            LEFT JOIN [Optima].[dbo].[EvaluationTypes] ET ON E.EvaluationTypeID = ET.EvaluationTypeID
         """
         where_clauses = []
         params = []
@@ -2434,8 +2626,8 @@ def evaluation_reports():
         if taken_course_id:
             where_clauses.append("""
                 EXISTS (
-                    SELECT 1 FROM [Zktime_Copy].[dbo].[TrainingEnrollments] TE_F
-                    JOIN [Zktime_Copy].[dbo].[TrainingSessions] TS_F ON TE_F.SessionID = TS_F.SessionID
+                    SELECT 1 FROM [Optima].[dbo].[TrainingEnrollments] TE_F
+                    JOIN [Optima].[dbo].[TrainingSessions] TS_F ON TE_F.SessionID = TS_F.SessionID
                     WHERE TE_F.EmployeeUserID = E.EmployeeUserID AND TS_F.CourseID = ?
                 )
             """)
@@ -2481,7 +2673,7 @@ def evaluation_reports():
 def evaluation_types_list():
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT ET.EvaluationTypeID, ET.TypeName, ET.DisplayName, ET.IsRepeatable, ET.SortOrder, Pre.DisplayName as PrerequisiteName FROM [Zktime_Copy].[dbo].[EvaluationTypes] ET LEFT JOIN [Zktime_Copy].[dbo].[EvaluationTypes] Pre ON ET.PrerequisiteTypeID = Pre.EvaluationTypeID ORDER BY ET.SortOrder")
+    cursor.execute("SELECT ET.EvaluationTypeID, ET.TypeName, ET.DisplayName, ET.IsRepeatable, ET.SortOrder, Pre.DisplayName as PrerequisiteName FROM [Optima].[dbo].[EvaluationTypes] ET LEFT JOIN [Optima].[dbo].[EvaluationTypes] Pre ON ET.PrerequisiteTypeID = Pre.EvaluationTypeID ORDER BY ET.SortOrder")
     types = cursor.fetchall()
     conn.close()
     return render_template('evaluation_types_list.html', types=types)
@@ -2491,7 +2683,7 @@ def evaluation_types_list():
 def evaluation_types_add():
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT EvaluationTypeID, DisplayName FROM [Zktime_Copy].[dbo].[EvaluationTypes] ORDER BY SortOrder")
+    cursor.execute("SELECT EvaluationTypeID, DisplayName FROM [Optima].[dbo].[EvaluationTypes] ORDER BY SortOrder")
     all_types = cursor.fetchall()
     if request.method == 'POST':
         try:
@@ -2500,7 +2692,12 @@ def evaluation_types_add():
             is_repeatable = 'is_repeatable' in request.form
             prerequisite_id = request.form.get('prerequisite_id') or None
             sort_order = request.form.get('sort_order', 100)
-            cursor.execute("INSERT INTO [Zktime_Copy].[dbo].[EvaluationTypes] (TypeName, DisplayName, IsRepeatable, PrerequisiteTypeID, SortOrder) VALUES (?, ?, ?, ?, ?)", (type_name, display_name, is_repeatable, prerequisite_id, sort_order))
+            days_after = request.form.get('days_after') or None
+            # Handle Checkbox List for Classes
+            selected_classes = request.form.getlist('included_classes_list')
+            included_classes = ','.join(selected_classes) if selected_classes else None
+            
+            cursor.execute("INSERT INTO [Optima].[dbo].[EvaluationTypes] (TypeName, DisplayName, IsRepeatable, PrerequisiteTypeID, SortOrder, DaysAfterPrerequisite, IncludedClasses) VALUES (?, ?, ?, ?, ?, ?, ?)", (type_name, display_name, is_repeatable, prerequisite_id, sort_order, days_after, included_classes))
             conn.commit()
             flash('✅ تم إضافة نوع التقييم بنجاح', 'success')
             return redirect(url_for('evaluation_types_list'))
@@ -2510,16 +2707,18 @@ def evaluation_types_add():
         finally:
             conn.close()
     conn.close()
-    return render_template('evaluation_type_form.html', action='Add', all_types=all_types)
+    all_classes = get_all_classes()
+    print(f"DEBUG: Found {len(all_classes)} classes for form.")
+    return render_template('evaluation_type_form.html', action='Add', all_types=all_types, all_classes=all_classes)
 
 @app.route('/evaluation-types/edit/<int:type_id>', methods=['GET', 'POST'])
 @admin_required
 def evaluation_types_edit(type_id):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT EvaluationTypeID, DisplayName FROM [Zktime_Copy].[dbo].[EvaluationTypes] WHERE EvaluationTypeID != ? ORDER BY SortOrder", (type_id,))
+    cursor.execute("SELECT EvaluationTypeID, DisplayName FROM [Optima].[dbo].[EvaluationTypes] WHERE EvaluationTypeID != ? ORDER BY SortOrder", (type_id,))
     all_types = cursor.fetchall()
-    cursor.execute("SELECT * FROM [Zktime_Copy].[dbo].[EvaluationTypes] WHERE EvaluationTypeID = ?", (type_id,))
+    cursor.execute("SELECT * FROM [Optima].[dbo].[EvaluationTypes] WHERE EvaluationTypeID = ?", (type_id,))
     eval_type = cursor.fetchone()
     if not eval_type:
         flash('❌ لم يتم العثور على نوع التقييم', 'danger')
@@ -2532,7 +2731,12 @@ def evaluation_types_edit(type_id):
             is_repeatable = 'is_repeatable' in request.form
             prerequisite_id = request.form.get('prerequisite_id') or None
             sort_order = request.form.get('sort_order', 100)
-            cursor.execute("UPDATE [Zktime_Copy].[dbo].[EvaluationTypes] SET TypeName = ?, DisplayName = ?, IsRepeatable = ?, PrerequisiteTypeID = ?, SortOrder = ? WHERE EvaluationTypeID = ?", (type_name, display_name, is_repeatable, prerequisite_id, sort_order, type_id))
+            days_after = request.form.get('days_after') or None
+            # Handle Checkbox List for Classes
+            selected_classes = request.form.getlist('included_classes_list')
+            included_classes = ','.join(selected_classes) if selected_classes else None
+            
+            cursor.execute("UPDATE [Optima].[dbo].[EvaluationTypes] SET TypeName = ?, DisplayName = ?, IsRepeatable = ?, PrerequisiteTypeID = ?, SortOrder = ?, DaysAfterPrerequisite = ?, IncludedClasses = ? WHERE EvaluationTypeID = ?", (type_name, display_name, is_repeatable, prerequisite_id, sort_order, days_after, included_classes, type_id))
             conn.commit()
             flash('✅ تم تحديث نوع التقييم بنجاح', 'success')
             return redirect(url_for('evaluation_types_list'))
@@ -2542,7 +2746,8 @@ def evaluation_types_edit(type_id):
         finally:
             conn.close()
     conn.close()
-    return render_template('evaluation_type_form.html', action='Edit', eval_type=eval_type, all_types=all_types)
+    all_classes = get_all_classes()
+    return render_template('evaluation_type_form.html', action='Edit', eval_type=eval_type, all_types=all_types, all_classes=all_classes)
 
 @app.route('/evaluation-types/delete/<int:type_id>', methods=['POST'])
 @admin_required
@@ -2550,17 +2755,17 @@ def evaluation_types_delete(type_id):
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
-        cursor.execute("SELECT COUNT(*) as cnt FROM [Zktime_Copy].[dbo].[Evaluations] WHERE EvaluationTypeID = ?", (type_id,))
+        cursor.execute("SELECT COUNT(*) as cnt FROM [Optima].[dbo].[Evaluations] WHERE EvaluationTypeID = ?", (type_id,))
         if cursor.fetchone().cnt > 0:
             flash('❌ لا يمكن الحذف، هذا النوع مستخدم في تقييمات سابقة.', 'danger')
             conn.close()
             return redirect(url_for('evaluation_types_list'))
-        cursor.execute("SELECT COUNT(*) as cnt FROM [Zktime_Copy].[dbo].[EvaluationTypes] WHERE PrerequisiteTypeID = ?", (type_id,))
+        cursor.execute("SELECT COUNT(*) as cnt FROM [Optima].[dbo].[EvaluationTypes] WHERE PrerequisiteTypeID = ?", (type_id,))
         if cursor.fetchone().cnt > 0:
             flash('❌ لا يمكن الحذف، هذا النوع هو متطلب لنوع آخر.', 'danger')
             conn.close()
             return redirect(url_for('evaluation_types_list'))
-        cursor.execute("DELETE FROM [Zktime_Copy].[dbo].[EvaluationTypes] WHERE EvaluationTypeID = ?", (type_id,))
+        cursor.execute("DELETE FROM [Optima].[dbo].[EvaluationTypes] WHERE EvaluationTypeID = ?", (type_id,))
         conn.commit()
         flash('✅ تم حذف نوع التقييم بنجاح', 'success')
     except Exception as e:
@@ -2575,7 +2780,7 @@ def evaluation_types_delete(type_id):
 def evaluation_cycles_list():
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT C.CycleID, C.CycleName, C.StartDate, C.EndDate, C.IsEnabled, ET.DisplayName as EvaluationTypeName FROM [Zktime_Copy].[dbo].[EvaluationCycles] C JOIN [Zktime_Copy].[dbo].[EvaluationTypes] ET ON C.EvaluationTypeID = ET.EvaluationTypeID ORDER BY C.StartDate DESC")
+    cursor.execute("SELECT C.CycleID, C.CycleName, C.StartDate, C.EndDate, C.IsEnabled, ET.DisplayName as EvaluationTypeName FROM [Optima].[dbo].[EvaluationCycles] C JOIN [Optima].[dbo].[EvaluationTypes] ET ON C.EvaluationTypeID = ET.EvaluationTypeID ORDER BY C.StartDate DESC")
     cycles = cursor.fetchall()
     conn.close()
     return render_template('evaluation_cycles_list.html', cycles=cycles)
@@ -2586,9 +2791,9 @@ def evaluation_cycles_list():
 def evaluation_cycles_add():
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT EvaluationTypeID, DisplayName FROM [Zktime_Copy].[dbo].[EvaluationTypes] ORDER BY SortOrder")
+    cursor.execute("SELECT EvaluationTypeID, DisplayName FROM [Optima].[dbo].[EvaluationTypes] ORDER BY SortOrder")
     all_types = cursor.fetchall()
-    cursor.execute("SELECT DEPTID, DEPTNAME FROM [Zktime_Copy].[dbo].[DEPARTMENTS] ORDER BY DEPTNAME")
+    cursor.execute("SELECT DEPTID, DEPTNAME FROM [Optima].[dbo].[DEPARTMENTS] ORDER BY DEPTNAME")
     all_depts = cursor.fetchall()
     if request.method == 'POST':
         try:
@@ -2598,11 +2803,11 @@ def evaluation_cycles_add():
             end_date = request.form['end_date']
             is_enabled = 'is_enabled' in request.form
             dept_ids = request.form.getlist('dept_ids')
-            cursor.execute("INSERT INTO [Zktime_Copy].[dbo].[EvaluationCycles] (CycleName, EvaluationTypeID, StartDate, EndDate, IsEnabled) OUTPUT INSERTED.CycleID VALUES (?, ?, ?, ?, ?)", (cycle_name, type_id, start_date, end_date, is_enabled))
+            cursor.execute("INSERT INTO [Optima].[dbo].[EvaluationCycles] (CycleName, EvaluationTypeID, StartDate, EndDate, IsEnabled) OUTPUT INSERTED.CycleID VALUES (?, ?, ?, ?, ?)", (cycle_name, type_id, start_date, end_date, is_enabled))
             new_cycle_id = cursor.fetchone().CycleID
             if dept_ids:
                 dept_data = [(new_cycle_id, int(dept_id)) for dept_id in dept_ids]
-                cursor.executemany("INSERT INTO [Zktime_Copy].[dbo].[CycleDepartments] (CycleID, DepartmentID) VALUES (?, ?)", dept_data)
+                cursor.executemany("INSERT INTO [Optima].[dbo].[CycleDepartments] (CycleID, DepartmentID) VALUES (?, ?)", dept_data)
             conn.commit()
             flash('✅ تم إنشاء دورة التقييم بنجاح', 'success')
             return redirect(url_for('evaluation_cycles_list'))
@@ -2619,9 +2824,9 @@ def evaluation_cycles_add():
 def evaluation_cycles_edit(cycle_id):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT EvaluationTypeID, DisplayName FROM [Zktime_Copy].[dbo].[EvaluationTypes] ORDER BY SortOrder")
+    cursor.execute("SELECT EvaluationTypeID, DisplayName FROM [Optima].[dbo].[EvaluationTypes] ORDER BY SortOrder")
     all_types = cursor.fetchall()
-    cursor.execute("SELECT DEPTID, DEPTNAME FROM [Zktime_Copy].[dbo].[DEPARTMENTS] ORDER BY DEPTNAME")
+    cursor.execute("SELECT DEPTID, DEPTNAME FROM [Optima].[dbo].[DEPARTMENTS] ORDER BY DEPTNAME")
     all_depts = cursor.fetchall()
     if request.method == 'POST':
         try:
@@ -2631,11 +2836,11 @@ def evaluation_cycles_edit(cycle_id):
             end_date = request.form['end_date']
             is_enabled = 'is_enabled' in request.form
             dept_ids = request.form.getlist('dept_ids')
-            cursor.execute("UPDATE [Zktime_Copy].[dbo].[EvaluationCycles] SET CycleName = ?, EvaluationTypeID = ?, StartDate = ?, EndDate = ?, IsEnabled = ? WHERE CycleID = ?", (cycle_name, type_id, start_date, end_date, is_enabled, cycle_id))
-            cursor.execute("DELETE FROM [Zktime_Copy].[dbo].[CycleDepartments] WHERE CycleID = ?", (cycle_id,))
+            cursor.execute("UPDATE [Optima].[dbo].[EvaluationCycles] SET CycleName = ?, EvaluationTypeID = ?, StartDate = ?, EndDate = ?, IsEnabled = ? WHERE CycleID = ?", (cycle_name, type_id, start_date, end_date, is_enabled, cycle_id))
+            cursor.execute("DELETE FROM [Optima].[dbo].[CycleDepartments] WHERE CycleID = ?", (cycle_id,))
             if dept_ids:
                 dept_data = [(cycle_id, int(dept_id)) for dept_id in dept_ids]
-                cursor.executemany("INSERT INTO [Zktime_Copy].[dbo].[CycleDepartments] (CycleID, DepartmentID) VALUES (?, ?)", dept_data)
+                cursor.executemany("INSERT INTO [Optima].[dbo].[CycleDepartments] (CycleID, DepartmentID) VALUES (?, ?)", dept_data)
             conn.commit()
             flash('✅ تم تحديث دورة التقييم بنجاح', 'success')
             return redirect(url_for('evaluation_cycles_list'))
@@ -2644,13 +2849,13 @@ def evaluation_cycles_edit(cycle_id):
             flash(f'❌ خطأ في قاعدة البيانات: {e}', 'danger')
         finally:
             conn.close()
-    cursor.execute("SELECT * FROM [Zktime_Copy].[dbo].[EvaluationCycles] WHERE CycleID = ?", (cycle_id,))
+    cursor.execute("SELECT * FROM [Optima].[dbo].[EvaluationCycles] WHERE CycleID = ?", (cycle_id,))
     cycle = cursor.fetchone()
     if not cycle:
         flash('❌ لم يتم العثور على الدورة', 'danger')
         conn.close()
         return redirect(url_for('evaluation_cycles_list'))
-    cursor.execute("SELECT DepartmentID FROM [Zktime_Copy].[dbo].[CycleDepartments] WHERE CycleID = ?", (cycle_id,))
+    cursor.execute("SELECT DepartmentID FROM [Optima].[dbo].[CycleDepartments] WHERE CycleID = ?", (cycle_id,))
     cycle_depts_rows = cursor.fetchall()
     cycle_depts = [row.DepartmentID for row in cycle_depts_rows]
     conn.close()
@@ -2662,8 +2867,8 @@ def evaluation_cycles_delete(cycle_id):
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
-        cursor.execute("DELETE FROM [Zktime_Copy].[dbo].[CycleDepartments] WHERE CycleID = ?", (cycle_id,))
-        cursor.execute("DELETE FROM [Zktime_Copy].[dbo].[EvaluationCycles] WHERE CycleID = ?", (cycle_id,))
+        cursor.execute("DELETE FROM [Optima].[dbo].[CycleDepartments] WHERE CycleID = ?", (cycle_id,))
+        cursor.execute("DELETE FROM [Optima].[dbo].[EvaluationCycles] WHERE CycleID = ?", (cycle_id,))
         conn.commit()
         flash('✅ تم حذف الدورة بنجاح', 'success')
     except Exception as e:
@@ -2695,22 +2900,22 @@ def evaluation_details(evaluation_id):
                 (
                     SELECT STUFF((
                         SELECT '###' + TC_Sub.TrainingCourseText
-                        FROM [Zktime_Copy].[dbo].[TrainingEnrollments] TE_Sub 
-                        JOIN [Zktime_Copy].[dbo].[TrainingSessions] TS_Sub ON TE_Sub.SessionID = TS_Sub.SessionID
-                        JOIN [Zktime_Copy].[dbo].[TrainingCourses] TC_Sub ON TS_Sub.CourseID = TC_Sub.TrainingCourseID
+                        FROM [Optima].[dbo].[TrainingEnrollments] TE_Sub 
+                        JOIN [Optima].[dbo].[TrainingSessions] TS_Sub ON TE_Sub.SessionID = TS_Sub.SessionID
+                        JOIN [Optima].[dbo].[TrainingCourses] TC_Sub ON TS_Sub.CourseID = TC_Sub.TrainingCourseID
                         WHERE TE_Sub.EmployeeUserID = EmpInfo.USERID
                         ORDER BY TC_Sub.TrainingCourseText
                         FOR XML PATH('')
                     ), 1, 3, '')
                 ) as CoursesTaken
-            FROM [Zktime_Copy].[dbo].[Evaluations] E 
-            LEFT JOIN [Zktime_Copy].[dbo].[Users] Mgr ON E.EvaluatorUserID = Mgr.UserID 
-            LEFT JOIN [Zktime_Copy].[dbo].[USERINFO] EmpInfo ON E.EmployeeUserID = EmpInfo.USERID 
-            LEFT JOIN [Zktime_Copy].[dbo].[Users] EmpUser ON E.EmployeeUserID = EmpUser.UserID 
-            LEFT JOIN [Zktime_Copy].[dbo].[DEPARTMENTS] DeptEmp ON COALESCE(EmpInfo.DEFAULTDEPTID, EmpUser.DepartmentID) = DeptEmp.DEPTID 
-            LEFT JOIN [Zktime_Copy].[dbo].[Recommendations] R ON E.RecommendationID = R.RecommendationID 
-            LEFT JOIN [Zktime_Copy].[dbo].[TrainingCourses] TC ON E.TrainingCourseID = TC.TrainingCourseID 
-            LEFT JOIN [Zktime_Copy].[dbo].[EvaluationTypes] ET ON E.EvaluationTypeID = ET.EvaluationTypeID 
+            FROM [Optima].[dbo].[Evaluations] E 
+            LEFT JOIN [Optima].[dbo].[Users] Mgr ON E.EvaluatorUserID = Mgr.UserID 
+            LEFT JOIN [Optima].[dbo].[USERINFO] EmpInfo ON E.EmployeeUserID = EmpInfo.USERID 
+            LEFT JOIN [Optima].[dbo].[Users] EmpUser ON E.EmployeeUserID = EmpUser.UserID 
+            LEFT JOIN [Optima].[dbo].[DEPARTMENTS] DeptEmp ON COALESCE(EmpInfo.DEFAULTDEPTID, EmpUser.DepartmentID) = DeptEmp.DEPTID 
+            LEFT JOIN [Optima].[dbo].[Recommendations] R ON E.RecommendationID = R.RecommendationID 
+            LEFT JOIN [Optima].[dbo].[TrainingCourses] TC ON E.TrainingCourseID = TC.TrainingCourseID 
+            LEFT JOIN [Optima].[dbo].[EvaluationTypes] ET ON E.EvaluationTypeID = ET.EvaluationTypeID 
             WHERE E.EvaluationID = ?
         """, (evaluation_id,))
         evaluation_data = cursor.fetchone()
@@ -2722,16 +2927,16 @@ def evaluation_details(evaluation_id):
         elif role_id in [2, 3] and evaluation_data.EvaluatorUserID == user_id: can_view = True
         elif role_id == 5 and evaluation_data.EmployeeUserID == user_id: can_view = True
         elif role_id == 3:
-            cursor.execute("SELECT DepartmentID FROM [Zktime_Copy].[dbo].[Users] WHERE UserID = ?", (user_id,))
+            cursor.execute("SELECT DepartmentID FROM [Optima].[dbo].[Users] WHERE UserID = ?", (user_id,))
             manager_dept = cursor.fetchone()
-            cursor.execute("SELECT DEFAULTDEPTID FROM [Zktime_Copy].[dbo].[USERINFO] WHERE USERID = ?", (evaluation_data.EmployeeUserID,))
+            cursor.execute("SELECT DEFAULTDEPTID FROM [Optima].[dbo].[USERINFO] WHERE USERID = ?", (evaluation_data.EmployeeUserID,))
             emp_dept = cursor.fetchone()
             if manager_dept and emp_dept and manager_dept.DepartmentID == emp_dept.DEFAULTDEPTID:
                 can_view = True
         if not can_view:
              flash("You do not have permission to view this evaluation.", "danger")
              return redirect(url_for('evaluation_reports'))
-        cursor.execute("SELECT ED.ScoreGiven, EC.CriteriaName, EC.CriteriaWeight, EC.MaxScore FROM [Zktime_Copy].[dbo].[EvaluationDetails] ED JOIN [Zktime_Copy].[dbo].[EvaluationCriteria] EC ON ED.CriteriaID = EC.CriteriaID WHERE ED.EvaluationID = ? ORDER BY EC.CriteriaID", (evaluation_id,))
+        cursor.execute("SELECT ED.ScoreGiven, EC.CriteriaName, EC.CriteriaWeight, EC.MaxScore FROM [Optima].[dbo].[EvaluationDetails] ED JOIN [Optima].[dbo].[EvaluationCriteria] EC ON ED.CriteriaID = EC.CriteriaID WHERE ED.EvaluationID = ? ORDER BY EC.CriteriaID", (evaluation_id,))
         details = cursor.fetchall()
     except Exception as e:
         flash(f"Error fetching evaluation details: {e}", "danger")
@@ -2748,7 +2953,7 @@ def evaluation_delete(evaluation_id):
     cursor = conn.cursor()
     try:
         # الحذف سيتم تلقائياً من جدول التفاصيل أيضاً بسبب خاصية CASCADE في قاعدة البيانات
-        cursor.execute("DELETE FROM [Zktime_Copy].[dbo].[Evaluations] WHERE EvaluationID = ?", (evaluation_id,))
+        cursor.execute("DELETE FROM [Optima].[dbo].[Evaluations] WHERE EvaluationID = ?", (evaluation_id,))
         conn.commit()
         flash('✅ تم حذف تقرير التقييم بنجاح.', 'success')
     except Exception as e:
@@ -3285,7 +3490,7 @@ def training_attendance_save(sid):
 def debug_userinfo():
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT DEPTID, DEPTNAME FROM [Zktime_Copy].[dbo].[DEPARTMENTS] ORDER BY DEPTID")
+    cursor.execute("SELECT DEPTID, DEPTNAME FROM [Optima].[dbo].[DEPARTMENTS] ORDER BY DEPTID")
     departments = cursor.fetchall()
     result = f"<h1>UserInfo Debug</h1><h2>Departments Query Result:</h2><p>Found {len(departments)} departments:</p><table border='1'><tr><th>DEPTID</th><th>DEPTNAME</th></tr>"
     for dept in departments: result += f"<tr><td>{dept.DEPTID}</td><td>{dept.DEPTNAME}</td></tr>"
@@ -3448,7 +3653,7 @@ def training_employee_report():
     date_to = request.args.get('date_to')
 
     # 2. Base Filter Logic (Reused for Analytics & Main List)
-    where_clauses = ["U.IsActive = 1"]
+    where_clauses = ["U.IsActive = 1", "U.TITLE IS NOT NULL", "U.TITLE <> ''", "U.TITLE <> 'None'"]
     params = []
 
     if search:
@@ -3473,158 +3678,73 @@ def training_employee_report():
 
     where_sql = " AND ".join(where_clauses)
     
-    # 3. Analytics Queries (Executed Separately for Reliability)
-    stats = {'total_employees': 0, 'total_courses': 0, 'pass_rate': 0, 'status_counts': {}, 'dept_counts': {}}
+    # --- PAGINATION LOGIC ---
+    page = request.args.get('page', 1, type=int)
+    if page < 1: page = 1
+    per_page = 10 # Reduced for safety and performance
+    offset = (page - 1) * per_page
 
-    # A. Totals
-    q_totals = f"""
-        SELECT 
-            COUNT(DISTINCT U.USERID),
-            COUNT(TE.EnrollmentID)
-        FROM [Zktime_Copy].[dbo].[USERINFO] U
-        LEFT JOIN [Zktime_Copy].[dbo].[DEPARTMENTS] D ON U.DEFAULTDEPTID = D.DEPTID
-        LEFT JOIN [Zktime_Copy].[dbo].[TrainingEnrollments] TE ON U.USERID = TE.EmployeeUserID
-        LEFT JOIN [Zktime_Copy].[dbo].[TrainingSessions] TS ON TE.SessionID = TS.SessionID
-        LEFT JOIN [Zktime_Copy].[dbo].[TrainingCourses] TC ON TS.CourseID = TC.TrainingCourseID
+    # 3. Count Total Matching Employees (Distinct)
+    count_query = f"""
+        SELECT COUNT(DISTINCT U.USERID)
+        FROM [Optima].[dbo].[USERINFO] U
+        LEFT JOIN [Optima].[dbo].[DEPARTMENTS] D ON U.DEFAULTDEPTID = D.DEPTID
+        LEFT JOIN [Optima].[dbo].[TrainingEnrollments] TE ON U.USERID = TE.EmployeeUserID
+        LEFT JOIN [Optima].[dbo].[TrainingSessions] TS ON TE.SessionID = TS.SessionID
+        LEFT JOIN [Optima].[dbo].[TrainingCourses] TC ON TS.CourseID = TC.TrainingCourseID
         WHERE {where_sql}
     """
-    cursor.execute(q_totals, params)
-    totals_row = cursor.fetchone()
-    if totals_row:
-        stats['total_employees'] = totals_row[0]
-        stats['total_courses'] = totals_row[1]
-
-    # B. Pass Status Breakdown
-    q_status = f"""
-        SELECT TE.PassStatus, COUNT(*)
-        FROM [Zktime_Copy].[dbo].[USERINFO] U
-        LEFT JOIN [Zktime_Copy].[dbo].[DEPARTMENTS] D ON U.DEFAULTDEPTID = D.DEPTID
-        JOIN [Zktime_Copy].[dbo].[TrainingEnrollments] TE ON U.USERID = TE.EmployeeUserID
-        LEFT JOIN [Zktime_Copy].[dbo].[TrainingSessions] TS ON TE.SessionID = TS.SessionID
-        LEFT JOIN [Zktime_Copy].[dbo].[TrainingCourses] TC ON TS.CourseID = TC.TrainingCourseID
+    cursor.execute(count_query, params)
+    total_users = cursor.fetchone()[0]
+    total_pages = (total_users + per_page - 1) // per_page
+    
+    # 4. Fetch Paged User IDs
+    # We must order by something unique to ensure stable pagination
+    ids_query = f"""
+        SELECT DISTINCT U.USERID, U.NAME
+        FROM [Optima].[dbo].[USERINFO] U
+        LEFT JOIN [Optima].[dbo].[DEPARTMENTS] D ON U.DEFAULTDEPTID = D.DEPTID
+        LEFT JOIN [Optima].[dbo].[TrainingEnrollments] TE ON U.USERID = TE.EmployeeUserID
+        LEFT JOIN [Optima].[dbo].[TrainingSessions] TS ON TE.SessionID = TS.SessionID
+        LEFT JOIN [Optima].[dbo].[TrainingCourses] TC ON TS.CourseID = TC.TrainingCourseID
         WHERE {where_sql}
-        GROUP BY TE.PassStatus
+        ORDER BY U.NAME, U.USERID
+        OFFSET ? ROWS FETCH NEXT ? ROWS ONLY
     """
-    cursor.execute(q_status, params)
-    status_rows = cursor.fetchall()
+    # Params for ID query: Original filters + pagination params
+    paged_params = params + [offset, per_page]
+    cursor.execute(ids_query, paged_params)
+    paged_users = cursor.fetchall()
     
-    passed = 0
-    failed = 0
-    others = 0
-    for r in status_rows:
-        st = r[0] or 'Unknown'
-        cnt = r[1]
-        stats['status_counts'][st] = cnt
-        if st == 'Passed': passed += cnt
-        elif st == 'Failed': failed += cnt
-    # B. Pass Status Breakdown (Using LEFT JOIN + NOT NULL check for consistency)
-    q_status = f"""
-        SELECT TE.PassStatus, COUNT(*)
-        FROM [Zktime_Copy].[dbo].[USERINFO] U
-        LEFT JOIN [Zktime_Copy].[dbo].[DEPARTMENTS] D ON U.DEFAULTDEPTID = D.DEPTID
-        LEFT JOIN [Zktime_Copy].[dbo].[TrainingEnrollments] TE ON U.USERID = TE.EmployeeUserID
-        LEFT JOIN [Zktime_Copy].[dbo].[TrainingSessions] TS ON TE.SessionID = TS.SessionID
-        LEFT JOIN [Zktime_Copy].[dbo].[TrainingCourses] TC ON TS.CourseID = TC.TrainingCourseID
-        WHERE {where_sql} AND TE.EnrollmentID IS NOT NULL
-        GROUP BY TE.PassStatus
-    """
-    cursor.execute(q_status, params)
-    status_rows = cursor.fetchall()
+    paged_user_ids = [row.USERID for row in paged_users]
     
-    passed = 0
-    failed = 0
-    others = 0
-    for r in status_rows:
-        st = r[0] or 'Unknown'
-        cnt = r[1]
-        stats['status_counts'][st] = cnt
-        if st == 'Passed': passed += cnt
-        elif st == 'Failed': failed += cnt
-        else: others += cnt
+    # 5. Fetch Full Data for Paged IDs
+    rows = []
+    if paged_user_ids:
+        placeholders = ','.join(['?'] * len(paged_user_ids))
+        # We re-use where_sql to ensure we still filter courses/sessions correctly (e.g. by date)
+        # But we restrict the USER pool to just our paged set
+        final_query = f"""
+            SELECT 
+                U.USERID, U.BADGENUMBER, U.NAME, U.TITLE,
+                D.DEPTNAME,
+                TE.EnrollmentID, TE.PassStatus, TE.Grade, TE.AttendanceStatus,
+                TS.SessionDate, TS.SessionID,
+                TC.TrainingCourseText
+            FROM [Optima].[dbo].[USERINFO] U
+            LEFT JOIN [Optima].[dbo].[DEPARTMENTS] D ON U.DEFAULTDEPTID = D.DEPTID
+            LEFT JOIN [Optima].[dbo].[TrainingEnrollments] TE ON U.USERID = TE.EmployeeUserID
+            LEFT JOIN [Optima].[dbo].[TrainingSessions] TS ON TE.SessionID = TS.SessionID
+            LEFT JOIN [Optima].[dbo].[TrainingCourses] TC ON TS.CourseID = TC.TrainingCourseID
+            WHERE U.USERID IN ({placeholders}) AND {where_sql}
+            ORDER BY U.NAME, TS.SessionDate DESC
+        """
+        # Params: IDs first, then the original filter params
+        final_params = paged_user_ids + params
+        cursor.execute(final_query, final_params)
+        rows = cursor.fetchall()
     
-    total_finished = passed + failed
-    stats['pass_rate'] = round((passed / total_finished * 100)) if total_finished > 0 else 0
-    stats['passed'] = passed
-    stats['failed'] = failed
-    stats['others'] = others
-
-    # C. Top Departments (Using LEFT JOIN + NOT NULL check)
-    q_depts = f"""
-        SELECT TOP 5 D.DEPTNAME, COUNT(TE.EnrollmentID) as Cnt
-        FROM [Zktime_Copy].[dbo].[USERINFO] U
-        LEFT JOIN [Zktime_Copy].[dbo].[DEPARTMENTS] D ON U.DEFAULTDEPTID = D.DEPTID
-        LEFT JOIN [Zktime_Copy].[dbo].[TrainingEnrollments] TE ON U.USERID = TE.EmployeeUserID
-        LEFT JOIN [Zktime_Copy].[dbo].[TrainingSessions] TS ON TE.SessionID = TS.SessionID
-        LEFT JOIN [Zktime_Copy].[dbo].[TrainingCourses] TC ON TS.CourseID = TC.TrainingCourseID
-        WHERE {where_sql} AND TE.EnrollmentID IS NOT NULL
-        GROUP BY D.DEPTNAME
-        ORDER BY Cnt DESC
-    """
-    cursor.execute(q_depts, params)
-    dept_rows = cursor.fetchall()
-    
-    for r in dept_rows:
-        dname = r[0] or 'غير محدد'
-        stats['dept_counts'][dname] = r[1]
-    
-    # --- GLOBAL ANALYTICS (Company-Wide, Unfiltered) ---
-    global_stats = {'total_employees': 0, 'total_courses': 0, 'pass_rate': 0}
-    
-    # G1. Global Totals
-    cur_global = conn.cursor()
-    cur_global.execute("""
-        SELECT COUNT(DISTINCT U.USERID), COUNT(TE.EnrollmentID)
-        FROM [Zktime_Copy].[dbo].[USERINFO] U
-        LEFT JOIN [Zktime_Copy].[dbo].[TrainingEnrollments] TE ON U.USERID = TE.EmployeeUserID
-        WHERE U.IsActive = 1
-    """)
-    g_totals = cur_global.fetchone()
-    if g_totals:
-        global_stats['total_employees'] = g_totals[0]
-        global_stats['total_courses'] = g_totals[1]
-
-    # G2. Global Pass Rate
-    cur_global.execute("""
-        SELECT TE.PassStatus, COUNT(*)
-        FROM [Zktime_Copy].[dbo].[USERINFO] U
-        LEFT JOIN [Zktime_Copy].[dbo].[TrainingEnrollments] TE ON U.USERID = TE.EmployeeUserID
-        WHERE U.IsActive = 1 AND TE.EnrollmentID IS NOT NULL
-        GROUP BY TE.PassStatus
-    """)
-    g_rows = cur_global.fetchall()
-    g_passed = 0
-    g_total_finished = 0
-    for r in g_rows:
-        gst = r[0]
-        gcnt = r[1]
-        if gst in ['Passed', 'Failed']:
-            g_total_finished += gcnt
-        if gst == 'Passed':
-            g_passed += gcnt
-            
-    global_stats['pass_rate'] = round((g_passed / g_total_finished * 100)) if g_total_finished > 0 else 0
-    
-    # 4. Main User List Query
-    query = f"""
-        SELECT 
-            U.USERID, U.BADGENUMBER, U.NAME, U.TITLE, U.pic, 
-            D.DEPTNAME,
-            TE.EnrollmentID, TE.PassStatus, TE.Grade, TE.AttendanceStatus,
-            TS.SessionDate, TS.SessionID,
-            TC.TrainingCourseText
-        FROM [Zktime_Copy].[dbo].[USERINFO] U
-        LEFT JOIN [Zktime_Copy].[dbo].[DEPARTMENTS] D ON U.DEFAULTDEPTID = D.DEPTID
-        LEFT JOIN [Zktime_Copy].[dbo].[TrainingEnrollments] TE ON U.USERID = TE.EmployeeUserID
-        LEFT JOIN [Zktime_Copy].[dbo].[TrainingSessions] TS ON TE.SessionID = TS.SessionID
-        LEFT JOIN [Zktime_Copy].[dbo].[TrainingCourses] TC ON TS.CourseID = TC.TrainingCourseID
-        WHERE {where_sql}
-        ORDER BY U.NAME, TS.SessionDate DESC
-    """
-
-    cursor.execute(query, params)
-    rows = cursor.fetchall()
-    
-    # 5. Process Users
+    # 4. Process Users
     employees = defaultdict(lambda: {'info': None, 'courses': [], 'stats': {'total': 0, 'passed': 0, 'failed': 0}})
     
     for row in rows:
@@ -3636,10 +3756,14 @@ def training_employee_report():
                 'name': row.NAME,
                 'title': row.TITLE,
                 'dept': row.DEPTNAME,
-                'has_pic': True if row.pic else False
+                'has_pic': False # details: pic column removed for performance
             }
         
         if row.EnrollmentID:
+            # Skip invalid course names
+            if not row.TrainingCourseText or str(row.TrainingCourseText).strip().lower() == 'none':
+                 continue
+
             employees[uid]['courses'].append({
                 'course_name': row.TrainingCourseText,
                 'date': row.SessionDate,
@@ -3653,7 +3777,7 @@ def training_employee_report():
             elif row.PassStatus == 'Failed':
                 employees[uid]['stats']['failed'] += 1
 
-    # 6. Dropdowns
+    # 5. Dropdowns
     cursor.execute("SELECT DEPTID, DEPTNAME FROM DEPARTMENTS ORDER BY DEPTNAME")
     all_depts = cursor.fetchall()
     
@@ -3662,13 +3786,79 @@ def training_employee_report():
 
     conn.close()
 
+    # Pagination Window Logic (Server-Side)
+    iter_pages = []
+    if total_pages > 1:
+        if total_pages <= 9:
+            iter_pages = list(range(1, total_pages + 1))
+        else:
+            s_pages = {1, total_pages}
+            for i in range(page - 2, page + 3):
+                if 1 <= i <= total_pages:
+                    s_pages.add(i)
+            sorted_p = sorted(list(s_pages))
+            for i, p in enumerate(sorted_p):
+                iter_pages.append(p)
+                if i < len(sorted_p) - 1 and sorted_p[i+1] > p + 1:
+                    iter_pages.append(None)
+
+    # Prepare filters for pagination links (exclude 'page' to avoid duplications)
+    filters_dict = {k: v for k, v in request.args.items() if k != 'page'}
+
     return render_template('training_employee_report.html', 
                            employees=employees, 
                            all_depts=all_depts, 
                            all_courses=all_courses,
-                           filters=request.args,
-                           analytics=stats,
-                           global_stats=global_stats)
+                           filters=filters_dict,
+                           analytics={},     # Unused by template (calculated in JS)
+                           global_stats={},  # Unused by template
+                           page=page,
+                           total_pages=total_pages,
+                           iter_pages=iter_pages)
+
+@app.route('/training/print_card/<int:user_id>')
+@login_required
+def training_print_card(user_id):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    # 1. Get Employee Info
+    cursor.execute("""
+        SELECT U.NAME, U.TITLE, D.DEPTNAME 
+        FROM USERINFO U
+        LEFT JOIN DEPARTMENTS D ON U.DEFAULTDEPTID = D.DEPTID
+        WHERE U.USERID = ?
+    """, (user_id,))
+    employee = cursor.fetchone()
+    
+    if not employee:
+        flash("الموظف غير موجود", "danger")
+        conn.close()
+        return redirect(url_for('training_employee_report'))
+
+    # 2. Get Training History
+    # Filter out 'None' courses and sort by date ascending (chronological for a card)
+    cursor.execute("""
+        SELECT 
+            TC.TrainingCourseText, 
+            TS.SessionDate, 
+            TS.EndDate, 
+            TS.Location,
+            TE.PassStatus,
+            TE.Grade
+        FROM TrainingEnrollments TE
+        JOIN TrainingSessions TS ON TE.SessionID = TS.SessionID
+        JOIN TrainingCourses TC ON TS.CourseID = TC.TrainingCourseID
+        WHERE TE.EmployeeUserID = ?
+        AND TC.TrainingCourseText IS NOT NULL 
+        AND TC.TrainingCourseText <> 'None'
+        ORDER BY TS.SessionDate ASC
+    """, (user_id,))
+    courses = cursor.fetchall()
+    
+    conn.close()
+    
+    return render_template('training_card_print.html', employee=employee, courses=courses)
 
 @app.route('/training/session/edit/<int:sid>', methods=['GET', 'POST'])
 @training_required
@@ -3888,7 +4078,7 @@ def training_session_detail(sid):
     # جلب التسجيلات مع استبعاد الملغاة (Canceled)
     # جلب التسجيلات مع استبعاد الملغاة (Canceled)
     cursor.execute("""
-        SELECT TE.*, UI.NAME, UI.BADGENUMBER, D.DEPTNAME
+        SELECT TE.*, UI.NAME, UI.BADGENUMBER, D.DEPTNAME, UI.TITLE
         FROM TrainingEnrollments TE
         LEFT JOIN USERINFO UI ON TE.EmployeeUserID = UI.USERID
         LEFT JOIN DEPARTMENTS D ON UI.DEFAULTDEPTID = D.DEPTID
@@ -5057,10 +5247,10 @@ def recruitment_archive():
     # 2. Fetch Archived Employees
     cursor.execute("""
         SELECT UI.USERID, UI.BADGENUMBER, UI.NAME, UI.HIREDDAY, D.DEPTNAME, EA.EndDay, TR.ReasonText, EA.ArchiveComment, EA.ArchiveReasonID, UI.DEFAULTDEPTID
-        FROM [Zktime_Copy].[dbo].[USERINFO] AS UI
+        FROM [Optima].[dbo].[USERINFO] AS UI
         LEFT JOIN DEPARTMENTS D ON UI.DEFAULTDEPTID = D.DEPTID
-        LEFT JOIN [Zktime_Copy].[dbo].[EmployeeArchive] EA ON UI.USERID = EA.UserID
-        LEFT JOIN [Zktime_Copy].[dbo].[TerminationReasons] TR ON EA.ArchiveReasonID = TR.ReasonID
+        LEFT JOIN [Optima].[dbo].[EmployeeArchive] EA ON UI.USERID = EA.UserID
+        LEFT JOIN [Optima].[dbo].[TerminationReasons] TR ON EA.ArchiveReasonID = TR.ReasonID
         WHERE UI.IsActive = 0
         ORDER BY EA.EndDay DESC
     """)
@@ -5224,8 +5414,8 @@ def get_employee_full_data():
             SELECT TOP 1 U.USERID, U.NAME, U.BADGENUMBER, U.SSN, 
                    U.HIREDDAY, U.BIRTHDAY, U.OPHONE, U.FPHONE, 
                    U.TITLE, U.STREET, D.DEPTNAME
-            FROM [Zktime_Copy].[dbo].[USERINFO] U
-            LEFT JOIN [Zktime_Copy].[dbo].[DEPARTMENTS] D ON U.DEFAULTDEPTID = D.DEPTID
+            FROM [Optima].[dbo].[USERINFO] U
+            LEFT JOIN [Optima].[dbo].[DEPARTMENTS] D ON U.DEFAULTDEPTID = D.DEPTID
             WHERE (U.BADGENUMBER = ?) OR (U.NAME LIKE ?)
             ORDER BY U.IsActive DESC -- Prefer active if matches multiple
         """
@@ -5303,7 +5493,7 @@ def save_employee_full_data():
         # 1. Update USERINFO (Basic fields that are allowed to be updated)
         # Note: Be careful what we update here. Let's update Phone, Address if changed.
         cursor.execute("""
-            UPDATE [Zktime_Copy].[dbo].[USERINFO] 
+            UPDATE [Optima].[dbo].[USERINFO] 
             SET OPHONE = ?, STREET = ?, SSN = ?
             WHERE USERID = ?
         """, (data.get('phone'), data.get('address'), data.get('national_id'), user_id))
@@ -5361,6 +5551,46 @@ def save_employee_full_data():
 
 
 if __name__ == '__main__':
+    # Default values
+    port = 8080
+    host = '0.0.0.0'
+    
+    # Try to read config from server_config.txt
+    config_file = 'server_config.txt'
+    if os.path.exists(config_file):
+        try:
+            with open(config_file, 'r') as f:
+                content = f.read().strip()
+                
+                # Check if it's the old strict number format or new KEY=VALUE format
+                is_key_value = any('=' in line for line in content.splitlines())
+                
+                if is_key_value:
+                    for line in content.splitlines():
+                        if '=' in line:
+                            key, value = line.split('=', 1)
+                            key = key.strip().upper()
+                            value = value.strip()
+                            if key == 'PORT':
+                                port = int(value)
+                            elif key == 'HOST':
+                                host = value
+                elif content.isdigit():
+                    # Fallback for just a number in the file
+                    port = int(content)
+                    
+            print(f"✅ Loaded configuration: Running on {host}:{port}")
+        except Exception as e:
+            print(f"⚠️ Error reading {config_file}, using defaults {host}:{port}. Error: {e}")
+    else:
+        # Create the file with defaults if it doesn't exist
+        try:
+            with open(config_file, 'w') as f:
+                f.write(f"HOST={host}\nPORT={port}")
+            print(f"ℹ️ Created {config_file} with defaults")
+        except:
+            pass
+
     # use_reloader=False prevents the crash
     # debug=True allows you to see the error pages
-    app.run(host='0.0.0.0', port=8080, debug=True, use_reloader=False)
+    app.run(host=host, port=port, debug=True, use_reloader=False)

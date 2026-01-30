@@ -3,52 +3,78 @@
 
 {% block content %}
 <style>
-/* Add styles from criteria_form.html */
-.container {
+  /* Add styles from criteria_form.html */
+  .container {
     background: #cecbcb;
     border-radius: 14px;
-    box-shadow: 0 3px 10px rgba(0,0,0,0.07);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.07);
     padding: 25px 35px;
     max-width: 750px;
     margin: 40px auto;
-}
-h2 {
+  }
+
+  h2 {
     color: #000000;
     font-weight: 700;
     text-align: center;
     margin-bottom: 30px;
-}
-label {
+  }
+
+  label {
     font-weight: 600;
     color: #333;
     margin-bottom: 6px;
     display: block;
-}
-input, select, textarea {
+  }
+
+  input,
+  select,
+  textarea {
     width: 100%;
     padding: 10px;
     border-radius: 8px;
     border: 1px solid #ccc;
     font-size: 15px;
-}
-.btn {
+  }
+
+  .btn {
     padding: 10px 16px;
     border: none;
     border-radius: 8px;
     cursor: pointer;
     font-weight: 600;
     text-decoration: none;
-}
-.btn-primary { background-color: #1565c0; color: white; }
-.btn-secondary { background-color: #757575; color: white; }
-.form-check {
+  }
+
+  .btn-primary {
+    background-color: #1565c0;
+    color: white;
+  }
+
+  .btn-secondary {
+    background-color: #757575;
+    color: white;
+  }
+
+  .form-check {
     display: flex;
     align-items: center;
     gap: 10px;
-}
-.d-flex { display: flex; justify-content: space-between; gap: 10px; }
-.mt-4 { margin-top: 25px; }
-.mb-3 { margin-bottom: 20px; }
+  }
+
+  .d-flex {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .mt-4 {
+    margin-top: 25px;
+  }
+
+  .mb-3 {
+    margin-bottom: 20px;
+  }
 </style>
 
 <div class="container">
@@ -57,13 +83,14 @@ input, select, textarea {
   <form method="POST">
     <div class="mb-3">
       <label for="display_name">الاسم الظاهر (بالعربي):</label>
-      <input type="text" id="display_name" name="display_name" required value="{{ eval_type.DisplayName if eval_type else '' }}">
+      <input type="text" id="display_name" name="display_name" required
+        value="{{ eval_type.DisplayName if eval_type else '' }}">
     </div>
 
     <div class="mb-3">
       <label for="type_name">الاسم البرمجي (ل الربط):</label>
       <input type="text" id="type_name" name="type_name" required value="{{ eval_type.TypeName if eval_type else '' }}"
-             placeholder="مثل: 15-day أو annual">
+        placeholder="مثل: 15-day أو annual">
     </div>
 
     <div class="mb-3">
@@ -71,26 +98,74 @@ input, select, textarea {
       <select id="prerequisite_id" name="prerequisite_id">
         <option value="">-- لا يوجد متطلب --</option>
         {% for t in all_types %}
-        <option value="{{ t.EvaluationTypeID }}" {% if eval_type and eval_type.PrerequisiteTypeID == t.EvaluationTypeID %}selected{% endif %}>
+        <option value="{{ t.EvaluationTypeID }}" {% if eval_type and eval_type.PrerequisiteTypeID==t.EvaluationTypeID
+          %}selected{% endif %}>
           {{ t.DisplayName }}
         </option>
         {% endfor %}
       </select>
+
     </div>
+
+    <!-- NEW: Days After Prerequisite -->
+    <div class="mb-3" id="days_after_div"
+      style="{{ 'display:block' if eval_type and eval_type.PrerequisiteTypeID else 'display:none' }}">
+      <label for="days_after">عدد الأيام بعد المتطلب (للتفعيل التلقائي):</label>
+      <input type="number" id="days_after" name="days_after"
+        value="{{ eval_type.DaysAfterPrerequisite if eval_type and eval_type.DaysAfterPrerequisite is not none else '' }}"
+        placeholder="مثال: 30 (يعني يستحق بعد 30 يوم من المتطلب)">
+      <small style="color: #666;">اتركه فارغاً إذا كنت لا تريد تفعيلاً تلقائياً زمنياً.</small>
+    </div>
+
+    <!-- NEW: Included Classes (Checkbox List) -->
+    <div class="mb-3">
+      <label>الفئات المسموح لها (اختر الفئات التي ستخضع لهذا التقييم):</label>
+      <div
+        style="max-height: 200px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; border-radius: 8px; background: #fff;">
+        {% if all_classes %}
+        {% set current_included = eval_type.IncludedClasses.split(',') if eval_type and eval_type.IncludedClasses else
+        [] %}
+        {% for cls in all_classes %}
+        <div class="form-check" style="margin-bottom: 5px;">
+          <input type="checkbox" name="included_classes_list" value="{{ cls.ClassName }}" id="cls_{{ cls.ClassID }}" {%
+            if cls.ClassName in current_included %}checked{% endif %}>
+          <label for="cls_{{ cls.ClassID }}" style="font-weight: normal; cursor: pointer; display: inline-block;">{{
+            cls.DisplayName }}</label>
+        </div>
+        {% endfor %}
+        {% else %}
+        <p style="color: #666;">لا توجد فئات معرفة في النظام.</p>
+        {% endif %}
+      </div>
+      <small style="color: #666;">إذا لم تختر أي فئة، سيكون التقييم متاحاً <b>للجميع</b>.</small>
+    </div>
+
+    <script>
+      // Simple script to toggle Days After field
+      document.getElementById('prerequisite_id').addEventListener('change', function () {
+        const daysDiv = document.getElementById('days_after_div');
+        if (this.value) {
+          daysDiv.style.display = 'block';
+        } else {
+          daysDiv.style.display = 'none';
+          document.getElementById('days_after').value = '';
+        }
+      });
+    </script>
 
     <div class="d-flex">
       <div class="mb-3" style="flex:1;">
         <label for="sort_order">ترتيب الظهور:</label>
         <input type="number" id="sort_order" name="sort_order" value="{{ eval_type.SortOrder if eval_type else 100 }}">
       </div>
-      
+
       <div class="mb-3 form-check" style="flex:1; margin-top: 30px;">
-        <input type="checkbox" id="is_repeatable" name="is_repeatable" value="1" 
-               {% if eval_type and eval_type.IsRepeatable %}checked{% endif %}>
+        <input type="checkbox" id="is_repeatable" name="is_repeatable" value="1" {% if eval_type and
+          eval_type.IsRepeatable %}checked{% endif %}>
         <label for="is_repeatable">قابل للتكرار؟</label>
       </div>
     </div>
-    
+
     <hr>
     <div class="d-flex mt-4">
       <a href="{{ url_for('evaluation_types_list') }}" class="btn btn-secondary">⬅️ رجوع</a>
