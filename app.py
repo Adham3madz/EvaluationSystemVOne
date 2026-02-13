@@ -162,7 +162,7 @@ def get_available_evaluation_types(conn, employee_id, manager_dept_id):
         today = datetime.now().date()
         
         # 1. Get employee's completed evals with dates to check against cycles
-        cursor.execute("SELECT EvaluationTypeID, EvaluationDate FROM [Optima].[dbo].[Evaluations] WHERE EmployeeUserID = ?", (employee_id,))
+        cursor.execute("SELECT EvaluationTypeID, EvaluationDate FROM [AURAHR].[dbo].[Evaluations] WHERE EmployeeUserID = ?", (employee_id,))
         completed_evals = []
         for row in cursor.fetchall():
             e_date = row.EvaluationDate
@@ -174,11 +174,11 @@ def get_available_evaluation_types(conn, employee_id, manager_dept_id):
         completed_eval_ids = {e['id'] for e in completed_evals}
         
         # 2. Get all rules (Updated to fetch new columns)
-        cursor.execute("SELECT * FROM [Optima].[dbo].[EvaluationTypes] ORDER BY SortOrder")
+        cursor.execute("SELECT * FROM [AURAHR].[dbo].[EvaluationTypes] ORDER BY SortOrder")
         all_types_rules = cursor.fetchall()
 
         # 2b. Get Employee Class and Hire Date
-        cursor.execute("SELECT employee_class, HiredDay FROM [Optima].[dbo].[USERINFO] WHERE USERID = ?", (employee_id,))
+        cursor.execute("SELECT employee_class, HiredDay FROM [AURAHR].[dbo].[USERINFO] WHERE USERID = ?", (employee_id,))
         emp_data = cursor.fetchone()
         emp_class = emp_data.employee_class if emp_data and emp_data.employee_class else 'لم تضاف'
         hire_date = emp_data.HiredDay if emp_data and emp_data.HiredDay else None
@@ -190,8 +190,8 @@ def get_available_evaluation_types(conn, employee_id, manager_dept_id):
         # 3. Get all active, open cycles including StartDate and EndDate
         cursor.execute("""
             SELECT C.EvaluationTypeID, CD.DepartmentID, C.StartDate, C.EndDate
-            FROM [Optima].[dbo].[EvaluationCycles] C
-            LEFT JOIN [Optima].[dbo].[CycleDepartments] CD ON C.CycleID = CD.CycleID
+            FROM [AURAHR].[dbo].[EvaluationCycles] C
+            LEFT JOIN [AURAHR].[dbo].[CycleDepartments] CD ON C.CycleID = CD.CycleID
             WHERE C.IsEnabled = 1 AND ? BETWEEN C.StartDate AND C.EndDate
         """, (today,))
         active_cycles = cursor.fetchall()
@@ -355,7 +355,7 @@ def get_rating_from_score(score):
 def get_employee_class(user_id):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT employee_class FROM [Optima].[dbo].[USERINFO] WHERE USERID = ?", (user_id,))
+    cursor.execute("SELECT employee_class FROM [AURAHR].[dbo].[USERINFO] WHERE USERID = ?", (user_id,))
     result = cursor.fetchone()
     conn.close()
     return result.employee_class if result and result.employee_class else 'لم تضاف'
@@ -365,7 +365,7 @@ def get_all_classes():
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute("SELECT ClassID, ClassName, DisplayName FROM [Optima].[dbo].[EmployeeClasses] ORDER BY ClassName")
+        cursor.execute("SELECT ClassID, ClassName, DisplayName FROM [AURAHR].[dbo].[EmployeeClasses] ORDER BY ClassName")
         classes = cursor.fetchall()
         conn.close()
         return classes
@@ -414,7 +414,7 @@ def login():
         try:
             conn = get_db_connection()
             cursor = conn.cursor()
-            cursor.execute("SELECT UserID, Username, PasswordHash, RoleID, Name FROM [Optima].[dbo].[Users] WHERE Username = ?", (username,))
+            cursor.execute("SELECT UserID, Username, PasswordHash, RoleID, Name FROM [AURAHR].[dbo].[Users] WHERE Username = ?", (username,))
             user = cursor.fetchone()
         except Exception as e:
             flash('❌ حدث خطأ في قاعدة البيانات.', 'danger')
@@ -482,16 +482,16 @@ def dashboard():
             # KPI Logic: Count All
             sql_kpis = """
                 SELECT 
-                    (SELECT COUNT(*) FROM [Optima].[dbo].[Users]) as UsersCount,
-                    (SELECT COUNT(*) FROM [Optima].[dbo].[USERINFO] WHERE (IsActive = 1 OR IsActive IS NULL)) as ActiveCount,
-                    (SELECT COUNT(*) FROM [Optima].[dbo].[USERINFO] WHERE IsActive = 0) as ArchivedCount,
-                    (SELECT COUNT(*) FROM [Optima].[dbo].[Evaluations] WHERE OverallScore IS NOT NULL) as EvalsCount,
-                    (SELECT AVG(OverallScore) FROM [Optima].[dbo].[Evaluations] WHERE OverallScore IS NOT NULL) as AvgScore
+                    (SELECT COUNT(*) FROM [AURAHR].[dbo].[Users]) as UsersCount,
+                    (SELECT COUNT(*) FROM [AURAHR].[dbo].[USERINFO] WHERE (IsActive = 1 OR IsActive IS NULL)) as ActiveCount,
+                    (SELECT COUNT(*) FROM [AURAHR].[dbo].[USERINFO] WHERE IsActive = 0) as ArchivedCount,
+                    (SELECT COUNT(*) FROM [AURAHR].[dbo].[Evaluations] WHERE OverallScore IS NOT NULL) as EvalsCount,
+                    (SELECT AVG(OverallScore) FROM [AURAHR].[dbo].[Evaluations] WHERE OverallScore IS NOT NULL) as AvgScore
             """
         else:
             # Manager Department Filters
             # Get Manager's Dept ID first
-            cursor.execute("SELECT DepartmentID FROM [Optima].[dbo].[Users] WHERE UserID = ?", (ctx['user_id'],))
+            cursor.execute("SELECT DepartmentID FROM [AURAHR].[dbo].[Users] WHERE UserID = ?", (ctx['user_id'],))
             user_row = cursor.fetchone()
             dept_id = user_row.DepartmentID if user_row else None
             
@@ -507,11 +507,11 @@ def dashboard():
 
             sql_kpis = """
                 SELECT 
-                    (SELECT COUNT(*) FROM [Optima].[dbo].[Users] WHERE DepartmentID = ?) as UsersCount,
-                    (SELECT COUNT(*) FROM [Optima].[dbo].[USERINFO] WHERE DEFAULTDEPTID = ? AND (IsActive = 1 OR IsActive IS NULL)) as ActiveCount,
-                    (SELECT COUNT(*) FROM [Optima].[dbo].[USERINFO] WHERE DEFAULTDEPTID = ? AND IsActive = 0) as ArchivedCount,
-                    (SELECT COUNT(*) FROM [Optima].[dbo].[Evaluations] E JOIN [Optima].[dbo].[USERINFO] UI ON E.EmployeeUserID = UI.USERID WHERE UI.DEFAULTDEPTID = ? AND E.OverallScore IS NOT NULL) as EvalsCount,
-                    (SELECT AVG(E.OverallScore) FROM [Optima].[dbo].[Evaluations] E JOIN [Optima].[dbo].[USERINFO] UI ON E.EmployeeUserID = UI.USERID WHERE UI.DEFAULTDEPTID = ? AND E.OverallScore IS NOT NULL) as AvgScore
+                    (SELECT COUNT(*) FROM [AURAHR].[dbo].[Users] WHERE DepartmentID = ?) as UsersCount,
+                    (SELECT COUNT(*) FROM [AURAHR].[dbo].[USERINFO] WHERE DEFAULTDEPTID = ? AND (IsActive = 1 OR IsActive IS NULL)) as ActiveCount,
+                    (SELECT COUNT(*) FROM [AURAHR].[dbo].[USERINFO] WHERE DEFAULTDEPTID = ? AND IsActive = 0) as ArchivedCount,
+                    (SELECT COUNT(*) FROM [AURAHR].[dbo].[Evaluations] E JOIN [AURAHR].[dbo].[USERINFO] UI ON E.EmployeeUserID = UI.USERID WHERE UI.DEFAULTDEPTID = ? AND E.OverallScore IS NOT NULL) as EvalsCount,
+                    (SELECT AVG(E.OverallScore) FROM [AURAHR].[dbo].[Evaluations] E JOIN [AURAHR].[dbo].[USERINFO] UI ON E.EmployeeUserID = UI.USERID WHERE UI.DEFAULTDEPTID = ? AND E.OverallScore IS NOT NULL) as AvgScore
             """
 
         # ==========================================
@@ -533,26 +533,26 @@ def dashboard():
         # Note: We must ensure the params list matches the order of '?' in the string
         
         base_joins = """
-            FROM [Optima].[dbo].[Evaluations] E
-            LEFT JOIN [Optima].[dbo].[USERINFO] UI ON E.EmployeeUserID = UI.USERID
-            LEFT JOIN [Optima].[dbo].[Users] U ON E.EmployeeUserID = U.UserID
-            LEFT JOIN [Optima].[dbo].[Users] Mgr ON E.EvaluatorUserID = Mgr.UserID
-            LEFT JOIN [Optima].[dbo].[EvaluationTypes] ET ON E.EvaluationTypeID = ET.EvaluationTypeID
+            FROM [AURAHR].[dbo].[Evaluations] E
+            LEFT JOIN [AURAHR].[dbo].[USERINFO] UI ON E.EmployeeUserID = UI.USERID
+            LEFT JOIN [AURAHR].[dbo].[Users] U ON E.EmployeeUserID = U.UserID
+            LEFT JOIN [AURAHR].[dbo].[Users] Mgr ON E.EvaluatorUserID = Mgr.UserID
+            LEFT JOIN [AURAHR].[dbo].[EvaluationTypes] ET ON E.EvaluationTypeID = ET.EvaluationTypeID
         """
 
         sql_charts = f"""
         -- 1. Rating Distribution
         SELECT OverallRating, COUNT(*) as count 
-        FROM [Optima].[dbo].[Evaluations] E 
-        LEFT JOIN [Optima].[dbo].[USERINFO] UI ON E.EmployeeUserID = UI.USERID 
+        FROM [AURAHR].[dbo].[Evaluations] E 
+        LEFT JOIN [AURAHR].[dbo].[USERINFO] UI ON E.EmployeeUserID = UI.USERID 
         WHERE {chart_where} AND OverallRating IS NOT NULL 
         GROUP BY OverallRating;
 
         -- 2. Type Distribution
         SELECT COALESCE(ET.DisplayName, E.EvaluationType, 'غير محدد'), COUNT(*) as count 
-        FROM [Optima].[dbo].[Evaluations] E 
-        LEFT JOIN [Optima].[dbo].[USERINFO] UI ON E.EmployeeUserID = UI.USERID 
-        LEFT JOIN [Optima].[dbo].[EvaluationTypes] ET ON E.EvaluationTypeID = ET.EvaluationTypeID 
+        FROM [AURAHR].[dbo].[Evaluations] E 
+        LEFT JOIN [AURAHR].[dbo].[USERINFO] UI ON E.EmployeeUserID = UI.USERID 
+        LEFT JOIN [AURAHR].[dbo].[EvaluationTypes] ET ON E.EvaluationTypeID = ET.EvaluationTypeID 
         WHERE {chart_where} 
         GROUP BY COALESCE(ET.DisplayName, E.EvaluationType, 'غير محدد') ORDER BY count DESC;
 
@@ -583,8 +583,8 @@ def dashboard():
         SELECT CASE WHEN OverallScore >= 90 THEN 'ممتاز (90-100)' WHEN OverallScore >= 80 THEN 'جيد جدا (80-89)'
                WHEN OverallScore >= 70 THEN 'جيد (70-79)' WHEN OverallScore >= 60 THEN 'مقبول (60-69)' ELSE 'ضعيف (أقل من 60)' END as score_range,
                COUNT(*) as count
-        FROM [Optima].[dbo].[Evaluations] E 
-        LEFT JOIN [Optima].[dbo].[USERINFO] UI ON E.EmployeeUserID = UI.USERID
+        FROM [AURAHR].[dbo].[Evaluations] E 
+        LEFT JOIN [AURAHR].[dbo].[USERINFO] UI ON E.EmployeeUserID = UI.USERID
         WHERE {chart_where} AND OverallScore IS NOT NULL
         GROUP BY CASE WHEN OverallScore >= 90 THEN 'ممتاز (90-100)' WHEN OverallScore >= 80 THEN 'جيد جدا (80-89)'
                  WHEN OverallScore >= 70 THEN 'جيد (70-79)' WHEN OverallScore >= 60 THEN 'مقبول (60-69)' ELSE 'ضعيف (أقل من 60)' END
@@ -621,9 +621,9 @@ def dashboard():
             # 1. Get Total Count
             cursor.execute("""
                 SELECT COUNT(*) 
-                FROM [Optima].[dbo].[Users] U
+                FROM [AURAHR].[dbo].[Users] U
                 WHERE U.RoleID = 3 
-                AND U.UserID NOT IN (SELECT DISTINCT EvaluatorUserID FROM [Optima].[dbo].[Evaluations] WHERE EvaluatorUserID IS NOT NULL)
+                AND U.UserID NOT IN (SELECT DISTINCT EvaluatorUserID FROM [AURAHR].[dbo].[Evaluations] WHERE EvaluatorUserID IS NOT NULL)
             """)
             managers_count = cursor.fetchone()[0]
             managers_total_pages = (managers_count + managers_limit - 1) // managers_limit
@@ -633,10 +633,10 @@ def dashboard():
             sql_admin = """
             -- Inactive Managers (Paginated)
             SELECT U.UserID, U.Name, D.DEPTNAME,
-                (SELECT COUNT(*) FROM [Optima].[dbo].[USERINFO] WHERE DEFAULTDEPTID = U.DepartmentID AND IsActive = 1) as TotalEmployees
-            FROM [Optima].[dbo].[Users] U
-            LEFT JOIN [Optima].[dbo].[DEPARTMENTS] D ON U.DepartmentID = D.DEPTID
-            WHERE U.RoleID = 3 AND U.UserID NOT IN (SELECT DISTINCT EvaluatorUserID FROM [Optima].[dbo].[Evaluations] WHERE EvaluatorUserID IS NOT NULL)
+                (SELECT COUNT(*) FROM [AURAHR].[dbo].[USERINFO] WHERE DEFAULTDEPTID = U.DepartmentID AND IsActive = 1) as TotalEmployees
+            FROM [AURAHR].[dbo].[Users] U
+            LEFT JOIN [AURAHR].[dbo].[DEPARTMENTS] D ON U.DepartmentID = D.DEPTID
+            WHERE U.RoleID = 3 AND U.UserID NOT IN (SELECT DISTINCT EvaluatorUserID FROM [AURAHR].[dbo].[Evaluations] WHERE EvaluatorUserID IS NOT NULL)
             ORDER BY U.Name
             OFFSET 0 ROWS FETCH NEXT 5 ROWS ONLY;
 
@@ -645,9 +645,9 @@ def dashboard():
                 COALESCE(Mgr.Name, Mgr.Username) AS EvaluatorName, 
                 COUNT(E.EvaluationID) as evaluation_count, 
                 COUNT(DISTINCT E.EmployeeUserID) as distinct_evaluated,
-                (SELECT COUNT(*) FROM [Optima].[dbo].[USERINFO] WHERE DEFAULTDEPTID = Mgr.DepartmentID AND IsActive = 1) as total_dept_employees
-            FROM [Optima].[dbo].[Evaluations] E
-            LEFT JOIN [Optima].[dbo].[Users] Mgr ON E.EvaluatorUserID = Mgr.UserID
+                (SELECT COUNT(*) FROM [AURAHR].[dbo].[USERINFO] WHERE DEFAULTDEPTID = Mgr.DepartmentID AND IsActive = 1) as total_dept_employees
+            FROM [AURAHR].[dbo].[Evaluations] E
+            LEFT JOIN [AURAHR].[dbo].[Users] Mgr ON E.EvaluatorUserID = Mgr.UserID
             GROUP BY Mgr.UserID, Mgr.Name, Mgr.Username, Mgr.DepartmentID
             HAVING COALESCE(Mgr.Name, Mgr.Username) IS NOT NULL ORDER BY COUNT(E.EvaluationID) DESC;
             """
@@ -664,24 +664,24 @@ def dashboard():
         -- 1. Hires
         SELECT YEAR(HiredDay) as Yr, COUNT(*) as Count 
         FROM (
-            SELECT HiredDay FROM [Optima].[dbo].[USERINFO] WHERE HiredDay IS NOT NULL AND DEFAULTDEPTID <> -1
+            SELECT HiredDay FROM [AURAHR].[dbo].[USERINFO] WHERE HiredDay IS NOT NULL AND DEFAULTDEPTID <> -1
             UNION ALL 
-            SELECT HiredDay FROM [Optima].[dbo].[EmployeeArchive] WHERE HiredDay IS NOT NULL
+            SELECT HiredDay FROM [AURAHR].[dbo].[EmployeeArchive] WHERE HiredDay IS NOT NULL
         ) as AllHires 
         WHERE YEAR(HiredDay) > 1900 GROUP BY YEAR(HiredDay) ORDER BY Yr;
 
         -- 2. Leavers
-        SELECT YEAR(EndDay) as Yr, COUNT(*) as Count FROM [Optima].[dbo].[EmployeeArchive] 
+        SELECT YEAR(EndDay) as Yr, COUNT(*) as Count FROM [AURAHR].[dbo].[EmployeeArchive] 
         WHERE EndDay IS NOT NULL AND YEAR(EndDay) > 1900 GROUP BY YEAR(EndDay) ORDER BY Yr;
 
         -- 3. Dept Turnover
-        SELECT D.DEPTNAME, COUNT(*) as Count FROM [Optima].[dbo].[EmployeeArchive] A 
-        LEFT JOIN [Optima].[dbo].[DEPARTMENTS] D ON A.ArchivedDeptID = D.DEPTID 
+        SELECT D.DEPTNAME, COUNT(*) as Count FROM [AURAHR].[dbo].[EmployeeArchive] A 
+        LEFT JOIN [AURAHR].[dbo].[DEPARTMENTS] D ON A.ArchivedDeptID = D.DEPTID 
         GROUP BY D.DEPTNAME ORDER BY Count DESC;
 
         -- 4. Pos Turnover
-        SELECT P.PositionName, COUNT(*) as Count FROM [Optima].[dbo].[EmployeeArchive] A 
-        LEFT JOIN [Optima].[dbo].[POSITIONS] P ON A.ArchivedPosID = P.PositionID 
+        SELECT P.PositionName, COUNT(*) as Count FROM [AURAHR].[dbo].[EmployeeArchive] A 
+        LEFT JOIN [AURAHR].[dbo].[POSITIONS] P ON A.ArchivedPosID = P.PositionID 
         GROUP BY P.PositionName ORDER BY Count DESC;
         """
         
@@ -747,9 +747,9 @@ def dashboard_managers_partial():
         # 1. Get Total Count
         cursor.execute("""
             SELECT COUNT(*) 
-            FROM [Optima].[dbo].[Users] U
+            FROM [AURAHR].[dbo].[Users] U
             WHERE U.RoleID = 3 
-            AND U.UserID NOT IN (SELECT DISTINCT EvaluatorUserID FROM [Optima].[dbo].[Evaluations] WHERE EvaluatorUserID IS NOT NULL)
+            AND U.UserID NOT IN (SELECT DISTINCT EvaluatorUserID FROM [AURAHR].[dbo].[Evaluations] WHERE EvaluatorUserID IS NOT NULL)
         """)
         total_count = cursor.fetchone()[0]
         total_pages = (total_count + limit - 1) // limit
@@ -757,11 +757,11 @@ def dashboard_managers_partial():
         # 2. Get Paginated Data
         sql = """
             SELECT U.UserID, U.Name, D.DEPTNAME,
-                (SELECT COUNT(*) FROM [Optima].[dbo].[USERINFO] WHERE DEFAULTDEPTID = U.DepartmentID AND IsActive = 1) as TotalEmployees
-            FROM [Optima].[dbo].[Users] U
-            LEFT JOIN [Optima].[dbo].[DEPARTMENTS] D ON U.DepartmentID = D.DEPTID
+                (SELECT COUNT(*) FROM [AURAHR].[dbo].[USERINFO] WHERE DEFAULTDEPTID = U.DepartmentID AND IsActive = 1) as TotalEmployees
+            FROM [AURAHR].[dbo].[Users] U
+            LEFT JOIN [AURAHR].[dbo].[DEPARTMENTS] D ON U.DepartmentID = D.DEPTID
             WHERE U.RoleID = 3 
-            AND U.UserID NOT IN (SELECT DISTINCT EvaluatorUserID FROM [Optima].[dbo].[Evaluations] WHERE EvaluatorUserID IS NOT NULL)
+            AND U.UserID NOT IN (SELECT DISTINCT EvaluatorUserID FROM [AURAHR].[dbo].[Evaluations] WHERE EvaluatorUserID IS NOT NULL)
             ORDER BY U.Name
             OFFSET ? ROWS FETCH NEXT ? ROWS ONLY
         """
@@ -790,7 +790,7 @@ def users():
     dept_id_filter = request.args.get('dept_id', '')
     conn = get_db_connection()
     cursor = conn.cursor()
-    query_base = "SELECT U.UserID, U.Username, COALESCE(U.Name, UI.NAME) AS FullName, U.DepartmentID, D.DEPTNAME, U.RoleID, R.RoleName FROM [Optima].[dbo].[Users] U LEFT JOIN [Optima].[dbo].[USERINFO] UI ON U.UserID = UI.USERID LEFT JOIN [Optima].[dbo].[DEPARTMENTS] D ON U.DepartmentID = D.DEPTID LEFT JOIN [Optima].[dbo].[Roles] R ON U.RoleID = R.RoleID"
+    query_base = "SELECT U.UserID, U.Username, COALESCE(U.Name, UI.NAME) AS FullName, U.DepartmentID, D.DEPTNAME, U.RoleID, R.RoleName FROM [AURAHR].[dbo].[Users] U LEFT JOIN [AURAHR].[dbo].[USERINFO] UI ON U.UserID = UI.USERID LEFT JOIN [AURAHR].[dbo].[DEPARTMENTS] D ON U.DepartmentID = D.DEPTID LEFT JOIN [AURAHR].[dbo].[Roles] R ON U.RoleID = R.RoleID"
     where_clauses = ["1=1"] 
     params = []
     if search:
@@ -805,9 +805,9 @@ def users():
     query = f"{query_base} WHERE {' AND '.join(where_clauses)} ORDER BY U.UserID"
     cursor.execute(query, params)
     users = cursor.fetchall()
-    cursor.execute("SELECT RoleID, RoleName FROM [Optima].[dbo].[Roles] ORDER BY RoleID")
+    cursor.execute("SELECT RoleID, RoleName FROM [AURAHR].[dbo].[Roles] ORDER BY RoleID")
     roles = cursor.fetchall()
-    cursor.execute("SELECT DEPTID, DEPTNAME FROM [Optima].[dbo].[DEPARTMENTS] ORDER BY DEPTID")
+    cursor.execute("SELECT DEPTID, DEPTNAME FROM [AURAHR].[dbo].[DEPARTMENTS] ORDER BY DEPTID")
     depts = cursor.fetchall()
     conn.close()
     return render_template('users.html', users=users, roles=roles, depts=depts, filters=request.args, is_admin=is_admin())
@@ -817,9 +817,9 @@ def users():
 def add_user():
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT RoleID, RoleName FROM [Optima].[dbo].[Roles] ORDER BY RoleID")
+    cursor.execute("SELECT RoleID, RoleName FROM [AURAHR].[dbo].[Roles] ORDER BY RoleID")
     roles = cursor.fetchall()
-    cursor.execute("SELECT DEPTID, DEPTNAME FROM [Optima].[dbo].[DEPARTMENTS] ORDER BY DEPTID")
+    cursor.execute("SELECT DEPTID, DEPTNAME FROM [AURAHR].[dbo].[DEPARTMENTS] ORDER BY DEPTID")
     depts = cursor.fetchall()
     if request.method == 'POST':
         username = request.form['username']
@@ -828,7 +828,7 @@ def add_user():
         role_id = request.form.get('role_id') or None
         dept_id = request.form.get('department_id') or None
         try:
-            cursor.execute("INSERT INTO [Optima].[dbo].[Users] (Username, PasswordHash, RoleID, Name, DepartmentID) VALUES (?, ?, ?, ?, ?)", (username, password, role_id, name, dept_id))
+            cursor.execute("INSERT INTO [AURAHR].[dbo].[Users] (Username, PasswordHash, RoleID, Name, DepartmentID) VALUES (?, ?, ?, ?, ?)", (username, password, role_id, name, dept_id))
             conn.commit()
             flash('✅ User added successfully!', 'success')
             return redirect(url_for('users'))
@@ -843,11 +843,11 @@ def add_user():
 def edit_user(user_id):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT RoleID, RoleName FROM [Optima].[dbo].[Roles] ORDER BY RoleID")
+    cursor.execute("SELECT RoleID, RoleName FROM [AURAHR].[dbo].[Roles] ORDER BY RoleID")
     roles = cursor.fetchall()
-    cursor.execute("SELECT DEPTID, DEPTNAME FROM [Optima].[dbo].[DEPARTMENTS] ORDER BY DEPTID")
+    cursor.execute("SELECT DEPTID, DEPTNAME FROM [AURAHR].[dbo].[DEPARTMENTS] ORDER BY DEPTID")
     depts = cursor.fetchall()
-    cursor.execute("SELECT UserID, Username, RoleID, Name, DepartmentID FROM [Optima].[dbo].[Users] WHERE UserID = ?", (user_id,))
+    cursor.execute("SELECT UserID, Username, RoleID, Name, DepartmentID FROM [AURAHR].[dbo].[Users] WHERE UserID = ?", (user_id,))
     user = cursor.fetchone()
     if request.method == 'POST':
         username = request.form['username']
@@ -856,9 +856,9 @@ def edit_user(user_id):
         dept_id = request.form.get('department_id') or None
         new_password = request.form.get('password') or None
         if new_password:
-            cursor.execute("UPDATE [Optima].[dbo].[Users] SET Username = ?, Name = ?, RoleID = ?, DepartmentID = ?, PasswordHash = ? WHERE UserID = ?", (username, name, role_id, dept_id, new_password, user_id))
+            cursor.execute("UPDATE [AURAHR].[dbo].[Users] SET Username = ?, Name = ?, RoleID = ?, DepartmentID = ?, PasswordHash = ? WHERE UserID = ?", (username, name, role_id, dept_id, new_password, user_id))
         else:
-            cursor.execute("UPDATE [Optima].[dbo].[Users] SET Username = ?, Name = ?, RoleID = ?, DepartmentID = ? WHERE UserID = ?", (username, name, role_id, dept_id, user_id))
+            cursor.execute("UPDATE [AURAHR].[dbo].[Users] SET Username = ?, Name = ?, RoleID = ?, DepartmentID = ? WHERE UserID = ?", (username, name, role_id, dept_id, user_id))
         conn.commit()
         conn.close()
         flash('User updated successfully!', 'success')
@@ -871,7 +871,7 @@ def edit_user(user_id):
 def delete_user(user_id):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("DELETE FROM [Optima].[dbo].[Users] WHERE UserID = ?", (user_id,))
+    cursor.execute("DELETE FROM [AURAHR].[dbo].[Users] WHERE UserID = ?", (user_id,))
     conn.commit()
     conn.close()
     flash('User deleted successfully!', 'info')
@@ -915,7 +915,7 @@ def userinfo_list():
     if is_admin():
         where_clauses.append("(UI.IsActive = 1 OR UI.IsActive IS NULL)")
     elif is_officer():
-        cursor.execute("SELECT DepartmentID FROM [Optima].[dbo].[Users] WHERE UserID = ?", (user_id,))
+        cursor.execute("SELECT DepartmentID FROM [AURAHR].[dbo].[Users] WHERE UserID = ?", (user_id,))
         user_row = cursor.fetchone()
         dept_id = user_row.DepartmentID if user_row else None
         
@@ -927,16 +927,16 @@ def userinfo_list():
         else:
             where_clauses.append("1=0")
     elif role_id == 3:
-        cursor.execute("SELECT DepartmentID FROM [Optima].[dbo].[Users] WHERE UserID = ?", (user_id,))
+        cursor.execute("SELECT DepartmentID FROM [AURAHR].[dbo].[Users] WHERE UserID = ?", (user_id,))
         user_row = cursor.fetchone()
         dept_id = user_row.DepartmentID if user_row and user_row.DepartmentID else None
         
         if dept_id and dept_id != -1:
             hierarchy_query = """
                 WITH DeptHierarchy AS (
-                    SELECT DEPTID FROM [Optima].[dbo].[DEPARTMENTS] WHERE DEPTID = ?
+                    SELECT DEPTID FROM [AURAHR].[dbo].[DEPARTMENTS] WHERE DEPTID = ?
                     UNION ALL
-                    SELECT d.DEPTID FROM [Optima].[dbo].[DEPARTMENTS] d
+                    SELECT d.DEPTID FROM [AURAHR].[dbo].[DEPARTMENTS] d
                     INNER JOIN DeptHierarchy dh ON d.SUPDEPTID = dh.DEPTID
                 )
                 SELECT DEPTID FROM DeptHierarchy
@@ -999,21 +999,21 @@ def userinfo_list():
     batch_sql = f"""
         -- 1. Gender Stats
         SELECT UI.GENDER, COUNT(*) 
-        FROM [Optima].[dbo].[USERINFO] UI
+        FROM [AURAHR].[dbo].[USERINFO] UI
         LEFT JOIN DEPARTMENTS D ON UI.DEFAULTDEPTID = D.DEPTID
         WHERE {where_sql}
         GROUP BY UI.GENDER;
 
         -- 2. Class Stats
         SELECT UI.employee_class, COUNT(*) 
-        FROM [Optima].[dbo].[USERINFO] UI
+        FROM [AURAHR].[dbo].[USERINFO] UI
         LEFT JOIN DEPARTMENTS D ON UI.DEFAULTDEPTID = D.DEPTID
         WHERE {where_sql}
         GROUP BY UI.employee_class;
 
         -- 3. Top Depts
         SELECT TOP 5 D.DEPTNAME, COUNT(*) as cnt
-        FROM [Optima].[dbo].[USERINFO] UI
+        FROM [AURAHR].[dbo].[USERINFO] UI
         LEFT JOIN DEPARTMENTS D ON UI.DEFAULTDEPTID = D.DEPTID
         WHERE {where_sql}
         GROUP BY D.DEPTNAME
@@ -1022,7 +1022,7 @@ def userinfo_list():
         -- 4. Paged Data
         SELECT UI.USERID, UI.BADGENUMBER, UI.SSN, UI.NAME, UI.GENDER, UI.TITLE, UI.HIREDDAY,
                UI.DEFAULTDEPTID, UI.employee_class, D.DEPTNAME, UI.IsActive
-        FROM [Optima].[dbo].[USERINFO] AS UI
+        FROM [AURAHR].[dbo].[USERINFO] AS UI
         LEFT JOIN DEPARTMENTS D ON UI.DEFAULTDEPTID = D.DEPTID
         WHERE {where_sql}
         ORDER BY {sort_field} {order_sql}
@@ -1106,9 +1106,9 @@ def userinfo_list():
 def userinfo_add():
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT DEPTID, DEPTNAME FROM [Optima].[dbo].[DEPARTMENTS] ORDER BY DEPTID")
+    cursor.execute("SELECT DEPTID, DEPTNAME FROM [AURAHR].[dbo].[DEPARTMENTS] ORDER BY DEPTID")
     depts = cursor.fetchall()
-    cursor.execute("SELECT PositionID, PositionName, DeptID FROM [Optima].[dbo].[POSITIONS] ORDER BY PositionName")
+    cursor.execute("SELECT PositionID, PositionName, DeptID FROM [AURAHR].[dbo].[POSITIONS] ORDER BY PositionName")
     positions_rows = cursor.fetchall()
     positions_list = [{'PositionID': p.PositionID, 'PositionName': p.PositionName, 'DeptID': p.DeptID} for p in positions_rows]
     
@@ -1125,7 +1125,7 @@ def userinfo_add():
         levels_list = request.form.getlist('employee_levels')
         employee_class = ",".join(levels_list) if levels_list else 'لم تضاف'
         cursor.execute("""
-    INSERT INTO [Optima].[dbo].[USERINFO] 
+    INSERT INTO [AURAHR].[dbo].[USERINFO] 
     (BADGENUMBER, SSN, NAME, GENDER, TITLE, DEFAULTDEPTID, employee_class)
     VALUES (?, ?, ?, ?, ?, ?, ?)
 """, (badge, ssn, name, gender, title, defaultdept, employee_class))
@@ -1141,12 +1141,12 @@ def userinfo_add():
 def userinfo_edit(uid):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT DEPTID, DEPTNAME FROM [Optima].[dbo].[DEPARTMENTS] ORDER BY DEPTID")
+    cursor.execute("SELECT DEPTID, DEPTNAME FROM [AURAHR].[dbo].[DEPARTMENTS] ORDER BY DEPTID")
     depts = cursor.fetchall()
-    cursor.execute("SELECT PositionID, PositionName, DeptID FROM [Optima].[dbo].[POSITIONS] ORDER BY PositionName")
+    cursor.execute("SELECT PositionID, PositionName, DeptID FROM [AURAHR].[dbo].[POSITIONS] ORDER BY PositionName")
     positions_rows = cursor.fetchall()
     positions_list = [{'PositionID': p.PositionID, 'PositionName': p.PositionName, 'DeptID': p.DeptID} for p in positions_rows]
-    cursor.execute("SELECT USERID, BADGENUMBER, SSN, NAME, GENDER, TITLE, DEFAULTDEPTID, PositionID, employee_class FROM [Optima].[dbo].[USERINFO] WHERE USERID = ?", (uid,))
+    cursor.execute("SELECT USERID, BADGENUMBER, SSN, NAME, GENDER, TITLE, DEFAULTDEPTID, PositionID, employee_class FROM [AURAHR].[dbo].[USERINFO] WHERE USERID = ?", (uid,))
     user = cursor.fetchone()
     
     classes = get_all_classes()
@@ -1162,7 +1162,7 @@ def userinfo_edit(uid):
         levels_list = request.form.getlist('employee_levels')
         employee_class = ",".join(levels_list) if levels_list else 'لم تضاف'
         cursor.execute("""
-    UPDATE [Optima].[dbo].[USERINFO] SET 
+    UPDATE [AURAHR].[dbo].[USERINFO] SET 
     BADGENUMBER = ?, SSN = ?, NAME = ?, GENDER = ?, TITLE = ?, DEFAULTDEPTID = ?, employee_class = ?
     WHERE USERID = ?
     """, (badge, ssn, name, gender, title, defaultdept, employee_class, uid))
@@ -1179,13 +1179,13 @@ def userinfo_view(uid):
     conn = get_db_connection()
     cursor = conn.cursor()
     # Fetch user data (basic info)
-    cursor.execute("SELECT * FROM [Optima].[dbo].[USERINFO] WHERE USERID = ?", (uid,))
+    cursor.execute("SELECT * FROM [AURAHR].[dbo].[USERINFO] WHERE USERID = ?", (uid,))
     user = cursor.fetchone()
     
     # Fetch department name
     dept_name = "N/A"
     if user and user.DEFAULTDEPTID:
-         cursor.execute("SELECT DEPTNAME FROM [Optima].[dbo].[DEPARTMENTS] WHERE DEPTID = ?", (user.DEFAULTDEPTID,))
+         cursor.execute("SELECT DEPTNAME FROM [AURAHR].[dbo].[DEPARTMENTS] WHERE DEPTID = ?", (user.DEFAULTDEPTID,))
          d_row = cursor.fetchone()
          if d_row: dept_name = d_row[0]
 
@@ -1193,8 +1193,8 @@ def userinfo_view(uid):
     # FIXED: Removed Join on CycleID as it does not exist in Evaluations table
     cursor.execute("""
         SELECT E.*, U.Name as EvaluatorName
-        FROM [Optima].[dbo].[Evaluations] E
-        LEFT JOIN [Optima].[dbo].[Users] U ON E.EvaluatorUserID = U.UserID
+        FROM [AURAHR].[dbo].[Evaluations] E
+        LEFT JOIN [AURAHR].[dbo].[Users] U ON E.EvaluatorUserID = U.UserID
         WHERE E.EmployeeUserID = ?
         ORDER BY E.EvaluationDate DESC
     """, (uid,))
@@ -1208,9 +1208,9 @@ def userinfo_view(uid):
             TS.EndDate,
             TE.PassStatus,
             TE.Grade
-        FROM [Optima].[dbo].[TrainingEnrollments] TE
-        LEFT JOIN [Optima].[dbo].[TrainingSessions] TS ON TE.SessionID = TS.SessionID
-        LEFT JOIN [Optima].[dbo].[TrainingCourses] TC ON TS.CourseID = TC.TrainingCourseID
+        FROM [AURAHR].[dbo].[TrainingEnrollments] TE
+        LEFT JOIN [AURAHR].[dbo].[TrainingSessions] TS ON TE.SessionID = TS.SessionID
+        LEFT JOIN [AURAHR].[dbo].[TrainingCourses] TC ON TS.CourseID = TC.TrainingCourseID
         WHERE TE.EmployeeUserID = ?
         ORDER BY TS.SessionDate DESC
     """, (uid,))
@@ -1227,7 +1227,7 @@ def userinfo_archive(uid):
     cursor = conn.cursor()
     try:
         # Get current info
-        cursor.execute("SELECT BADGENUMBER, NAME, SSN, DEFAULTDEPTID, HIREDDAY FROM [Optima].[dbo].[USERINFO] WHERE USERID = ?", (uid,))
+        cursor.execute("SELECT BADGENUMBER, NAME, SSN, DEFAULTDEPTID, HIREDDAY FROM [AURAHR].[dbo].[USERINFO] WHERE USERID = ?", (uid,))
         row = cursor.fetchone()
         if not row:
             flash('User not found', 'danger')
@@ -1241,7 +1241,7 @@ def userinfo_archive(uid):
              new_badge_candidate = new_badge_candidate[:24]
 
         # Update UserInfo
-        cursor.execute("UPDATE [Optima].[dbo].[USERINFO] SET IsActive = 0, BADGENUMBER = ? WHERE USERID = ?", (new_badge_candidate, uid))
+        cursor.execute("UPDATE [AURAHR].[dbo].[USERINFO] SET IsActive = 0, BADGENUMBER = ? WHERE USERID = ?", (new_badge_candidate, uid))
         
         # Insert into EmployeeArchive
         reason_id = request.form.get('reason_id')
@@ -1249,7 +1249,7 @@ def userinfo_archive(uid):
         
         if reason_id:
              cursor.execute("""
-                 INSERT INTO [Optima].[dbo].[EmployeeArchive]
+                 INSERT INTO [AURAHR].[dbo].[EmployeeArchive]
                  (UserID, Name, ArchivedSSN, ArchivedDeptID, HiredDay, EndDay, ArchiveReasonID, ArchiveComment, AdminUserID)
                  VALUES (?, ?, ?, ?, ?, GETDATE(), ?, ?, ?)
              """, (uid, row.NAME, row.SSN, row.DEFAULTDEPTID, row.HIREDDAY, reason_id, note, session.get('user_id')))
@@ -1270,7 +1270,7 @@ def userinfo_restore(uid):
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
-        cursor.execute("SELECT BADGENUMBER FROM [Optima].[dbo].[USERINFO] WHERE USERID = ?", (uid,))
+        cursor.execute("SELECT BADGENUMBER FROM [AURAHR].[dbo].[USERINFO] WHERE USERID = ?", (uid,))
         row = cursor.fetchone()
         current_badge = row.BADGENUMBER # e.g. "100_A"
         
@@ -1280,13 +1280,13 @@ def userinfo_restore(uid):
             possible_original = current_badge[:-2]
             
             # Check if this original badge is taken
-            cursor.execute("SELECT COUNT(*) FROM [Optima].[dbo].[USERINFO] WHERE BADGENUMBER = ?", (possible_original,))
+            cursor.execute("SELECT COUNT(*) FROM [AURAHR].[dbo].[USERINFO] WHERE BADGENUMBER = ?", (possible_original,))
             if cursor.fetchone()[0] == 0:
                 new_badge = possible_original
             else:
                 flash(f'⚠️ Original badge "{possible_original}" is taken. Restoring with current badge "{current_badge}". Please update manually.', 'warning')
         
-        cursor.execute("UPDATE [Optima].[dbo].[USERINFO] SET IsActive = 1, BADGENUMBER = ? WHERE USERID = ?", (new_badge, uid))
+        cursor.execute("UPDATE [AURAHR].[dbo].[USERINFO] SET IsActive = 1, BADGENUMBER = ? WHERE USERID = ?", (new_badge, uid))
         conn.commit()
         log_system_action('Users', 'Restore', f'Restored User ID {uid}. Badge updated to {new_badge}')
         flash('✅ User restored successfully!', 'success')
@@ -1315,16 +1315,27 @@ def userinfo_archive_update(uid):
         reason_id = request.form.get('reason_id') or None
         
         # 1. Update USERINFO
-        cursor.execute("UPDATE [Optima].[dbo].[USERINFO] SET HIREDDAY = ?, DEFAULTDEPTID = ? WHERE USERID = ?", (hired_day, dept_id, uid))
+        cursor.execute("UPDATE [AURAHR].[dbo].[USERINFO] SET HIREDDAY = ?, DEFAULTDEPTID = ? WHERE USERID = ?", (hired_day, dept_id, uid))
         
         # 2. Update EmployeeArchive
+        # First, determine the TypeID associated with the selected ReasonID
+        type_id = None
+        if reason_id:
+            cursor.execute("SELECT TypeID FROM [AURAHR].[dbo].[TerminationReasons] WHERE ReasonID = ?", (reason_id,))
+            row = cursor.fetchone()
+            if row:
+                type_id = row[0]
+
         # Check if record exists first
-        cursor.execute("SELECT COUNT(*) FROM [Optima].[dbo].[EmployeeArchive] WHERE UserID = ?", (uid,))
+        cursor.execute("SELECT COUNT(*) FROM [AURAHR].[dbo].[EmployeeArchive] WHERE UserID = ?", (uid,))
         if cursor.fetchone()[0] > 0:
-            cursor.execute("UPDATE [Optima].[dbo].[EmployeeArchive] SET EndDay = ?, ArchiveReasonID = ? WHERE UserID = ?", (end_day, reason_id, uid))
+            cursor.execute("""
+                UPDATE [AURAHR].[dbo].[EmployeeArchive] 
+                SET EndDay = ?, ArchiveReasonID = ?, ArchiveTypeID = ? 
+                WHERE UserID = ?
+            """, (end_day, reason_id, type_id, uid))
         else:
-            # If for some reason missing, maybe insert? But let's just warn or ignore for now as it's an update action.
-            # Ideally fetch NAME/SSN to insert if needed but let's stick to update.
+            # If for some reason missing, we skip.
             pass
 
         conn.commit()
@@ -1345,7 +1356,7 @@ def userinfo_archive_update(uid):
 def roles():
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT RoleID, RoleName FROM [Optima].[dbo].[Roles] ORDER BY RoleID")
+    cursor.execute("SELECT RoleID, RoleName FROM [AURAHR].[dbo].[Roles] ORDER BY RoleID")
     rows = cursor.fetchall()
     conn.close()
     return render_template('roles.html', roles=rows)
@@ -1357,7 +1368,7 @@ def roles_add():
         name = request.form['rolename']
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute("INSERT INTO [Optima].[dbo].[Roles] (RoleName) VALUES (?)", (name,))
+        cursor.execute("INSERT INTO [AURAHR].[dbo].[Roles] (RoleName) VALUES (?)", (name,))
         conn.commit()
         conn.close()
         flash('Role added successfully!', 'success')
@@ -1369,11 +1380,11 @@ def roles_add():
 def roles_edit(rid):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT RoleID, RoleName FROM [Optima].[dbo].[Roles] WHERE RoleID = ?", (rid,))
+    cursor.execute("SELECT RoleID, RoleName FROM [AURAHR].[dbo].[Roles] WHERE RoleID = ?", (rid,))
     role = cursor.fetchone()
     if request.method == 'POST':
         name = request.form['rolename']
-        cursor.execute("UPDATE [Optima].[dbo].[Roles] SET RoleName = ? WHERE RoleID = ?", (name, rid))
+        cursor.execute("UPDATE [AURAHR].[dbo].[Roles] SET RoleName = ? WHERE RoleID = ?", (name, rid))
         conn.commit()
         conn.close()
         flash('Role updated successfully!', 'success')
@@ -1386,7 +1397,7 @@ def roles_edit(rid):
 def roles_delete(rid):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("DELETE FROM [Optima].[dbo].[Roles] WHERE RoleID = ?", (rid,))
+    cursor.execute("DELETE FROM [AURAHR].[dbo].[Roles] WHERE RoleID = ?", (rid,))
     conn.commit()
     conn.close()
     flash('Role deleted successfully!', 'info')
@@ -1412,11 +1423,11 @@ def classes_add():
         conn = get_db_connection()
         cursor = conn.cursor()
         # Check uniqueness
-        cursor.execute("SELECT Count(*) FROM [Optima].[dbo].[EmployeeClasses] WHERE ClassName = ?", (class_name,))
+        cursor.execute("SELECT Count(*) FROM [AURAHR].[dbo].[EmployeeClasses] WHERE ClassName = ?", (class_name,))
         if cursor.fetchone()[0] > 0:
             flash(f'❌ الفئة "{class_name}" موجودة بالفعل.', 'danger')
         else:
-            cursor.execute("INSERT INTO [Optima].[dbo].[EmployeeClasses] (ClassName, DisplayName) VALUES (?, ?)", (class_name, display_name or class_name))
+            cursor.execute("INSERT INTO [AURAHR].[dbo].[EmployeeClasses] (ClassName, DisplayName) VALUES (?, ?)", (class_name, display_name or class_name))
             conn.commit()
             flash('✅ تم إضافة الفئة بنجاح.', 'success')
         conn.close()
@@ -1542,12 +1553,12 @@ def classes_delete(id):
         cursor = conn.cursor()
         
         # Check if it's a core class, although UI prevents it, secure backend too
-        cursor.execute("SELECT ClassName FROM [Optima].[dbo].[EmployeeClasses] WHERE ClassID = ?", (id,))
+        cursor.execute("SELECT ClassName FROM [AURAHR].[dbo].[EmployeeClasses] WHERE ClassID = ?", (id,))
         row = cursor.fetchone()
         if row and row.ClassName in ['A', 'B', 'C', 'مشرف', 'مدير']:
             flash('⚠️ لا يمكن حذف الفئات الأساسية للنظام.', 'warning')
         else:
-            cursor.execute("DELETE FROM [Optima].[dbo].[EmployeeClasses] WHERE ClassID = ?", (id,))
+            cursor.execute("DELETE FROM [AURAHR].[dbo].[EmployeeClasses] WHERE ClassID = ?", (id,))
             conn.commit()
             flash('✅ تم حذف الفئة بنجاح.', 'success')
             
@@ -1562,7 +1573,7 @@ def classes_delete(id):
 def departments_manage():
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT DEPTID, DEPTNAME, SUPDEPTID FROM [Optima].[dbo].[DEPARTMENTS] ORDER BY DEPTID")
+    cursor.execute("SELECT DEPTID, DEPTNAME, SUPDEPTID FROM [AURAHR].[dbo].[DEPARTMENTS] ORDER BY DEPTID")
     rows = cursor.fetchall()
     conn.close()
     return render_template('departments.html', departments=rows)
@@ -1579,14 +1590,14 @@ def departments_add():
         
         try:
             # 1. Calculate the next available DEPTID
-            cursor.execute("SELECT MAX(DEPTID) FROM [Optima].[dbo].[DEPARTMENTS]")
+            cursor.execute("SELECT MAX(DEPTID) FROM [AURAHR].[dbo].[DEPARTMENTS]")
             row = cursor.fetchone()
             # If table is empty, start at 1, otherwise add 1 to the max ID
             new_dept_id = (row[0] or 0) + 1
             
             # 2. Insert with the manually generated DEPTID
             cursor.execute("""
-                INSERT INTO [Optima].[dbo].[DEPARTMENTS] (DEPTID, DEPTNAME, SUPDEPTID) 
+                INSERT INTO [AURAHR].[dbo].[DEPARTMENTS] (DEPTID, DEPTNAME, SUPDEPTID) 
                 VALUES (?, ?, ?)
             """, (new_dept_id, name, sup))
             
@@ -1611,12 +1622,12 @@ def departments_add():
 def departments_edit(did):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT DEPTID, DEPTNAME, SUPDEPTID FROM [Optima].[dbo].[DEPARTMENTS] WHERE DEPTID = ?", (did,))
+    cursor.execute("SELECT DEPTID, DEPTNAME, SUPDEPTID FROM [AURAHR].[dbo].[DEPARTMENTS] WHERE DEPTID = ?", (did,))
     dept = cursor.fetchone()
     if request.method == 'POST':
         name = request.form['deptname']
         sup = request.form.get('supdeptid') or None
-        cursor.execute("UPDATE [Optima].[dbo].[DEPARTMENTS] SET DEPTNAME = ?, SUPDEPTID = ? WHERE DEPTID = ?", (name, sup, did))
+        cursor.execute("UPDATE [AURAHR].[dbo].[DEPARTMENTS] SET DEPTNAME = ?, SUPDEPTID = ? WHERE DEPTID = ?", (name, sup, did))
         conn.commit()
         conn.close()
         flash('Department updated successfully!', 'success')
@@ -1629,7 +1640,7 @@ def departments_edit(did):
 def departments_delete(did):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("DELETE FROM [Optima].[dbo].[DEPARTMENTS] WHERE DEPTID = ?", (did,))
+    cursor.execute("DELETE FROM [AURAHR].[dbo].[DEPARTMENTS] WHERE DEPTID = ?", (did,))
     conn.commit()
     conn.close()
     flash('Department deleted successfully!', 'info')
@@ -1641,7 +1652,7 @@ def departments_delete(did):
 def recommendations_list():
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT R.RecommendationID, R.RecommendationText, R.AppliesToDeptID, D.DEPTNAME FROM [Optima].[dbo].[Recommendations] R LEFT JOIN [Optima].[dbo].[DEPARTMENTS] D ON R.AppliesToDeptID = D.DEPTID ORDER BY R.RecommendationID")
+    cursor.execute("SELECT R.RecommendationID, R.RecommendationText, R.AppliesToDeptID, D.DEPTNAME FROM [AURAHR].[dbo].[Recommendations] R LEFT JOIN [AURAHR].[dbo].[DEPARTMENTS] D ON R.AppliesToDeptID = D.DEPTID ORDER BY R.RecommendationID")
     recommendations = cursor.fetchall()
     conn.close()
     return render_template('recommendations_list.html', recommendations=recommendations)
@@ -1651,14 +1662,14 @@ def recommendations_list():
 def recommendations_add():
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT DEPTID, DEPTNAME FROM [Optima].[dbo].[DEPARTMENTS] ORDER BY DEPTID")
+    cursor.execute("SELECT DEPTID, DEPTNAME FROM [AURAHR].[dbo].[DEPARTMENTS] ORDER BY DEPTID")
     departments = cursor.fetchall()
     if request.method == 'POST':
         text = request.form['text']
         dept_id = request.form.get('dept_id')
         dept_id = int(dept_id) if dept_id else None
         try:
-            cursor.execute("INSERT INTO [Optima].[dbo].[Recommendations] (RecommendationText, AppliesToDeptID) VALUES (?, ?)", (text, dept_id))
+            cursor.execute("INSERT INTO [AURAHR].[dbo].[Recommendations] (RecommendationText, AppliesToDeptID) VALUES (?, ?)", (text, dept_id))
             conn.commit()
             flash('✅ تم إضافة التوصية بنجاح!', 'success')
             return redirect(url_for('recommendations_list'))
@@ -1675,9 +1686,9 @@ def recommendations_add():
 def recommendations_edit(rid):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT DEPTID, DEPTNAME FROM [Optima].[dbo].[DEPARTMENTS] ORDER BY DEPTID")
+    cursor.execute("SELECT DEPTID, DEPTNAME FROM [AURAHR].[dbo].[DEPARTMENTS] ORDER BY DEPTID")
     departments = cursor.fetchall()
-    cursor.execute("SELECT * FROM [Optima].[dbo].[Recommendations] WHERE RecommendationID = ?", (rid,))
+    cursor.execute("SELECT * FROM [AURAHR].[dbo].[Recommendations] WHERE RecommendationID = ?", (rid,))
     recommendation = cursor.fetchone()
     if not recommendation:
         flash('لم يتم العثور على التوصية!', 'warning')
@@ -1688,7 +1699,7 @@ def recommendations_edit(rid):
         dept_id = request.form.get('dept_id')
         dept_id = int(dept_id) if dept_id else None
         try:
-            cursor.execute("UPDATE [Optima].[dbo].[Recommendations] SET RecommendationText = ?, AppliesToDeptID = ? WHERE RecommendationID = ?", (text, dept_id, rid))
+            cursor.execute("UPDATE [AURAHR].[dbo].[Recommendations] SET RecommendationText = ?, AppliesToDeptID = ? WHERE RecommendationID = ?", (text, dept_id, rid))
             conn.commit()
             flash('✅ تم تحديث التوصية بنجاح!', 'success')
             return redirect(url_for('recommendations_list'))
@@ -1706,11 +1717,11 @@ def recommendations_delete(rid):
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
-        cursor.execute("SELECT COUNT(*) as cnt FROM [Optima].[dbo].[Evaluations] WHERE RecommendationID = ?", (rid,))
+        cursor.execute("SELECT COUNT(*) as cnt FROM [AURAHR].[dbo].[Evaluations] WHERE RecommendationID = ?", (rid,))
         if cursor.fetchone().cnt > 0:
             flash('لا يمكن حذف توصية مستخدمة في تقييمات سابقة.', 'danger')
         else:
-            cursor.execute("DELETE FROM [Optima].[dbo].[Recommendations] WHERE RecommendationID = ?", (rid,))
+            cursor.execute("DELETE FROM [AURAHR].[dbo].[Recommendations] WHERE RecommendationID = ?", (rid,))
             conn.commit()
             flash('تم حذف التوصية بنجاح!', 'info')
     except Exception as e:
@@ -1728,11 +1739,11 @@ def criteria_list():
     conn = get_db_connection()
     cursor = conn.cursor()
     # 1. Fetch Criteria (No Join on Departments)
-    cursor.execute("SELECT CriteriaID, CriteriaName, CriteriaWeight, MaxScore, AppliesToDeptID, employee_class FROM [Optima].[dbo].[EvaluationCriteria] ORDER BY CriteriaID")
+    cursor.execute("SELECT CriteriaID, CriteriaName, CriteriaWeight, MaxScore, AppliesToDeptID, employee_class FROM [AURAHR].[dbo].[EvaluationCriteria] ORDER BY CriteriaID")
     criteria_rows = cursor.fetchall()
     
     # 2. Fetch Departments Reference
-    cursor.execute("SELECT DEPTID, DEPTNAME FROM [Optima].[dbo].[DEPARTMENTS]")
+    cursor.execute("SELECT DEPTID, DEPTNAME FROM [AURAHR].[dbo].[DEPARTMENTS]")
     depts_rows = cursor.fetchall()
     dept_map = {d.DEPTID: d.DEPTNAME for d in depts_rows}
     
@@ -1768,8 +1779,8 @@ def criteria_list():
     # Efficiently fetch all links and map in Python
     cursor.execute("""
         SELECT ETC.CriteriaID, ET.DisplayName 
-        FROM [Optima].[dbo].[EvaluationTypeCriteria] ETC
-        JOIN [Optima].[dbo].[EvaluationTypes] ET ON ETC.EvaluationTypeID = ET.EvaluationTypeID
+        FROM [AURAHR].[dbo].[EvaluationTypeCriteria] ETC
+        JOIN [AURAHR].[dbo].[EvaluationTypes] ET ON ETC.EvaluationTypeID = ET.EvaluationTypeID
     """)
     links = cursor.fetchall()
     
@@ -1797,10 +1808,10 @@ def criteria_add():
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
-        cursor.execute("SELECT DEPTID, DEPTNAME FROM [Optima].[dbo].[DEPARTMENTS] ORDER BY DEPTID")
+        cursor.execute("SELECT DEPTID, DEPTNAME FROM [AURAHR].[dbo].[DEPARTMENTS] ORDER BY DEPTID")
         departments = cursor.fetchall()
         
-        cursor.execute("SELECT EvaluationTypeID, DisplayName FROM [Optima].[dbo].[EvaluationTypes] ORDER BY SortOrder")
+        cursor.execute("SELECT EvaluationTypeID, DisplayName FROM [AURAHR].[dbo].[EvaluationTypes] ORDER BY SortOrder")
         all_types = cursor.fetchall()
 
         classes = get_all_classes() 
@@ -1834,13 +1845,13 @@ def criteria_add():
                 if not employee_levels:
                     raise ValueError("Please select at least one employee level")
                     
-                cursor.execute("INSERT INTO [Optima].[dbo].[EvaluationCriteria] (CriteriaName, CriteriaWeight, MaxScore, AppliesToDeptID, employee_class) OUTPUT INSERTED.CriteriaID VALUES (?, ?, ?, ?, ?)", (name, weight_float, max_score_int, applies_to_dept, employee_class))
+                cursor.execute("INSERT INTO [AURAHR].[dbo].[EvaluationCriteria] (CriteriaName, CriteriaWeight, MaxScore, AppliesToDeptID, employee_class) OUTPUT INSERTED.CriteriaID VALUES (?, ?, ?, ?, ?)", (name, weight_float, max_score_int, applies_to_dept, employee_class))
                 new_criteria_id = cursor.fetchone().CriteriaID
                 
                 # Insert Type Links
                 if type_ids:
                     link_values = [(int(t), new_criteria_id) for t in type_ids]
-                    cursor.executemany("INSERT INTO [Optima].[dbo].[EvaluationTypeCriteria] (EvaluationTypeID, CriteriaID) VALUES (?, ?)", link_values)
+                    cursor.executemany("INSERT INTO [AURAHR].[dbo].[EvaluationTypeCriteria] (EvaluationTypeID, CriteriaID) VALUES (?, ?)", link_values)
                 
                 conn.commit()
                 flash('✅ Criterion added successfully!', 'success')
@@ -1862,9 +1873,9 @@ def criteria_edit(cid):
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
-        cursor.execute("SELECT DEPTID, DEPTNAME FROM [Optima].[dbo].[DEPARTMENTS] ORDER BY DEPTID")
+        cursor.execute("SELECT DEPTID, DEPTNAME FROM [AURAHR].[dbo].[DEPARTMENTS] ORDER BY DEPTID")
         departments = cursor.fetchall()
-        cursor.execute("SELECT * FROM [Optima].[dbo].[EvaluationCriteria] WHERE CriteriaID = ?", (cid,))
+        cursor.execute("SELECT * FROM [AURAHR].[dbo].[EvaluationCriteria] WHERE CriteriaID = ?", (cid,))
         row = cursor.fetchone()
         if not row:
             flash('Criterion not found!', 'warning')
@@ -1874,10 +1885,10 @@ def criteria_edit(cid):
         if row.AppliesToDeptID:
             selected_depts = [x.strip() for x in str(row.AppliesToDeptID).split(',') if x.strip()]
 
-        cursor.execute("SELECT EvaluationTypeID FROM [Optima].[dbo].[EvaluationTypeCriteria] WHERE CriteriaID = ?", (cid,))
+        cursor.execute("SELECT EvaluationTypeID FROM [AURAHR].[dbo].[EvaluationTypeCriteria] WHERE CriteriaID = ?", (cid,))
         selected_type_ids = [r[0] for r in cursor.fetchall()]
 
-        cursor.execute("SELECT EvaluationTypeID, DisplayName FROM [Optima].[dbo].[EvaluationTypes] ORDER BY SortOrder")
+        cursor.execute("SELECT EvaluationTypeID, DisplayName FROM [AURAHR].[dbo].[EvaluationTypes] ORDER BY SortOrder")
         all_types = cursor.fetchall()
 
         classes = get_all_classes() 
@@ -1909,13 +1920,13 @@ def criteria_edit(cid):
                 if not employee_levels:
                     raise ValueError("Please select at least one employee level")
                 
-                cursor.execute("UPDATE [Optima].[dbo].[EvaluationCriteria] SET CriteriaName = ?, CriteriaWeight = ?, MaxScore = ?, AppliesToDeptID = ?, employee_class = ? WHERE CriteriaID = ?", (name, weight_float, max_score_int, applies_to_dept, employee_class, cid))
+                cursor.execute("UPDATE [AURAHR].[dbo].[EvaluationCriteria] SET CriteriaName = ?, CriteriaWeight = ?, MaxScore = ?, AppliesToDeptID = ?, employee_class = ? WHERE CriteriaID = ?", (name, weight_float, max_score_int, applies_to_dept, employee_class, cid))
                 
                 # Update Links (Delete all, re-insert)
-                cursor.execute("DELETE FROM [Optima].[dbo].[EvaluationTypeCriteria] WHERE CriteriaID = ?", (cid,))
+                cursor.execute("DELETE FROM [AURAHR].[dbo].[EvaluationTypeCriteria] WHERE CriteriaID = ?", (cid,))
                 if type_ids:
                     link_values = [(int(t), cid) for t in type_ids]
-                    cursor.executemany("INSERT INTO [Optima].[dbo].[EvaluationTypeCriteria] (EvaluationTypeID, CriteriaID) VALUES (?, ?)", link_values)
+                    cursor.executemany("INSERT INTO [AURAHR].[dbo].[EvaluationTypeCriteria] (EvaluationTypeID, CriteriaID) VALUES (?, ?)", link_values)
 
                 conn.commit()
                 flash('✅ Criterion updated successfully!', 'success')
@@ -1937,12 +1948,12 @@ def criteria_delete(cid):
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
-        cursor.execute("SELECT COUNT(*) as cnt FROM [Optima].[dbo].[EvaluationDetails] WHERE CriteriaID = ?", (cid,))
+        cursor.execute("SELECT COUNT(*) as cnt FROM [AURAHR].[dbo].[EvaluationDetails] WHERE CriteriaID = ?", (cid,))
         usage_count = cursor.fetchone().cnt
         if usage_count > 0:
             flash('Cannot delete criterion, it is used in existing evaluations.', 'danger')
         else:
-            cursor.execute("DELETE FROM [Optima].[dbo].[EvaluationCriteria] WHERE CriteriaID = ?", (cid,))
+            cursor.execute("DELETE FROM [AURAHR].[dbo].[EvaluationCriteria] WHERE CriteriaID = ?", (cid,))
             conn.commit()
             flash('Criterion deleted successfully!', 'info')
     except Exception as e:
@@ -1987,7 +1998,7 @@ def userinfo_sync():
         print(">>> REMOTE CONNECTED")
 
         # 3. Existing IDs
-        local_cursor.execute("SELECT USERID FROM [Optima].[dbo].[USERINFO]")
+        local_cursor.execute("SELECT USERID FROM [AURAHR].[dbo].[USERINFO]")
         existing_ids = set(row[0] for row in local_cursor.fetchall())
         
         # 4. Fetch Remote
@@ -2000,11 +2011,11 @@ def userinfo_sync():
         added = 0
         
         if missing:
-            local_cursor.execute("SET IDENTITY_INSERT [Optima].[dbo].[USERINFO] ON")
+            local_cursor.execute("SET IDENTITY_INSERT [AURAHR].[dbo].[USERINFO] ON")
             for u in missing:
                 try:
                     local_cursor.execute("""
-                        INSERT INTO [Optima].[dbo].[USERINFO] 
+                        INSERT INTO [AURAHR].[dbo].[USERINFO] 
                         (USERID, BADGENUMBER, SSN, NAME, GENDER, TITLE, DEFAULTDEPTID, HIREDDAY, employee_class) 
                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'لم تضاف')
                     """, (u.USERID, u.BADGENUMBER, u.SSN, u.NAME, u.GENDER, u.TITLE, u.DEFAULTDEPTID, u.HIREDDAY))
@@ -2012,7 +2023,7 @@ def userinfo_sync():
                     details.append(f"Added: {u.NAME}")
                 except Exception as e_row:
                     details.append(f"Row Error {u.USERID}: {e_row}")
-            local_cursor.execute("SET IDENTITY_INSERT [Optima].[dbo].[USERINFO] OFF")
+            local_cursor.execute("SET IDENTITY_INSERT [AURAHR].[dbo].[USERINFO] OFF")
             local_conn.commit()
         else:
             details.append("No new users found.")
@@ -2067,13 +2078,13 @@ def userinfo_import():
         cursor = conn.cursor()
         
         # Get existing IDs
-        cursor.execute("SELECT USERID FROM [Optima].[dbo].[USERINFO]")
+        cursor.execute("SELECT USERID FROM [AURAHR].[dbo].[USERINFO]")
         existing_ids = set(row[0] for row in cursor.fetchall())
         
         added_count = 0
         details = []
         
-        cursor.execute("SET IDENTITY_INSERT [Optima].[dbo].[USERINFO] ON")
+        cursor.execute("SET IDENTITY_INSERT [AURAHR].[dbo].[USERINFO] ON")
         
         for index, row in df.iterrows():
             uid = int(row['USERID'])
@@ -2108,7 +2119,7 @@ def userinfo_import():
                     hired = None
                 
                 cursor.execute("""
-                    INSERT INTO [Optima].[dbo].[USERINFO] 
+                    INSERT INTO [AURAHR].[dbo].[USERINFO] 
                     (USERID, BADGENUMBER, SSN, NAME, GENDER, TITLE, DEFAULTDEPTID, HIREDDAY, employee_class) 
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'لم تضاف')
                 """, (uid, badge, ssn, name, gender, title, dept, hired))
@@ -2118,7 +2129,7 @@ def userinfo_import():
             except Exception as e_row:
                 details.append(f"Error Row {index}: {e_row}")
                 
-        cursor.execute("SET IDENTITY_INSERT [Optima].[dbo].[USERINFO] OFF")
+        cursor.execute("SET IDENTITY_INSERT [AURAHR].[dbo].[USERINFO] OFF")
         conn.commit()
         
         return jsonify({'status': 'success', 'added_count': added_count, 'details': details})
@@ -2171,13 +2182,13 @@ def select_user_for_evaluation():
     page_title = "اختر موظف للتقييم"
     
     if role_id == 3:
-        cursor.execute("SELECT DepartmentID FROM [Optima].[dbo].[Users] WHERE UserID = ?", (evaluator_user_id,))
+        cursor.execute("SELECT DepartmentID FROM [AURAHR].[dbo].[Users] WHERE UserID = ?", (evaluator_user_id,))
         user_record = cursor.fetchone()
         manager_dept_id = user_record.DepartmentID if user_record else None
         
         if manager_dept_id:
             # UPDATED QUERY: Now selects UI.BADGENUMBER
-            query = "SELECT UI.USERID, UI.NAME, UI.TITLE, UI.PositionID, P.PositionName, D.DEPTNAME, UI.BADGENUMBER FROM [Optima].[dbo].[USERINFO] UI LEFT JOIN [dbo].[POSITIONS] P ON UI.PositionID = P.PositionID LEFT JOIN [dbo].[DEPARTMENTS] D ON UI.DEFAULTDEPTID = D.DEPTID WHERE UI.DEFAULTDEPTID = ? AND UI.USERID != ?"
+            query = "SELECT UI.USERID, UI.NAME, UI.TITLE, UI.PositionID, P.PositionName, D.DEPTNAME, UI.BADGENUMBER FROM [AURAHR].[dbo].[USERINFO] UI LEFT JOIN [dbo].[POSITIONS] P ON UI.PositionID = P.PositionID LEFT JOIN [dbo].[DEPARTMENTS] D ON UI.DEFAULTDEPTID = D.DEPTID WHERE UI.DEFAULTDEPTID = ? AND UI.USERID != ?"
             params = [manager_dept_id, evaluator_user_id]
             
             if search_query:
@@ -2192,7 +2203,7 @@ def select_user_for_evaluation():
     elif role_id == 2:
         page_title = "اختر مدير للتقييم"
         # UPDATED QUERY: Now selects UI.BADGENUMBER logic
-        query = "SELECT U.UserID, U.Name, U.Username, U.DepartmentID, D.DEPTNAME, UI.BADGENUMBER FROM [Optima].[dbo].[Users] U LEFT JOIN [dbo].[DEPARTMENTS] D ON U.DepartmentID = D.DEPTID LEFT JOIN [Optima].[dbo].[USERINFO] UI ON U.UserID = UI.USERID WHERE U.RoleID = 3 AND U.UserID != ?"
+        query = "SELECT U.UserID, U.Name, U.Username, U.DepartmentID, D.DEPTNAME, UI.BADGENUMBER FROM [AURAHR].[dbo].[Users] U LEFT JOIN [dbo].[DEPARTMENTS] D ON U.DepartmentID = D.DEPTID LEFT JOIN [AURAHR].[dbo].[USERINFO] UI ON U.UserID = UI.USERID WHERE U.RoleID = 3 AND U.UserID != ?"
         params = [evaluator_user_id]
         
         if search_query:
@@ -2234,7 +2245,7 @@ def new_evaluation(badgenumber_str):
     cursor = conn.cursor()
 
     # Get evaluator's department ID
-    cursor.execute("SELECT DepartmentID FROM [Optima].[dbo].[Users] WHERE UserID = ?", (evaluator_user_id,))
+    cursor.execute("SELECT DepartmentID FROM [AURAHR].[dbo].[Users] WHERE UserID = ?", (evaluator_user_id,))
     manager_record = cursor.fetchone()
     manager_dept_id = manager_record.DepartmentID if manager_record else None
 
@@ -2255,7 +2266,7 @@ def new_evaluation(badgenumber_str):
     cursor.execute("""
         SELECT UI.USERID, UI.NAME, UI.DEFAULTDEPTID, UI.TITLE, D.DEPTNAME, UI.employee_class,
                 (SELECT COUNT(*) FROM TrainingEnrollments TE WHERE TE.EmployeeUserID = UI.USERID) AS TotalSessions
-        FROM [Optima].[dbo].[USERINFO] UI
+        FROM [AURAHR].[dbo].[USERINFO] UI
         LEFT JOIN [dbo].[DEPARTMENTS] D ON UI.DEFAULTDEPTID = D.DEPTID
         WHERE UI.BADGENUMBER = ?
     """, (badgenumber_str,))
@@ -2370,7 +2381,7 @@ def new_evaluation(badgenumber_str):
     # --- MODIFIED CRITERIA FILTERING FOR MULTI-DEPT ---
     # Fetch ALL criteria matching the class (ignoring dept in SQL for now)
     
-    criteria_query = f"SELECT CriteriaID, CriteriaName, CriteriaWeight, MaxScore, AppliesToDeptID FROM [Optima].[dbo].[EvaluationCriteria] WHERE {class_clause} ORDER BY CriteriaID"
+    criteria_query = f"SELECT CriteriaID, CriteriaName, CriteriaWeight, MaxScore, AppliesToDeptID FROM [AURAHR].[dbo].[EvaluationCriteria] WHERE {class_clause} ORDER BY CriteriaID"
     # We remove (AppliesToDeptID = ? OR AppliesToDeptID IS NULL) from SQL because we need to check CSV in Python
     
     cursor.execute(criteria_query, class_params)
@@ -2403,12 +2414,12 @@ def new_evaluation(badgenumber_str):
         conn.close()
         return redirect(url_for('select_user_for_evaluation'))
 
-    cursor.execute("SELECT RecommendationID, RecommendationText FROM [Optima].[dbo].[Recommendations] WHERE AppliesToDeptID = ? OR AppliesToDeptID IS NULL ORDER BY RecommendationText", (employee_dept_id,))
+    cursor.execute("SELECT RecommendationID, RecommendationText FROM [AURAHR].[dbo].[Recommendations] WHERE AppliesToDeptID = ? OR AppliesToDeptID IS NULL ORDER BY RecommendationText", (employee_dept_id,))
     recommendations = cursor.fetchall()
     
     cursor.execute("""
         SELECT TrainingCourseID, TrainingCourseText 
-        FROM [Optima].[dbo].[TrainingCourses] 
+        FROM [AURAHR].[dbo].[TrainingCourses] 
         WHERE (AppliesToDeptID = ? OR AppliesToDeptID IS NULL) 
         AND IsActive = 1 
         ORDER BY TrainingCourseText
@@ -2431,7 +2442,7 @@ def new_evaluation(badgenumber_str):
         # However, let's just filter for now.
         
         # Helper list of criteria IDs linked to this type
-        cursor.execute("SELECT CriteriaID FROM [Optima].[dbo].[EvaluationTypeCriteria] WHERE EvaluationTypeID = ?", (selected_eval_type_id,))
+        cursor.execute("SELECT CriteriaID FROM [AURAHR].[dbo].[EvaluationTypeCriteria] WHERE EvaluationTypeID = ?", (selected_eval_type_id,))
         linked_criteria_ids = {row[0] for row in cursor.fetchall()}
         
         # If no specific links exist (legacy support), maybe show all? 
@@ -2462,7 +2473,7 @@ def new_evaluation(badgenumber_str):
             recommendation_id = request.form.get('recommendation_id') or None
             training_course_id = request.form.get('training_course_id') or None
 
-            cursor.execute("INSERT INTO [Optima].[dbo].[Evaluations] (EmployeeUserID, EvaluatorUserID, EvaluationTypeID, ManagerComments, RecommendationID, TrainingCourseID) OUTPUT INSERTED.EvaluationID VALUES (?, ?, ?, ?, ?, ?)", (employee_user_id, evaluator_user_id, eval_type_id, comments, recommendation_id, training_course_id))
+            cursor.execute("INSERT INTO [AURAHR].[dbo].[Evaluations] (EmployeeUserID, EvaluatorUserID, EvaluationTypeID, ManagerComments, RecommendationID, TrainingCourseID) OUTPUT INSERTED.EvaluationID VALUES (?, ?, ?, ?, ?, ?)", (employee_user_id, evaluator_user_id, eval_type_id, comments, recommendation_id, training_course_id))
             evaluation_id = cursor.fetchone().EvaluationID
 
             total_weighted_score = 0.0
@@ -2480,7 +2491,7 @@ def new_evaluation(badgenumber_str):
             
             # Re-filter 'criteria' list based on submitted ID
             validation_criteria_ids = set()
-            cursor.execute("SELECT CriteriaID FROM [Optima].[dbo].[EvaluationTypeCriteria] WHERE EvaluationTypeID = ?", (eval_type_id,))
+            cursor.execute("SELECT CriteriaID FROM [AURAHR].[dbo].[EvaluationTypeCriteria] WHERE EvaluationTypeID = ?", (eval_type_id,))
             linked_ids = {row[0] for row in cursor.fetchall()}
             
             valid_criteria_for_type = [c for c in criteria if c.CriteriaID in linked_ids]
@@ -2503,12 +2514,12 @@ def new_evaluation(badgenumber_str):
                 total_max_weighted_score += weight
 
             if scores_data:
-                cursor.executemany("INSERT INTO [Optima].[dbo].[EvaluationDetails] (EvaluationID, CriteriaID, ScoreGiven) VALUES (?, ?, ?)", scores_data)
+                cursor.executemany("INSERT INTO [AURAHR].[dbo].[EvaluationDetails] (EvaluationID, CriteriaID, ScoreGiven) VALUES (?, ?, ?)", scores_data)
 
             final_percentage = (total_weighted_score / total_max_weighted_score) * 100 if total_max_weighted_score > 0 else 0
             final_rating = get_rating_from_score(final_percentage)
 
-            cursor.execute("UPDATE [Optima].[dbo].[Evaluations] SET OverallScore = ?, OverallRating = ? WHERE EvaluationID = ?", (final_percentage, final_rating, evaluation_id))
+            cursor.execute("UPDATE [AURAHR].[dbo].[Evaluations] SET OverallScore = ?, OverallRating = ? WHERE EvaluationID = ?", (final_percentage, final_rating, evaluation_id))
             
             conn.commit()
             flash('تم إرسال التقييم بنجاح!', 'success')
@@ -2553,11 +2564,11 @@ def evaluation_reports():
         cursor = conn.cursor()
         role_id = session.get('role_id')
         user_id = session.get('user_id')
-        cursor.execute("SELECT RecommendationID, RecommendationText FROM [Optima].[dbo].[Recommendations] ORDER BY RecommendationText")
+        cursor.execute("SELECT RecommendationID, RecommendationText FROM [AURAHR].[dbo].[Recommendations] ORDER BY RecommendationText")
         all_recommendations = cursor.fetchall()
-        cursor.execute("SELECT TrainingCourseID, TrainingCourseText FROM [Optima].[dbo].[TrainingCourses] ORDER BY TrainingCourseText")
+        cursor.execute("SELECT TrainingCourseID, TrainingCourseText FROM [AURAHR].[dbo].[TrainingCourses] ORDER BY TrainingCourseText")
         all_training_courses = cursor.fetchall()
-        cursor.execute("SELECT EvaluationTypeID, DisplayName FROM [Optima].[dbo].[EvaluationTypes] ORDER BY SortOrder")
+        cursor.execute("SELECT EvaluationTypeID, DisplayName FROM [AURAHR].[dbo].[EvaluationTypes] ORDER BY SortOrder")
         all_evaluation_types = cursor.fetchall()
         query = """
             SELECT E.EvaluationID, E.EvaluationDate, COALESCE(ET.DisplayName, E.EvaluationType) as EvaluationType,
@@ -2568,21 +2579,21 @@ def evaluation_reports():
                 (
                     SELECT STUFF((
                         SELECT '###' + TC_Sub.TrainingCourseText
-                        FROM [Optima].[dbo].[TrainingEnrollments] TE_Sub 
-                        JOIN [Optima].[dbo].[TrainingSessions] TS_Sub ON TE_Sub.SessionID = TS_Sub.SessionID
-                        JOIN [Optima].[dbo].[TrainingCourses] TC_Sub ON TS_Sub.CourseID = TC_Sub.TrainingCourseID
+                        FROM [AURAHR].[dbo].[TrainingEnrollments] TE_Sub 
+                        JOIN [AURAHR].[dbo].[TrainingSessions] TS_Sub ON TE_Sub.SessionID = TS_Sub.SessionID
+                        JOIN [AURAHR].[dbo].[TrainingCourses] TC_Sub ON TS_Sub.CourseID = TC_Sub.TrainingCourseID
                         WHERE TE_Sub.EmployeeUserID = EmpInfo.USERID
                         ORDER BY TC_Sub.TrainingCourseText
                         FOR XML PATH('')
                     ), 1, 3, '')
                 ) as CoursesTaken
-            FROM [Optima].[dbo].[Evaluations] E
-            LEFT JOIN [Optima].[dbo].[Users] Mgr ON E.EvaluatorUserID = Mgr.UserID 
-            LEFT JOIN [Optima].[dbo].[USERINFO] EmpInfo ON E.EmployeeUserID = EmpInfo.USERID
-            LEFT JOIN [Optima].[dbo].[Users] EmpUser ON E.EmployeeUserID = EmpUser.UserID
-            LEFT JOIN [Optima].[dbo].[Recommendations] R ON E.RecommendationID = R.RecommendationID
-            LEFT JOIN [Optima].[dbo].[TrainingCourses] TC ON E.TrainingCourseID = TC.TrainingCourseID
-            LEFT JOIN [Optima].[dbo].[EvaluationTypes] ET ON E.EvaluationTypeID = ET.EvaluationTypeID
+            FROM [AURAHR].[dbo].[Evaluations] E
+            LEFT JOIN [AURAHR].[dbo].[Users] Mgr ON E.EvaluatorUserID = Mgr.UserID 
+            LEFT JOIN [AURAHR].[dbo].[USERINFO] EmpInfo ON E.EmployeeUserID = EmpInfo.USERID
+            LEFT JOIN [AURAHR].[dbo].[Users] EmpUser ON E.EmployeeUserID = EmpUser.UserID
+            LEFT JOIN [AURAHR].[dbo].[Recommendations] R ON E.RecommendationID = R.RecommendationID
+            LEFT JOIN [AURAHR].[dbo].[TrainingCourses] TC ON E.TrainingCourseID = TC.TrainingCourseID
+            LEFT JOIN [AURAHR].[dbo].[EvaluationTypes] ET ON E.EvaluationTypeID = ET.EvaluationTypeID
         """
         where_clauses = []
         params = []
@@ -2626,8 +2637,8 @@ def evaluation_reports():
         if taken_course_id:
             where_clauses.append("""
                 EXISTS (
-                    SELECT 1 FROM [Optima].[dbo].[TrainingEnrollments] TE_F
-                    JOIN [Optima].[dbo].[TrainingSessions] TS_F ON TE_F.SessionID = TS_F.SessionID
+                    SELECT 1 FROM [AURAHR].[dbo].[TrainingEnrollments] TE_F
+                    JOIN [AURAHR].[dbo].[TrainingSessions] TS_F ON TE_F.SessionID = TS_F.SessionID
                     WHERE TE_F.EmployeeUserID = E.EmployeeUserID AND TS_F.CourseID = ?
                 )
             """)
@@ -2673,7 +2684,7 @@ def evaluation_reports():
 def evaluation_types_list():
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT ET.EvaluationTypeID, ET.TypeName, ET.DisplayName, ET.IsRepeatable, ET.SortOrder, Pre.DisplayName as PrerequisiteName FROM [Optima].[dbo].[EvaluationTypes] ET LEFT JOIN [Optima].[dbo].[EvaluationTypes] Pre ON ET.PrerequisiteTypeID = Pre.EvaluationTypeID ORDER BY ET.SortOrder")
+    cursor.execute("SELECT ET.EvaluationTypeID, ET.TypeName, ET.DisplayName, ET.IsRepeatable, ET.SortOrder, Pre.DisplayName as PrerequisiteName FROM [AURAHR].[dbo].[EvaluationTypes] ET LEFT JOIN [AURAHR].[dbo].[EvaluationTypes] Pre ON ET.PrerequisiteTypeID = Pre.EvaluationTypeID ORDER BY ET.SortOrder")
     types = cursor.fetchall()
     conn.close()
     return render_template('evaluation_types_list.html', types=types)
@@ -2683,7 +2694,7 @@ def evaluation_types_list():
 def evaluation_types_add():
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT EvaluationTypeID, DisplayName FROM [Optima].[dbo].[EvaluationTypes] ORDER BY SortOrder")
+    cursor.execute("SELECT EvaluationTypeID, DisplayName FROM [AURAHR].[dbo].[EvaluationTypes] ORDER BY SortOrder")
     all_types = cursor.fetchall()
     if request.method == 'POST':
         try:
@@ -2697,7 +2708,7 @@ def evaluation_types_add():
             selected_classes = request.form.getlist('included_classes_list')
             included_classes = ','.join(selected_classes) if selected_classes else None
             
-            cursor.execute("INSERT INTO [Optima].[dbo].[EvaluationTypes] (TypeName, DisplayName, IsRepeatable, PrerequisiteTypeID, SortOrder, DaysAfterPrerequisite, IncludedClasses) VALUES (?, ?, ?, ?, ?, ?, ?)", (type_name, display_name, is_repeatable, prerequisite_id, sort_order, days_after, included_classes))
+            cursor.execute("INSERT INTO [AURAHR].[dbo].[EvaluationTypes] (TypeName, DisplayName, IsRepeatable, PrerequisiteTypeID, SortOrder, DaysAfterPrerequisite, IncludedClasses) VALUES (?, ?, ?, ?, ?, ?, ?)", (type_name, display_name, is_repeatable, prerequisite_id, sort_order, days_after, included_classes))
             conn.commit()
             flash('✅ تم إضافة نوع التقييم بنجاح', 'success')
             return redirect(url_for('evaluation_types_list'))
@@ -2716,9 +2727,9 @@ def evaluation_types_add():
 def evaluation_types_edit(type_id):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT EvaluationTypeID, DisplayName FROM [Optima].[dbo].[EvaluationTypes] WHERE EvaluationTypeID != ? ORDER BY SortOrder", (type_id,))
+    cursor.execute("SELECT EvaluationTypeID, DisplayName FROM [AURAHR].[dbo].[EvaluationTypes] WHERE EvaluationTypeID != ? ORDER BY SortOrder", (type_id,))
     all_types = cursor.fetchall()
-    cursor.execute("SELECT * FROM [Optima].[dbo].[EvaluationTypes] WHERE EvaluationTypeID = ?", (type_id,))
+    cursor.execute("SELECT * FROM [AURAHR].[dbo].[EvaluationTypes] WHERE EvaluationTypeID = ?", (type_id,))
     eval_type = cursor.fetchone()
     if not eval_type:
         flash('❌ لم يتم العثور على نوع التقييم', 'danger')
@@ -2736,7 +2747,7 @@ def evaluation_types_edit(type_id):
             selected_classes = request.form.getlist('included_classes_list')
             included_classes = ','.join(selected_classes) if selected_classes else None
             
-            cursor.execute("UPDATE [Optima].[dbo].[EvaluationTypes] SET TypeName = ?, DisplayName = ?, IsRepeatable = ?, PrerequisiteTypeID = ?, SortOrder = ?, DaysAfterPrerequisite = ?, IncludedClasses = ? WHERE EvaluationTypeID = ?", (type_name, display_name, is_repeatable, prerequisite_id, sort_order, days_after, included_classes, type_id))
+            cursor.execute("UPDATE [AURAHR].[dbo].[EvaluationTypes] SET TypeName = ?, DisplayName = ?, IsRepeatable = ?, PrerequisiteTypeID = ?, SortOrder = ?, DaysAfterPrerequisite = ?, IncludedClasses = ? WHERE EvaluationTypeID = ?", (type_name, display_name, is_repeatable, prerequisite_id, sort_order, days_after, included_classes, type_id))
             conn.commit()
             flash('✅ تم تحديث نوع التقييم بنجاح', 'success')
             return redirect(url_for('evaluation_types_list'))
@@ -2755,17 +2766,17 @@ def evaluation_types_delete(type_id):
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
-        cursor.execute("SELECT COUNT(*) as cnt FROM [Optima].[dbo].[Evaluations] WHERE EvaluationTypeID = ?", (type_id,))
+        cursor.execute("SELECT COUNT(*) as cnt FROM [AURAHR].[dbo].[Evaluations] WHERE EvaluationTypeID = ?", (type_id,))
         if cursor.fetchone().cnt > 0:
             flash('❌ لا يمكن الحذف، هذا النوع مستخدم في تقييمات سابقة.', 'danger')
             conn.close()
             return redirect(url_for('evaluation_types_list'))
-        cursor.execute("SELECT COUNT(*) as cnt FROM [Optima].[dbo].[EvaluationTypes] WHERE PrerequisiteTypeID = ?", (type_id,))
+        cursor.execute("SELECT COUNT(*) as cnt FROM [AURAHR].[dbo].[EvaluationTypes] WHERE PrerequisiteTypeID = ?", (type_id,))
         if cursor.fetchone().cnt > 0:
             flash('❌ لا يمكن الحذف، هذا النوع هو متطلب لنوع آخر.', 'danger')
             conn.close()
             return redirect(url_for('evaluation_types_list'))
-        cursor.execute("DELETE FROM [Optima].[dbo].[EvaluationTypes] WHERE EvaluationTypeID = ?", (type_id,))
+        cursor.execute("DELETE FROM [AURAHR].[dbo].[EvaluationTypes] WHERE EvaluationTypeID = ?", (type_id,))
         conn.commit()
         flash('✅ تم حذف نوع التقييم بنجاح', 'success')
     except Exception as e:
@@ -2780,7 +2791,7 @@ def evaluation_types_delete(type_id):
 def evaluation_cycles_list():
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT C.CycleID, C.CycleName, C.StartDate, C.EndDate, C.IsEnabled, ET.DisplayName as EvaluationTypeName FROM [Optima].[dbo].[EvaluationCycles] C JOIN [Optima].[dbo].[EvaluationTypes] ET ON C.EvaluationTypeID = ET.EvaluationTypeID ORDER BY C.StartDate DESC")
+    cursor.execute("SELECT C.CycleID, C.CycleName, C.StartDate, C.EndDate, C.IsEnabled, ET.DisplayName as EvaluationTypeName FROM [AURAHR].[dbo].[EvaluationCycles] C JOIN [AURAHR].[dbo].[EvaluationTypes] ET ON C.EvaluationTypeID = ET.EvaluationTypeID ORDER BY C.StartDate DESC")
     cycles = cursor.fetchall()
     conn.close()
     return render_template('evaluation_cycles_list.html', cycles=cycles)
@@ -2791,9 +2802,9 @@ def evaluation_cycles_list():
 def evaluation_cycles_add():
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT EvaluationTypeID, DisplayName FROM [Optima].[dbo].[EvaluationTypes] ORDER BY SortOrder")
+    cursor.execute("SELECT EvaluationTypeID, DisplayName FROM [AURAHR].[dbo].[EvaluationTypes] ORDER BY SortOrder")
     all_types = cursor.fetchall()
-    cursor.execute("SELECT DEPTID, DEPTNAME FROM [Optima].[dbo].[DEPARTMENTS] ORDER BY DEPTNAME")
+    cursor.execute("SELECT DEPTID, DEPTNAME FROM [AURAHR].[dbo].[DEPARTMENTS] ORDER BY DEPTNAME")
     all_depts = cursor.fetchall()
     if request.method == 'POST':
         try:
@@ -2803,11 +2814,11 @@ def evaluation_cycles_add():
             end_date = request.form['end_date']
             is_enabled = 'is_enabled' in request.form
             dept_ids = request.form.getlist('dept_ids')
-            cursor.execute("INSERT INTO [Optima].[dbo].[EvaluationCycles] (CycleName, EvaluationTypeID, StartDate, EndDate, IsEnabled) OUTPUT INSERTED.CycleID VALUES (?, ?, ?, ?, ?)", (cycle_name, type_id, start_date, end_date, is_enabled))
+            cursor.execute("INSERT INTO [AURAHR].[dbo].[EvaluationCycles] (CycleName, EvaluationTypeID, StartDate, EndDate, IsEnabled) OUTPUT INSERTED.CycleID VALUES (?, ?, ?, ?, ?)", (cycle_name, type_id, start_date, end_date, is_enabled))
             new_cycle_id = cursor.fetchone().CycleID
             if dept_ids:
                 dept_data = [(new_cycle_id, int(dept_id)) for dept_id in dept_ids]
-                cursor.executemany("INSERT INTO [Optima].[dbo].[CycleDepartments] (CycleID, DepartmentID) VALUES (?, ?)", dept_data)
+                cursor.executemany("INSERT INTO [AURAHR].[dbo].[CycleDepartments] (CycleID, DepartmentID) VALUES (?, ?)", dept_data)
             conn.commit()
             flash('✅ تم إنشاء دورة التقييم بنجاح', 'success')
             return redirect(url_for('evaluation_cycles_list'))
@@ -2824,9 +2835,9 @@ def evaluation_cycles_add():
 def evaluation_cycles_edit(cycle_id):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT EvaluationTypeID, DisplayName FROM [Optima].[dbo].[EvaluationTypes] ORDER BY SortOrder")
+    cursor.execute("SELECT EvaluationTypeID, DisplayName FROM [AURAHR].[dbo].[EvaluationTypes] ORDER BY SortOrder")
     all_types = cursor.fetchall()
-    cursor.execute("SELECT DEPTID, DEPTNAME FROM [Optima].[dbo].[DEPARTMENTS] ORDER BY DEPTNAME")
+    cursor.execute("SELECT DEPTID, DEPTNAME FROM [AURAHR].[dbo].[DEPARTMENTS] ORDER BY DEPTNAME")
     all_depts = cursor.fetchall()
     if request.method == 'POST':
         try:
@@ -2836,11 +2847,11 @@ def evaluation_cycles_edit(cycle_id):
             end_date = request.form['end_date']
             is_enabled = 'is_enabled' in request.form
             dept_ids = request.form.getlist('dept_ids')
-            cursor.execute("UPDATE [Optima].[dbo].[EvaluationCycles] SET CycleName = ?, EvaluationTypeID = ?, StartDate = ?, EndDate = ?, IsEnabled = ? WHERE CycleID = ?", (cycle_name, type_id, start_date, end_date, is_enabled, cycle_id))
-            cursor.execute("DELETE FROM [Optima].[dbo].[CycleDepartments] WHERE CycleID = ?", (cycle_id,))
+            cursor.execute("UPDATE [AURAHR].[dbo].[EvaluationCycles] SET CycleName = ?, EvaluationTypeID = ?, StartDate = ?, EndDate = ?, IsEnabled = ? WHERE CycleID = ?", (cycle_name, type_id, start_date, end_date, is_enabled, cycle_id))
+            cursor.execute("DELETE FROM [AURAHR].[dbo].[CycleDepartments] WHERE CycleID = ?", (cycle_id,))
             if dept_ids:
                 dept_data = [(cycle_id, int(dept_id)) for dept_id in dept_ids]
-                cursor.executemany("INSERT INTO [Optima].[dbo].[CycleDepartments] (CycleID, DepartmentID) VALUES (?, ?)", dept_data)
+                cursor.executemany("INSERT INTO [AURAHR].[dbo].[CycleDepartments] (CycleID, DepartmentID) VALUES (?, ?)", dept_data)
             conn.commit()
             flash('✅ تم تحديث دورة التقييم بنجاح', 'success')
             return redirect(url_for('evaluation_cycles_list'))
@@ -2849,13 +2860,13 @@ def evaluation_cycles_edit(cycle_id):
             flash(f'❌ خطأ في قاعدة البيانات: {e}', 'danger')
         finally:
             conn.close()
-    cursor.execute("SELECT * FROM [Optima].[dbo].[EvaluationCycles] WHERE CycleID = ?", (cycle_id,))
+    cursor.execute("SELECT * FROM [AURAHR].[dbo].[EvaluationCycles] WHERE CycleID = ?", (cycle_id,))
     cycle = cursor.fetchone()
     if not cycle:
         flash('❌ لم يتم العثور على الدورة', 'danger')
         conn.close()
         return redirect(url_for('evaluation_cycles_list'))
-    cursor.execute("SELECT DepartmentID FROM [Optima].[dbo].[CycleDepartments] WHERE CycleID = ?", (cycle_id,))
+    cursor.execute("SELECT DepartmentID FROM [AURAHR].[dbo].[CycleDepartments] WHERE CycleID = ?", (cycle_id,))
     cycle_depts_rows = cursor.fetchall()
     cycle_depts = [row.DepartmentID for row in cycle_depts_rows]
     conn.close()
@@ -2867,8 +2878,8 @@ def evaluation_cycles_delete(cycle_id):
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
-        cursor.execute("DELETE FROM [Optima].[dbo].[CycleDepartments] WHERE CycleID = ?", (cycle_id,))
-        cursor.execute("DELETE FROM [Optima].[dbo].[EvaluationCycles] WHERE CycleID = ?", (cycle_id,))
+        cursor.execute("DELETE FROM [AURAHR].[dbo].[CycleDepartments] WHERE CycleID = ?", (cycle_id,))
+        cursor.execute("DELETE FROM [AURAHR].[dbo].[EvaluationCycles] WHERE CycleID = ?", (cycle_id,))
         conn.commit()
         flash('✅ تم حذف الدورة بنجاح', 'success')
     except Exception as e:
@@ -2900,22 +2911,22 @@ def evaluation_details(evaluation_id):
                 (
                     SELECT STUFF((
                         SELECT '###' + TC_Sub.TrainingCourseText
-                        FROM [Optima].[dbo].[TrainingEnrollments] TE_Sub 
-                        JOIN [Optima].[dbo].[TrainingSessions] TS_Sub ON TE_Sub.SessionID = TS_Sub.SessionID
-                        JOIN [Optima].[dbo].[TrainingCourses] TC_Sub ON TS_Sub.CourseID = TC_Sub.TrainingCourseID
+                        FROM [AURAHR].[dbo].[TrainingEnrollments] TE_Sub 
+                        JOIN [AURAHR].[dbo].[TrainingSessions] TS_Sub ON TE_Sub.SessionID = TS_Sub.SessionID
+                        JOIN [AURAHR].[dbo].[TrainingCourses] TC_Sub ON TS_Sub.CourseID = TC_Sub.TrainingCourseID
                         WHERE TE_Sub.EmployeeUserID = EmpInfo.USERID
                         ORDER BY TC_Sub.TrainingCourseText
                         FOR XML PATH('')
                     ), 1, 3, '')
                 ) as CoursesTaken
-            FROM [Optima].[dbo].[Evaluations] E 
-            LEFT JOIN [Optima].[dbo].[Users] Mgr ON E.EvaluatorUserID = Mgr.UserID 
-            LEFT JOIN [Optima].[dbo].[USERINFO] EmpInfo ON E.EmployeeUserID = EmpInfo.USERID 
-            LEFT JOIN [Optima].[dbo].[Users] EmpUser ON E.EmployeeUserID = EmpUser.UserID 
-            LEFT JOIN [Optima].[dbo].[DEPARTMENTS] DeptEmp ON COALESCE(EmpInfo.DEFAULTDEPTID, EmpUser.DepartmentID) = DeptEmp.DEPTID 
-            LEFT JOIN [Optima].[dbo].[Recommendations] R ON E.RecommendationID = R.RecommendationID 
-            LEFT JOIN [Optima].[dbo].[TrainingCourses] TC ON E.TrainingCourseID = TC.TrainingCourseID 
-            LEFT JOIN [Optima].[dbo].[EvaluationTypes] ET ON E.EvaluationTypeID = ET.EvaluationTypeID 
+            FROM [AURAHR].[dbo].[Evaluations] E 
+            LEFT JOIN [AURAHR].[dbo].[Users] Mgr ON E.EvaluatorUserID = Mgr.UserID 
+            LEFT JOIN [AURAHR].[dbo].[USERINFO] EmpInfo ON E.EmployeeUserID = EmpInfo.USERID 
+            LEFT JOIN [AURAHR].[dbo].[Users] EmpUser ON E.EmployeeUserID = EmpUser.UserID 
+            LEFT JOIN [AURAHR].[dbo].[DEPARTMENTS] DeptEmp ON COALESCE(EmpInfo.DEFAULTDEPTID, EmpUser.DepartmentID) = DeptEmp.DEPTID 
+            LEFT JOIN [AURAHR].[dbo].[Recommendations] R ON E.RecommendationID = R.RecommendationID 
+            LEFT JOIN [AURAHR].[dbo].[TrainingCourses] TC ON E.TrainingCourseID = TC.TrainingCourseID 
+            LEFT JOIN [AURAHR].[dbo].[EvaluationTypes] ET ON E.EvaluationTypeID = ET.EvaluationTypeID 
             WHERE E.EvaluationID = ?
         """, (evaluation_id,))
         evaluation_data = cursor.fetchone()
@@ -2927,16 +2938,16 @@ def evaluation_details(evaluation_id):
         elif role_id in [2, 3] and evaluation_data.EvaluatorUserID == user_id: can_view = True
         elif role_id == 5 and evaluation_data.EmployeeUserID == user_id: can_view = True
         elif role_id == 3:
-            cursor.execute("SELECT DepartmentID FROM [Optima].[dbo].[Users] WHERE UserID = ?", (user_id,))
+            cursor.execute("SELECT DepartmentID FROM [AURAHR].[dbo].[Users] WHERE UserID = ?", (user_id,))
             manager_dept = cursor.fetchone()
-            cursor.execute("SELECT DEFAULTDEPTID FROM [Optima].[dbo].[USERINFO] WHERE USERID = ?", (evaluation_data.EmployeeUserID,))
+            cursor.execute("SELECT DEFAULTDEPTID FROM [AURAHR].[dbo].[USERINFO] WHERE USERID = ?", (evaluation_data.EmployeeUserID,))
             emp_dept = cursor.fetchone()
             if manager_dept and emp_dept and manager_dept.DepartmentID == emp_dept.DEFAULTDEPTID:
                 can_view = True
         if not can_view:
              flash("You do not have permission to view this evaluation.", "danger")
              return redirect(url_for('evaluation_reports'))
-        cursor.execute("SELECT ED.ScoreGiven, EC.CriteriaName, EC.CriteriaWeight, EC.MaxScore FROM [Optima].[dbo].[EvaluationDetails] ED JOIN [Optima].[dbo].[EvaluationCriteria] EC ON ED.CriteriaID = EC.CriteriaID WHERE ED.EvaluationID = ? ORDER BY EC.CriteriaID", (evaluation_id,))
+        cursor.execute("SELECT ED.ScoreGiven, EC.CriteriaName, EC.CriteriaWeight, EC.MaxScore FROM [AURAHR].[dbo].[EvaluationDetails] ED JOIN [AURAHR].[dbo].[EvaluationCriteria] EC ON ED.CriteriaID = EC.CriteriaID WHERE ED.EvaluationID = ? ORDER BY EC.CriteriaID", (evaluation_id,))
         details = cursor.fetchall()
     except Exception as e:
         flash(f"Error fetching evaluation details: {e}", "danger")
@@ -2953,7 +2964,7 @@ def evaluation_delete(evaluation_id):
     cursor = conn.cursor()
     try:
         # الحذف سيتم تلقائياً من جدول التفاصيل أيضاً بسبب خاصية CASCADE في قاعدة البيانات
-        cursor.execute("DELETE FROM [Optima].[dbo].[Evaluations] WHERE EvaluationID = ?", (evaluation_id,))
+        cursor.execute("DELETE FROM [AURAHR].[dbo].[Evaluations] WHERE EvaluationID = ?", (evaluation_id,))
         conn.commit()
         flash('✅ تم حذف تقرير التقييم بنجاح.', 'success')
     except Exception as e:
@@ -3490,7 +3501,7 @@ def training_attendance_save(sid):
 def debug_userinfo():
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT DEPTID, DEPTNAME FROM [Optima].[dbo].[DEPARTMENTS] ORDER BY DEPTID")
+    cursor.execute("SELECT DEPTID, DEPTNAME FROM [AURAHR].[dbo].[DEPARTMENTS] ORDER BY DEPTID")
     departments = cursor.fetchall()
     result = f"<h1>UserInfo Debug</h1><h2>Departments Query Result:</h2><p>Found {len(departments)} departments:</p><table border='1'><tr><th>DEPTID</th><th>DEPTNAME</th></tr>"
     for dept in departments: result += f"<tr><td>{dept.DEPTID}</td><td>{dept.DEPTNAME}</td></tr>"
@@ -3687,11 +3698,11 @@ def training_employee_report():
     # 3. Count Total Matching Employees (Distinct)
     count_query = f"""
         SELECT COUNT(DISTINCT U.USERID)
-        FROM [Optima].[dbo].[USERINFO] U
-        LEFT JOIN [Optima].[dbo].[DEPARTMENTS] D ON U.DEFAULTDEPTID = D.DEPTID
-        LEFT JOIN [Optima].[dbo].[TrainingEnrollments] TE ON U.USERID = TE.EmployeeUserID
-        LEFT JOIN [Optima].[dbo].[TrainingSessions] TS ON TE.SessionID = TS.SessionID
-        LEFT JOIN [Optima].[dbo].[TrainingCourses] TC ON TS.CourseID = TC.TrainingCourseID
+        FROM [AURAHR].[dbo].[USERINFO] U
+        LEFT JOIN [AURAHR].[dbo].[DEPARTMENTS] D ON U.DEFAULTDEPTID = D.DEPTID
+        LEFT JOIN [AURAHR].[dbo].[TrainingEnrollments] TE ON U.USERID = TE.EmployeeUserID
+        LEFT JOIN [AURAHR].[dbo].[TrainingSessions] TS ON TE.SessionID = TS.SessionID
+        LEFT JOIN [AURAHR].[dbo].[TrainingCourses] TC ON TS.CourseID = TC.TrainingCourseID
         WHERE {where_sql}
     """
     cursor.execute(count_query, params)
@@ -3702,11 +3713,11 @@ def training_employee_report():
     # We must order by something unique to ensure stable pagination
     ids_query = f"""
         SELECT DISTINCT U.USERID, U.NAME
-        FROM [Optima].[dbo].[USERINFO] U
-        LEFT JOIN [Optima].[dbo].[DEPARTMENTS] D ON U.DEFAULTDEPTID = D.DEPTID
-        LEFT JOIN [Optima].[dbo].[TrainingEnrollments] TE ON U.USERID = TE.EmployeeUserID
-        LEFT JOIN [Optima].[dbo].[TrainingSessions] TS ON TE.SessionID = TS.SessionID
-        LEFT JOIN [Optima].[dbo].[TrainingCourses] TC ON TS.CourseID = TC.TrainingCourseID
+        FROM [AURAHR].[dbo].[USERINFO] U
+        LEFT JOIN [AURAHR].[dbo].[DEPARTMENTS] D ON U.DEFAULTDEPTID = D.DEPTID
+        LEFT JOIN [AURAHR].[dbo].[TrainingEnrollments] TE ON U.USERID = TE.EmployeeUserID
+        LEFT JOIN [AURAHR].[dbo].[TrainingSessions] TS ON TE.SessionID = TS.SessionID
+        LEFT JOIN [AURAHR].[dbo].[TrainingCourses] TC ON TS.CourseID = TC.TrainingCourseID
         WHERE {where_sql}
         ORDER BY U.NAME, U.USERID
         OFFSET ? ROWS FETCH NEXT ? ROWS ONLY
@@ -3731,11 +3742,11 @@ def training_employee_report():
                 TE.EnrollmentID, TE.PassStatus, TE.Grade, TE.AttendanceStatus,
                 TS.SessionDate, TS.SessionID,
                 TC.TrainingCourseText
-            FROM [Optima].[dbo].[USERINFO] U
-            LEFT JOIN [Optima].[dbo].[DEPARTMENTS] D ON U.DEFAULTDEPTID = D.DEPTID
-            LEFT JOIN [Optima].[dbo].[TrainingEnrollments] TE ON U.USERID = TE.EmployeeUserID
-            LEFT JOIN [Optima].[dbo].[TrainingSessions] TS ON TE.SessionID = TS.SessionID
-            LEFT JOIN [Optima].[dbo].[TrainingCourses] TC ON TS.CourseID = TC.TrainingCourseID
+            FROM [AURAHR].[dbo].[USERINFO] U
+            LEFT JOIN [AURAHR].[dbo].[DEPARTMENTS] D ON U.DEFAULTDEPTID = D.DEPTID
+            LEFT JOIN [AURAHR].[dbo].[TrainingEnrollments] TE ON U.USERID = TE.EmployeeUserID
+            LEFT JOIN [AURAHR].[dbo].[TrainingSessions] TS ON TE.SessionID = TS.SessionID
+            LEFT JOIN [AURAHR].[dbo].[TrainingCourses] TC ON TS.CourseID = TC.TrainingCourseID
             WHERE U.USERID IN ({placeholders}) AND {where_sql}
             ORDER BY U.NAME, TS.SessionDate DESC
         """
@@ -4943,7 +4954,9 @@ def recruitment_training():
     
     # Fetch all candidates currently in 'Training'
     cursor.execute("""
-        SELECT C.CandidateID, C.FullName, C.Phone, C.TrainingStartDate, C.TrainerName, J.JobTitle, C.NationalID 
+        SELECT C.CandidateID, C.FullName, C.Phone, C.TrainingStartDate, C.TrainingEndDate,
+               C.TrainerName, J.JobTitle, C.NationalID,
+               C.TrainingStartTime, C.TrainingEndTime
         FROM Candidates C
         JOIN Jobs J ON C.JobID = J.JobID
         WHERE C.Status = 'Training'
@@ -4957,10 +4970,17 @@ def recruitment_training():
 
     for row in rows:
         start_date = row.TrainingStartDate.date() if row.TrainingStartDate else today
-        end_date = start_date + timedelta(days=90) # 3 Months Rule
+        
+        # Use DB end date if exists
+        if row.TrainingEndDate:
+            end_date = row.TrainingEndDate.date()
+        else:
+            end_date = start_date + timedelta(days=90) # Default 3 Months Rule
         
         # Calculate Progress
-        total_days = 90
+        total_days = (end_date - start_date).days
+        if total_days <= 0: total_days = 90
+        
         days_passed = (today - start_date).days
         days_left = (end_date - today).days
         
@@ -4980,15 +5000,62 @@ def recruitment_training():
         'job': row.JobTitle,
         'phone': row.Phone,
         'trainer': row.TrainerName,
-        'national_id': row.NationalID,  # <--- Add this line
+        'national_id': row.NationalID,
         'start_date': start_date,
         'end_date': end_date,
+        'start_time': row.TrainingStartTime,
+        'end_time': row.TrainingEndTime,
         'days_left': days_left,
         'percent': int(percent),
         'color': color
     })
 
     return render_template('recruitment/recruitment_training.html', trainees=trainees)
+
+# --- 2. Update Candidate Training Info Route ---
+@app.route('/recruitment/update_training_info', methods=['POST'])
+def update_candidate_training_info():
+    """
+    Updates the training dates and times for a specific candidate.
+    Expected form data: candidate_id, start_date, end_date, start_time, end_time
+    """
+    try:
+        candidate_id = request.form.get('candidate_id')
+        start_date = request.form.get('start_date')
+        end_date = request.form.get('end_date')
+        start_time = request.form.get('start_time')
+        end_time = request.form.get('end_time')
+
+        if not candidate_id:
+            flash("خطأ: لم يتم تحديد المرشح.", "danger")
+            return redirect(url_for('recruitment_training'))
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # Update SQL
+        sql = """UPDATE Candidates 
+                 SET TrainingStartDate = ?, TrainingEndDate = ?, 
+                     TrainingStartTime = ?, TrainingEndTime = ?
+                 WHERE CandidateID = ?"""
+        
+        # Handle empty strings
+        sd = start_date if start_date else None
+        ed = end_date if end_date else None
+        st = start_time if start_time else None
+        et = end_time if end_time else None
+        
+        cursor.execute(sql, (sd, ed, st, et, candidate_id))
+        conn.commit()
+        conn.close()
+        
+        flash("تم تحديث بيانات التدريب بنجاح.", "success")
+        
+    except Exception as e:
+        print(f"Error updating training info: {e}")
+        flash("حدث خطأ أثناء تحديث البيانات.", "danger")
+    
+    return redirect(url_for('recruitment_training'))
 
 @app.route('/recruitment/assign_trainer', methods=['POST'])
 def assign_trainer():
@@ -5246,11 +5313,15 @@ def recruitment_archive():
     
     # 2. Fetch Archived Employees
     cursor.execute("""
-        SELECT UI.USERID, UI.BADGENUMBER, UI.NAME, UI.HIREDDAY, D.DEPTNAME, EA.EndDay, TR.ReasonText, EA.ArchiveComment, EA.ArchiveReasonID, UI.DEFAULTDEPTID
-        FROM [Optima].[dbo].[USERINFO] AS UI
+        SELECT UI.USERID, UI.BADGENUMBER, UI.NAME, UI.HIREDDAY, D.DEPTNAME, EA.EndDay, 
+               TR.ReasonText, TT.TypeText, EA.ArchiveComment, EA.ArchiveReasonID, 
+               EA.ArchiveTypeID AS TheArchiveTypeID, 
+               UI.DEFAULTDEPTID
+        FROM [AURAHR].[dbo].[USERINFO] AS UI
         LEFT JOIN DEPARTMENTS D ON UI.DEFAULTDEPTID = D.DEPTID
-        LEFT JOIN [Optima].[dbo].[EmployeeArchive] EA ON UI.USERID = EA.UserID
-        LEFT JOIN [Optima].[dbo].[TerminationReasons] TR ON EA.ArchiveReasonID = TR.ReasonID
+        LEFT JOIN [AURAHR].[dbo].[EmployeeArchive] EA ON UI.USERID = EA.UserID
+        LEFT JOIN [AURAHR].[dbo].[TerminationReasons] TR ON EA.ArchiveReasonID = TR.ReasonID
+        LEFT JOIN [AURAHR].[dbo].[TerminationTypes] TT ON EA.ArchiveTypeID = TT.TypeID
         WHERE UI.IsActive = 0
         ORDER BY EA.EndDay DESC
     """)
@@ -5264,7 +5335,12 @@ def recruitment_archive():
     cursor.execute("SELECT DEPTID, DEPTNAME FROM DEPARTMENTS ORDER BY DEPTID")
     departments = cursor.fetchall()
     
-    cursor.execute("SELECT * FROM TerminationReasons ORDER BY ReasonText")
+    cursor.execute("""
+        SELECT R.ReasonID, R.ReasonText, T.TypeText 
+        FROM TerminationReasons R
+        JOIN TerminationTypes T ON R.TypeID = T.TypeID
+        ORDER BY T.TypeText, R.ReasonText
+    """)
     reasons = cursor.fetchall()
     
     conn.close()
@@ -5408,18 +5484,27 @@ def get_employee_full_data():
     cursor = conn.cursor()
 
     try:
+        # Helper for safe date formatting
+        def format_date(d):
+            if not d: return ''
+            if hasattr(d, 'strftime'):
+                return d.strftime('%Y-%m-%d')
+            return str(d)
+
         # A. SEARCH (Name or Badge)
         # We prefer finding by exact Badge first, then Name
         sql_search = """
             SELECT TOP 1 U.USERID, U.NAME, U.BADGENUMBER, U.SSN, 
                    U.HIREDDAY, U.BIRTHDAY, U.OPHONE, U.FPHONE, 
                    U.TITLE, U.STREET, D.DEPTNAME
-            FROM [Optima].[dbo].[USERINFO] U
-            LEFT JOIN [Optima].[dbo].[DEPARTMENTS] D ON U.DEFAULTDEPTID = D.DEPTID
-            WHERE (U.BADGENUMBER = ?) OR (U.NAME LIKE ?)
+            FROM [AURAHR].[dbo].[USERINFO] U
+            LEFT JOIN [AURAHR].[dbo].[DEPARTMENTS] D ON U.DEFAULTDEPTID = D.DEPTID
+            WHERE (U.BADGENUMBER = ?) OR (U.NAME LIKE ?) OR (TRY_CAST(U.BADGENUMBER AS BIGINT) = TRY_CAST(? AS BIGINT))
             ORDER BY U.IsActive DESC -- Prefer active if matches multiple
         """
-        cursor.execute(sql_search, (query, f"%{query}%"))
+        print(f"SEARCH QUERY: {query}")
+        print(f"PARAMS: ('{query}', '%{query}%', '{query}')")
+        cursor.execute(sql_search, (query, f"%{query}%", query))
         user_row = cursor.fetchone()
 
         if not user_row:
@@ -5441,7 +5526,7 @@ def get_employee_full_data():
         for f in family_rows:
             family_data[f.RelationType].append({
                 'name': f.Name,
-                'dob': f.DOB.strftime('%Y-%m-%d') if f.DOB else '',
+                'dob': format_date(f.DOB),
                 'job': f.Job,
                 'address': f.Address,
                 'phone': f.Phone
@@ -5454,8 +5539,8 @@ def get_employee_full_data():
             'name': user_row.NAME,
             'badge': user_row.BADGENUMBER,
             'ssn': extended_row.NationalID if extended_row and extended_row.NationalID else user_row.SSN,
-            'hired_date': user_row.HIREDDAY.strftime('%Y-%m-%d') if user_row.HIREDDAY else '',
-            'birth_date': user_row.BIRTHDAY.strftime('%Y-%m-%d') if user_row.BIRTHDAY else '',
+            'hired_date': format_date(user_row.HIREDDAY),
+            'birth_date': format_date(user_row.BIRTHDAY),
             'phone': user_row.OPHONE or user_row.FPHONE,
             'title': user_row.TITLE,
             'address': user_row.STREET,
@@ -5493,7 +5578,7 @@ def save_employee_full_data():
         # 1. Update USERINFO (Basic fields that are allowed to be updated)
         # Note: Be careful what we update here. Let's update Phone, Address if changed.
         cursor.execute("""
-            UPDATE [Optima].[dbo].[USERINFO] 
+            UPDATE [AURAHR].[dbo].[USERINFO] 
             SET OPHONE = ?, STREET = ?, SSN = ?
             WHERE USERID = ?
         """, (data.get('phone'), data.get('address'), data.get('national_id'), user_id))

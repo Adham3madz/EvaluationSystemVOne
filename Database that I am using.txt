@@ -1,0 +1,47 @@
+Tables that I am using it in db.optima
+
+Employee & Structure:
+
+USERINFO (Primary employee table)
+DEPARTMENTS
+POSITIONS
+Jobs
+EmployeeClasses
+EmployeeExtendedInfo
+EmployeeFamilyMembers
+Users
+Roles
+---------
+Evaluations System:
+
+Evaluations
+EvaluationDetails
+EvaluationTypes
+EvaluationCriteria
+EvaluationTypeCriteria
+EvaluationCycles
+CycleDepartments
+Recommendations
+--------------
+Training & Recruitment:
+
+TrainingSessions
+TrainingCourses
+TrainingEnrollments
+TrainingAttendance
+TrainingSessionDays
+Candidates
+CandidateLogs
+----------
+Termination & Logging:
+
+EmployeeArchive
+TerminationTypes
+TerminationReasons
+AppLogs
+UserLogsHr
+--------------
+Other:
+
+SHIFT
+TEMPLATE

@@ -1,39 +1,33 @@
+from app import get_db_connection
 
-import pyodbc
-from config import CONNECTION_STRING
-
-def create_app_logs_table():
-    conn = pyodbc.connect(CONNECTION_STRING)
+def create_applogs_table():
+    conn = get_db_connection()
     cursor = conn.cursor()
-    
-    table_sql = """
-    IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[AppLogs]') AND type in (N'U'))
-    BEGIN
-        CREATE TABLE [dbo].[AppLogs](
-            [LogID] [int] IDENTITY(1,1) NOT NULL,
-            [UserID] [int] NULL,
-            [Username] [nvarchar](100) NULL,
-            [Module] [nvarchar](50) NULL,
-            [ActionType] [nvarchar](50) NULL,
-            [Description] [nvarchar](max) NULL,
-            [Timestamp] [datetime] DEFAULT GETDATE(),
-            PRIMARY KEY CLUSTERED ([LogID] ASC)
-        )
-        PRINT 'Table AppLogs created successfully.'
-    END
-    ELSE
-    BEGIN
-        PRINT 'Table AppLogs already exists.'
-    END
-    """
-    
     try:
-        cursor.execute(table_sql)
+        cursor.execute("""
+            IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='AppLogs' AND xtype='U')
+            BEGIN
+                CREATE TABLE AppLogs (
+                    LogID INT IDENTITY(1,1) PRIMARY KEY,
+                    UserID INT,
+                    Username NVARCHAR(100),
+                    Module NVARCHAR(100),
+                    ActionType NVARCHAR(100),
+                    Description NVARCHAR(MAX),
+                    Timestamp DATETIME DEFAULT GETDATE()
+                )
+                PRINT 'AppLogs table created.'
+            END
+            ELSE
+            BEGIN
+                PRINT 'AppLogs table already exists.'
+            END
+        """)
         conn.commit()
     except Exception as e:
         print(f"Error creating table: {e}")
-        
-    conn.close()
+    finally:
+        conn.close()
 
-if __name__ == "__main__":
-    create_app_logs_table()
+if __name__ == '__main__':
+    create_applogs_table()

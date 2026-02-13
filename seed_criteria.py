@@ -30,16 +30,16 @@ def seed_criteria():
         try:
             # Check if exists (by name) - we might want to update or skip
             # For this task, we skip if exact name exists to avoid duplicates
-            cursor.execute("SELECT COUNT(*) FROM [Optima].[dbo].[EvaluationCriteria] WHERE CriteriaName = ?", (c['name'],))
+            cursor.execute("SELECT COUNT(*) FROM [AURAHR].[dbo].[EvaluationCriteria] WHERE CriteriaName = ?", (c['name'],))
             exists = cursor.fetchone()[0] > 0
             
             if exists:
                 print(f"Skipping (Already Exists): {c['name']}")
                 # Optional: Update the class string if you want to ensure these classes are included
-                # cursor.execute("UPDATE [Optima].[dbo].[EvaluationCriteria] SET employee_class = ? WHERE CriteriaName = ?", (class_string, c['name']))
+                # cursor.execute("UPDATE [AURAHR].[dbo].[EvaluationCriteria] SET employee_class = ? WHERE CriteriaName = ?", (class_string, c['name']))
             else:
                 cursor.execute("""
-                    INSERT INTO [Optima].[dbo].[EvaluationCriteria] 
+                    INSERT INTO [AURAHR].[dbo].[EvaluationCriteria] 
                     (CriteriaName, CriteriaWeight, MaxScore, AppliesToDeptID, employee_class) 
                     VALUES (?, ?, ?, NULL, ?)
                 """, (c['name'], c['weight'], c['max'], class_string))

@@ -54,30 +54,80 @@
         font-size: 0.9rem;
     }
 
-    /* Stats */
+    /* Stats - Glassmorphic Concept */
     .stat-card {
-        background: #fff;
-        border: 1px solid var(--formal-border);
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        border-radius: 16px;
         padding: 20px;
-        border-right: 4px solid var(--formal-border);
-        /* Subtle subtle bar */
+        transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+        display: flex;
+        flex-direction: row-reverse;
+        /* For RTL Icon on the Left, Text on the Right */
+        align-items: center;
+        justify-content: space-between;
+        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+        height: 100%;
     }
 
     .stat-card:hover {
-        border-right-color: var(--formal-primary);
+        transform: translateY(-8px) scale(1.02);
+        box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.12);
+        background: #ffffff;
+    }
+
+    .stat-icon {
+        width: 52px;
+        height: 52px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        flex-shrink: 0;
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+    }
+
+    .bg-soft-blue {
+        background: linear-gradient(135deg, rgba(52, 152, 219, 0.1), rgba(52, 152, 219, 0.2)) !important;
+        color: #3498db !important;
+    }
+
+    .bg-soft-orange {
+        background: linear-gradient(135deg, rgba(243, 156, 18, 0.1), rgba(243, 156, 18, 0.2)) !important;
+        color: #f39c12 !important;
+    }
+
+    .bg-soft-red {
+        background: linear-gradient(135deg, rgba(231, 76, 60, 0.1), rgba(231, 76, 60, 0.2)) !important;
+        color: #e74c3c !important;
+    }
+
+    .bg-soft-purple {
+        background: linear-gradient(135deg, rgba(155, 89, 182, 0.1), rgba(155, 89, 182, 0.2)) !important;
+        color: #9b59b6 !important;
+    }
+
+    .stat-content {
+        text-align: right;
     }
 
     .stat-value {
         font-size: 1.8rem;
-        font-weight: 700;
-        color: var(--formal-primary);
+        font-weight: 800;
+        margin: 0;
+        color: #2d3748;
+        letter-spacing: -0.5px;
     }
 
     .stat-label {
         font-size: 0.8rem;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        color: #adb5bd;
+        font-weight: 500;
+        color: #a0aec0;
+        margin-top: 2px;
+        display: block;
     }
 
     /* Tables */
@@ -139,6 +189,10 @@
         font-weight: 600;
         box-shadow: none !important;
         border: 1px solid transparent;
+    }
+
+    .text-orange {
+        color: #f39c12 !important;
     }
 
     .btn-formal-primary {
@@ -226,6 +280,70 @@
         </div>
     </div>
 
+    <!-- Persistent HR Insights Dashboard -->
+    <div class="glass-panel mb-4">
+        <h5 class="fw-bold mb-4 text-warning">📊 تحليل الأرشيف (HR Insights)</h5>
+
+        <div class="row g-3">
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <div class="stat-icon bg-soft-blue">📂</div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="statTotal">0</div>
+                        <div class="stat-label">إجمالي المؤرشفين</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <div class="stat-icon bg-soft-orange">🏢</div>
+                    <div class="stat-content">
+                        <div class="stat-value text-orange" id="statTopDept">-</div>
+                        <div class="stat-label">القسم الأكثر أرشفة</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <div class="stat-icon bg-soft-red">🆔</div>
+                    <div class="stat-content">
+                        <div class="stat-value text-danger" id="statNoID">0</div>
+                        <div class="stat-label">ناقصي البيانات</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="stat-card flex-column align-items-stretch" style="display: block;">
+                    <div class="d-flex align-items-center gap-2 mb-3">
+                        <div class="stat-icon bg-soft-purple" style="width: 40px; height: 40px; font-size: 1.2rem;">📊
+                        </div>
+                        <h6 class="fw-bold mb-0 text-secondary">توزيع أسباب الأرشفة</h6>
+                    </div>
+                    <div style="height: 250px;">
+                        <canvas id="reasonsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="stat-card flex-column align-items-stretch" style="display: block;">
+                    <div class="d-flex align-items-center gap-2 mb-3">
+                        <div class="stat-icon bg-soft-blue" style="width: 40px; height: 40px; font-size: 1.2rem;">📈
+                        </div>
+                        <h6 class="fw-bold mb-0 text-secondary">اتجاهات الأرشفة (شهرياً)</h6>
+                    </div>
+                    <div style="height: 250px;">
+                        <canvas id="trendsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Tabs -->
     <ul class="nav nav-pills mb-4" id="archiveTabs" role="tablist" style="border-bottom: 1px solid #e9ecef;">
         <li class="nav-item" role="presentation">
@@ -245,35 +363,6 @@
     <div class="tab-content">
         <!-- === TAB 1: CANDIDATES === -->
         <div class="tab-pane fade show active" id="tab-candidates" role="tabpanel">
-            <div class="glass-panel mb-4">
-                <h5 class="fw-bold mb-3 text-warning">📊 تحليل الأرشيف (HR Insights)</h5>
-                <div class="row g-3">
-                    <div class="col-md-4">
-                        <div class="stat-card text-center">
-                            <div class="fs-1 mb-1">📂</div>
-                            <div class="stat-value text-white" id="statTotal">0</div>
-                            <div class="stat-label text-white-50">إجمالي المؤرشفين</div>
-                        </div>
-                    </div>
-
-                    <div class="col-md-4">
-                        <div class="stat-card text-center">
-                            <div class="fs-1 mb-1">🏢</div>
-                            <div class="stat-value text-warning" id="statTopDept">-</div>
-                            <div class="stat-label text-white-50">القسم الأكثر أرشفة (تنبيه)</div>
-                        </div>
-                    </div>
-
-                    <div class="col-md-4">
-                        <div class="stat-card text-center">
-                            <div class="fs-1 mb-1">🆔</div>
-                            <div class="stat-value text-danger" id="statNoID">0</div>
-                            <div class="stat-label text-white-50">ناقصي الرقم القومي</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
             <div class="glass-panel py-3 mb-4">
                 <div class="row g-3 align-items-center">
                     <div class="col-md-8">
@@ -378,12 +467,62 @@
 
         <!-- === TAB 2: EMPLOYEES === -->
         <div class="tab-pane fade" id="tab-employees" role="tabpanel">
-            <div class="glass-panel">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="fw-bold text-danger">🗄️ سجل الموظفين المؤرشفين ({{ archived_employees|length }})</h5>
-                    <input type="text" id="empSearch" class="form-control search-glass" style="width: 300px;"
-                        placeholder="🔍 ابحث في الموظفين...">
+            <div class="glass-panel py-3 mb-4">
+                <div class="row g-2 align-items-center">
+                    <div class="col-md-3">
+                        <label class="form-label small fw-bold text-secondary">🔍 بحث سريع</label>
+                        <input type="text" id="empSearch" class="form-control search-glass"
+                            placeholder="ابحث بالاسم أو الرقم الوظيفي...">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small fw-bold text-secondary">🏢 القسم</label>
+                        <select id="empDeptFilter" class="form-select select-glass">
+                            <option value="">كل الأقسام</option>
+                            {% set emp_depts = [] %}
+                            {% for u in archived_employees %}
+                            {% if u.DEPTNAME and u.DEPTNAME not in emp_depts %}
+                            {% set _ = emp_depts.append(u.DEPTNAME) %}
+                            {% endif %}
+                            {% endfor %}
+                            {% for d in emp_depts|sort %}
+                            <option value="{{ d }}">{{ d }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small fw-bold text-secondary">� نوع الأرشفة</label>
+                        <select id="empTypeFilter" class="form-select select-glass">
+                            <option value="">كل الأنواع</option>
+                            {% set emp_types = [] %}
+                            {% for u in archived_employees %}
+                            {% if u.TypeText and u.TypeText not in emp_types %}
+                            {% set _ = emp_types.append(u.TypeText) %}
+                            {% endif %}
+                            {% endfor %}
+                            {% for t in emp_types|sort %}
+                            <option value="{{ t }}">{{ t }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small fw-bold text-secondary">📁 سبب الأرشفة</label>
+                        <select id="empReasonFilter" class="form-select select-glass">
+                            <option value="">كل الأسباب</option>
+                            {% set emp_reasons = [] %}
+                            {% for u in archived_employees %}
+                            {% if u.ReasonText and u.ReasonText not in emp_reasons %}
+                            {% set _ = emp_reasons.append(u.ReasonText) %}
+                            {% endif %}
+                            {% endfor %}
+                            {% for r in emp_reasons|sort %}
+                            <option value="{{ r }}">{{ r }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
                 </div>
+            </div>
+
+            <div class="glass-panel p-0 overflow-hidden">
 
                 <div class="table-responsive">
                     <table class="table table-glass text-center">
@@ -395,19 +534,24 @@
                                 <th>القسم</th>
                                 <th>تاريخ التعيين</th>
                                 <th>تاريخ الأرشفة</th>
+                                <th>نوع الأرشفة</th>
                                 <th>سبب الأرشفة</th>
                                 <th>إجراءات</th>
                             </tr>
                         </thead>
                         <tbody id="empTableBody">
                             {% for u in archived_employees %}
-                            <tr>
+                            <tr data-dept="{{ u.DEPTNAME or '' }}" data-reason="{{ u.ReasonText or '' }}"
+                                data-type="{{ u.TypeText or '' }}">
                                 <td>{{ u.USERID }}</td>
                                 <td class="font-monospace text-warning fw-bold">{{ u.BADGENUMBER }}</td>
                                 <td class="fw-bold">{{ u.NAME or '-' }}</td>
                                 <td>{{ u.DEPTNAME or '-' }}</td>
                                 <td>{{ u.HIREDDAY.strftime('%Y-%m-%d') if u.HIREDDAY else '-' }}</td>
                                 <td class="text-danger">{{ u.EndDay.strftime('%Y-%m-%d') if u.EndDay else '-' }}</td>
+                                <td>
+                                    {{ u.TypeText or '-' }}
+                                </td>
                                 <td>
                                     {% if u.ReasonText %}
                                     <span class="badge bg-danger bg-opacity-25 text-white">
@@ -423,11 +567,13 @@
                                 <td>
                                     <div class="d-flex justify-content-center gap-2">
                                         <!-- Edit Action (Opens Modal) -->
-                                        <button type="button" class="btn btn-sm btn-outline-info rounded-pill" onclick="openEditModal('{{ u.USERID }}', 
-                                                       '{{ u.HIREDDAY.strftime('%Y-%m-%d') if u.HIREDDAY else '' }}', 
-                                                       '{{ u.DEFAULTDEPTID or '' }}', 
-                                                       '{{ u.EndDay.strftime('%Y-%m-%d') if u.EndDay else '' }}', 
-                                                       '{{ u.ArchiveReasonID or '' }}')">
+                                        <button type="button"
+                                            class="btn btn-sm btn-outline-info rounded-pill edit-emp-btn"
+                                            data-uid="{{ u.USERID }}"
+                                            data-hired="{{ u.HIREDDAY.strftime('%Y-%m-%d') if u.HIREDDAY else '' }}"
+                                            data-dept="{{ u.DEFAULTDEPTID or '' }}"
+                                            data-end="{{ u.EndDay.strftime('%Y-%m-%d') if u.EndDay else '' }}"
+                                            data-reason="{{ u.ArchiveReasonID or '' }}">
                                             ✏️
                                         </button>
 
@@ -442,7 +588,7 @@
                             </tr>
                             {% else %}
                             <tr>
-                                <td colspan="8" class="py-5 text-white-50">
+                                <td colspan="9" class="py-5 text-white-50">
                                     🤷‍♂️ لا يوجد موظفين في الأرشيف.
                                 </td>
                             </tr>
@@ -455,6 +601,7 @@
     </div>
 </div>
 
+<script src="{{ url_for('static', filename='js/chart.min.js') }}"></script>
 <script>
     // === 1. Stats Calculation (Offline Analysis) ===
     document.addEventListener('DOMContentLoaded', function () {
@@ -462,6 +609,10 @@
         let total = 0;
         let missingID = 0;
         let deptCounts = {};
+
+        // Data for charts
+        let reasonCounts = {};
+        let monthlyTrends = {};
 
         // Loop only through valid data rows (ignore 'empty' message row)
         rows.forEach(row => {
@@ -475,6 +626,25 @@
             // Count Depts
             let dept = row.getAttribute('data-dept') || 'غير محدد';
             deptCounts[dept] = (deptCounts[dept] || 0) + 1;
+        });
+
+        // 2. Process Employee Archive Data for Charts
+        const empRows = document.querySelectorAll('#empTableBody tr');
+        empRows.forEach(row => {
+            if (row.querySelector('td').innerText.includes('لا يوجد موظفين')) return;
+
+            // Extract Reason
+            const reasonCell = row.cells[7]; // ReasonText column
+            const reason = reasonCell.innerText.trim().split('\n')[0].trim() || 'غير محدد';
+            reasonCounts[reason] = (reasonCounts[reason] || 0) + 1;
+
+            // Extract Date for Trends
+            const dateCell = row.cells[5]; // EndDay column
+            const dateStr = dateCell.innerText.trim(); // YYYY-MM-DD
+            if (dateStr && dateStr !== '-') {
+                const month = dateStr.substring(0, 7); // YYYY-MM
+                monthlyTrends[month] = (monthlyTrends[month] || 0) + 1;
+            }
         });
 
         // Find Top Dept
@@ -491,6 +661,62 @@
         document.getElementById('statTotal').innerText = total;
         document.getElementById('statNoID').innerText = missingID;
         document.getElementById('statTopDept').innerText = topDept + ` (${maxCount})`;
+
+        // === 3. Initialize Charts ===
+
+        // Reasons Doughnut Chart
+        const reasonsCtx = document.getElementById('reasonsChart').getContext('2d');
+        new Chart(reasonsCtx, {
+            type: 'doughnut',
+            data: {
+                labels: Object.keys(reasonCounts),
+                datasets: [{
+                    data: Object.values(reasonCounts),
+                    backgroundColor: [
+                        '#2c3e50', '#e74c3c', '#f1c40f', '#27ae60', '#3498db', '#9b59b6', '#f39c12'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: { font: { size: 10 } }
+                    }
+                }
+            }
+        });
+
+        // Trends Line Chart
+        const sortedMonths = Object.keys(monthlyTrends).sort();
+        const trendsCtx = document.getElementById('trendsChart').getContext('2d');
+        new Chart(trendsCtx, {
+            type: 'line',
+            data: {
+                labels: sortedMonths,
+                datasets: [{
+                    label: 'عدد المؤرشفين',
+                    data: sortedMonths.map(m => monthlyTrends[m]),
+                    borderColor: '#2c3e50',
+                    backgroundColor: 'rgba(44, 62, 80, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: { beginAtZero: true, ticks: { stepSize: 1 } }
+                }
+            }
+        });
     });
 
     // === 2. Combined Search & Filter Script ===
@@ -629,7 +855,7 @@
                         <select name="reason_id" id="editReasonId" class="form-select select-glass">
                             <option value="">-- اختر السبب --</option>
                             {% for r in reasons %}
-                            <option value="{{ r.ReasonID }}">{{ r.ReasonText }}</option>
+                            <option value="{{ r.ReasonID }}">{{ r.TypeText }} : {{ r.ReasonText }}</option>
                             {% endfor %}
                         </select>
                     </div>
@@ -644,29 +870,66 @@
 </div>
 
 <script>
-    // === Employee Search Script ===
-    document.getElementById('empSearch').addEventListener('keyup', function () {
-        const val = this.value.toLowerCase();
-        const rows = document.querySelectorAll('#empTableBody tr');
-        rows.forEach(row => {
+    // === Employee Filtering Script ===
+    const empSearch = document.getElementById('empSearch');
+    const empDeptFilter = document.getElementById('empDeptFilter');
+    const empReasonFilter = document.getElementById('empReasonFilter');
+    const empTypeFilter = document.getElementById('empTypeFilter');
+    const empTableRows = document.querySelectorAll('#empTableBody tr');
+
+    function filterEmployees() {
+        const searchText = empSearch.value.toLowerCase();
+        const deptValue = empDeptFilter.value;
+        const reasonValue = empReasonFilter.value;
+        const typeValue = empTypeFilter.value;
+
+        empTableRows.forEach(row => {
             if (row.innerText.includes('لا يوجد موظفين')) return;
-            const text = row.innerText.toLowerCase();
-            row.style.display = text.includes(val) ? '' : 'none';
+
+            const rowText = row.innerText.toLowerCase();
+            const rowDept = row.getAttribute('data-dept') || '';
+            const rowReason = row.getAttribute('data-reason') || '';
+            const rowType = row.getAttribute('data-type') || '';
+
+            const matchesSearch = rowText.includes(searchText);
+            const matchesDept = (deptValue === "") || (rowDept === deptValue);
+            const matchesReason = (reasonValue === "") || (rowReason === reasonValue);
+            const matchesType = (typeValue === "") || (rowType === typeValue);
+
+            if (matchesSearch && matchesDept && matchesReason && matchesType) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
         });
-    });
+    }
+
+    empSearch.addEventListener('keyup', filterEmployees);
+    empDeptFilter.addEventListener('change', filterEmployees);
+    empReasonFilter.addEventListener('change', filterEmployees);
+    empTypeFilter.addEventListener('change', filterEmployees);
 
     // === Open Edit Modal Script ===
-    function openEditModal(uid, hiredDay, deptId, endDay, reasonId) {
-        // Use userinfo_archive_update route
-        document.getElementById('editArchiveForm').action = "{{ url_for('userinfo_archive_update', uid=0) }}".replace('0', uid);
-        document.getElementById('editHiredDay').value = hiredDay;
-        document.getElementById('editDeptId').value = deptId;
-        document.getElementById('editEndDay').value = endDay;
-        document.getElementById('editReasonId').value = reasonId;
+    document.addEventListener('click', function (e) {
+        if (e.target.closest('.edit-emp-btn')) {
+            const btn = e.target.closest('.edit-emp-btn');
+            const uid = btn.dataset.uid;
+            const hiredDay = btn.dataset.hired;
+            const deptId = btn.dataset.dept;
+            const endDay = btn.dataset.end;
+            const reasonId = btn.dataset.reason;
 
-        var myModal = new bootstrap.Modal(document.getElementById('editArchiveModal'));
-        myModal.show();
-    }
+            // Use userinfo_archive_update route
+            document.getElementById('editArchiveForm').action = "{{ url_for('userinfo_archive_update', uid=0) }}".replace('0', uid);
+            document.getElementById('editHiredDay').value = hiredDay;
+            document.getElementById('editDeptId').value = deptId;
+            document.getElementById('editEndDay').value = endDay;
+            document.getElementById('editReasonId').value = reasonId;
+
+            var myModal = new bootstrap.Modal(document.getElementById('editArchiveModal'));
+            myModal.show();
+        }
+    });
 </script>
 
 {% endblock %}

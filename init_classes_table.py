@@ -14,7 +14,7 @@ def init_classes_db():
         cursor.execute("""
             IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='EmployeeClasses' AND xtype='U')
             BEGIN
-                CREATE TABLE [Optima].[dbo].[EmployeeClasses] (
+                CREATE TABLE [AURAHR].[dbo].[EmployeeClasses] (
                     ClassID INT IDENTITY(1,1) PRIMARY KEY,
                     ClassName NVARCHAR(50) NOT NULL UNIQUE, -- The code, e.g., 'A', 'Manager'
                     DisplayName NVARCHAR(100) NULL          -- The label, e.g., 'A - Admin Staff'
@@ -39,9 +39,9 @@ def init_classes_db():
         
         for code, display in default_classes:
             # Check if exists
-            cursor.execute("SELECT Count(*) FROM [Optima].[dbo].[EmployeeClasses] WHERE ClassName = ?", (code,))
+            cursor.execute("SELECT Count(*) FROM [AURAHR].[dbo].[EmployeeClasses] WHERE ClassName = ?", (code,))
             if cursor.fetchone()[0] == 0:
-                cursor.execute("INSERT INTO [Optima].[dbo].[EmployeeClasses] (ClassName, DisplayName) VALUES (?, ?)", (code, display))
+                cursor.execute("INSERT INTO [AURAHR].[dbo].[EmployeeClasses] (ClassName, DisplayName) VALUES (?, ?)", (code, display))
                 print(f"   + Added: {display}")
             
         conn.commit()

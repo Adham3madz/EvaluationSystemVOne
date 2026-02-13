@@ -5,36 +5,41 @@
 <script src="{{ url_for('static', filename='js/chart.min.js') }}"></script>
 
 <style>
-  /* === Premium Glassmorphism Dashboard === */
-
+  /* === Corporate Light Dashboard === */
   :root {
-    --glass-bg: rgba(15, 23, 42, 0.6);
-    /* Darker glass for better contrast against wallpaper */
-    --glass-border: rgba(255, 255, 255, 0.1);
-    --glass-highlight: rgba(255, 255, 255, 0.05);
-    --accent-cyan: #00d2ff;
-    --accent-blue: #3a7bd5;
-    --text-primary: #ffffff;
-    --text-secondary: #94a3b8;
-    --card-radius: 24px;
+    --bg-body: #f3f4f6;
+    /* Light Gray Background */
+    --bg-card: #ffffff;
+    /* White Cards */
+    --border-color: #e5e7eb;
+    /* Light Border */
+    --primary-color: #1e3a8a;
+    /* Navy Blue */
+    --text-main: #111827;
+    /* Dark Text */
+    --text-muted: #6b7280;
+    /* Muted Text */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --radius: 8px;
+    /* Standard Radius */
   }
 
-  /* Reset & Typography */
+  /* Structural Resets from Dark Mode */
   .dashboard-container {
-    padding: 20px;
+    padding: 24px;
     direction: rtl;
     width: 100%;
-    max-width: 1400px;
+    max-width: 1600px;
     margin: 0 auto;
-    font-family: 'Cairo', sans-serif;
-    color: var(--text-primary);
-    animation: fadeIn 0.8s ease-out;
+    font-family: 'Cairo', system-ui, sans-serif;
+    color: var(--text-main);
+    animation: fadeIn 0.5s ease-out;
   }
 
   @keyframes fadeIn {
     from {
       opacity: 0;
-      transform: translateY(20px);
+      transform: translateY(10px);
     }
 
     to {
@@ -43,150 +48,98 @@
     }
   }
 
-  /* === Header Section === */
+  /* === Header === */
   .dashboard-header {
-    background: rgba(15, 23, 42, 0.7);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid var(--glass-border);
-    border-radius: var(--card-radius);
-    padding: 30px;
-    margin-bottom: 40px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-bottom: 24px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
-    position: relative;
-    overflow: hidden;
-  }
-
-  /* Glowing accent line */
-  .dashboard-header::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 2px;
-    background: linear-gradient(90deg, transparent, var(--accent-cyan), transparent);
+    box-shadow: var(--shadow-sm);
   }
 
   .header-content h2 {
     margin: 0;
-    font-size: 2rem;
-    font-weight: 800;
-    color: #fff;
-  }
-
-  .header-content h2 .gradient-text {
-    background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
   }
 
   .header-content p {
-    margin: 5px 0 0 0;
-    color: var(--text-secondary);
-    font-size: 1.1rem;
+    margin: 4px 0 0 0;
+    color: var(--text-muted);
+    font-size: 0.95rem;
   }
 
   .date-badge {
-    background: rgba(0, 210, 255, 0.1);
-    border: 1px solid rgba(0, 210, 255, 0.3);
-    color: var(--accent-cyan);
-    padding: 10px 20px;
-    border-radius: 50px;
-    font-weight: bold;
-    backdrop-filter: blur(5px);
+    background: #f0f9ff;
+    border: 1px solid #e0f2fe;
+    color: #0369a1;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.9rem;
   }
 
   /* === Stats Grid === */
   .stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 25px;
-    margin-bottom: 40px;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+    margin-bottom: 24px;
   }
 
-  .glass-stat-card {
-    background: rgba(30, 41, 59, 0.7);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid var(--glass-border);
-    border-radius: 20px;
-    padding: 25px;
+  .stat-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    padding: 20px;
     display: flex;
     align-items: center;
-    gap: 20px;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    position: relative;
-    overflow: hidden;
+    gap: 16px;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: var(--shadow-sm);
   }
 
-  .glass-stat-card:hover {
-    transform: translateY(-5px);
-    background: rgba(30, 41, 59, 0.9);
-    border-color: rgba(255, 255, 255, 0.2);
-    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
-  }
-
-  /* Hover Glow Effect */
-  .glass-stat-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.03), transparent);
-    transform: translateX(-100%);
-    transition: 0.5s;
-  }
-
-  .glass-stat-card:hover::before {
-    transform: translateX(100%);
+  .stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
   }
 
   .stat-icon-box {
-    width: 60px;
-    height: 60px;
-    border-radius: 16px;
+    width: 50px;
+    height: 50px;
+    border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.8rem;
-    background: rgba(255, 255, 255, 0.05);
-    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    color: #fff;
-    /* Ensure emoji color is visible if not overridden */
+    font-size: 1.5rem;
   }
 
   .stat-info h5 {
-    margin: 0;
-    font-size: 0.9rem;
-    color: var(--text-secondary);
+    margin: 0 0 4px 0;
+    font-size: 0.85rem;
+    color: var(--text-muted);
     font-weight: 600;
-    letter-spacing: 0.5px;
   }
 
   .stat-info p {
-    margin: 5px 0 0 0;
-    font-size: 1.8rem;
-    font-weight: 800;
-    color: #fff;
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-main);
+    line-height: 1.2;
   }
 
-  /* === Main Content Grid === */
+  /* === Grid Layout === */
   .content-grid {
     display: grid;
     grid-template-columns: repeat(12, 1fr);
-    gap: 25px;
-    margin-bottom: 40px;
-  }
-
-  .col-span-8 {
-    grid-column: span 8;
+    gap: 24px;
+    margin-bottom: 24px;
   }
 
   .col-span-4 {
@@ -197,37 +150,36 @@
     grid-column: span 6;
   }
 
+  .col-span-8 {
+    grid-column: span 8;
+  }
+
   .col-span-12 {
     grid-column: span 12;
   }
 
-  /* === Glass Panels === */
-  .glass-panel {
-    background: var(--glass-bg);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid var(--glass-border);
-    border-radius: var(--card-radius);
-    padding: 25px;
+  /* === Panels === */
+  .content-panel {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    padding: 24px;
     height: 100%;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--shadow-sm);
     display: flex;
     flex-direction: column;
   }
 
   .panel-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 25px;
-    padding-bottom: 15px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #f1f5f9;
   }
 
   .panel-title {
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     font-weight: 700;
-    color: #fff;
+    color: var(--text-main);
     display: flex;
     align-items: center;
     gap: 10px;
@@ -236,98 +188,83 @@
   .chart-container {
     position: relative;
     flex-grow: 1;
-    min-height: 300px;
+    min-height: 250px;
     width: 100%;
   }
 
   /* === Tables === */
-  .custom-table {
+  .table-responsive {
+    overflow-x: auto;
+  }
+
+  .modern-table {
     width: 100%;
-    border-collapse: separate;
-    border-spacing: 0 8px;
-    /* Spacing between rows */
+    border-collapse: collapse;
     font-size: 0.95rem;
   }
 
-  .custom-table th {
+  .modern-table th {
     text-align: right;
-    padding: 15px;
-    color: var(--text-secondary);
+    padding: 12px 16px;
+    color: #475569;
     font-weight: 600;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    border-bottom: 2px solid #e2e8f0;
     font-size: 0.85rem;
-    text-transform: uppercase;
-    letter-spacing: 1px;
+    background: #f8fafc;
   }
 
-  .custom-table td {
-    background: rgba(255, 255, 255, 0.03);
-    padding: 16px;
-    color: #e2e8f0;
-    border: 1px solid transparent;
-    transition: all 0.2s;
+  .modern-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid #e2e8f0;
+    color: var(--text-main);
   }
 
-  .custom-table td:first-child {
-    border-radius: 0 12px 12px 0;
+  .modern-table tr:last-child td {
+    border-bottom: none;
   }
 
-  .custom-table td:last-child {
-    border-radius: 12px 0 0 12px;
-  }
-
-  .custom-table tr:hover td {
-    background: rgba(255, 255, 255, 0.08);
-    transform: scale(1.01);
+  .modern-table tr:hover {
+    background-color: #f9fafb;
   }
 
   .user-avatar {
     width: 32px;
     height: 32px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: #e0f2fe;
+    color: #0369a1;
     border-radius: 50%;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: 12px;
+    font-size: 0.8rem;
+    font-weight: bold;
     margin-left: 10px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-    color: white;
   }
 
   /* Badges */
-  .status-badge {
-    padding: 6px 12px;
-    border-radius: 30px;
+  .badge {
+    padding: 4px 10px;
+    border-radius: 4px;
     font-size: 0.75rem;
-    font-weight: 700;
+    font-weight: 600;
     display: inline-block;
   }
 
   .badge-success {
-    background: rgba(16, 185, 129, 0.2);
-    color: #34d399;
-    border: 1px solid rgba(16, 185, 129, 0.2);
-  }
-
-  .badge-warning {
-    background: rgba(245, 158, 11, 0.2);
-    color: #fbbf24;
-    border: 1px solid rgba(245, 158, 11, 0.2);
+    background: #dcfce7;
+    color: #166534;
   }
 
   .badge-info {
-    background: rgba(59, 130, 246, 0.2);
-    color: #60a5fa;
-    border: 1px solid rgba(59, 130, 246, 0.2);
+    background: #e0f2fe;
+    color: #075985;
   }
 
-  /* Responsive */
   @media (max-width: 1024px) {
 
-    .col-span-8,
     .col-span-4,
-    .col-span-6 {
+    .col-span-6,
+    .col-span-8 {
       grid-column: span 12;
     }
   }
@@ -338,46 +275,55 @@
   <!-- Header -->
   <div class="dashboard-header">
     <div class="header-content">
-      <h2><span class="gradient-text">مرحباً، {{ name or username }}</span> 👋</h2>
-      <p>نظرة عامة على أداء الموارد البشرية والتقييمات اليوم.</p>
+      <h2>مرحباً، {{ name or username }} 👋</h2>
+      <p>ملخص الأداء والتقييمات للموارد البشرية</p>
     </div>
     <div class="date-badge">
       📅 {{ "now" | date_format_arabic }}
     </div>
   </div>
 
-  <!-- Stats Cards -->
+  <!-- Key Metrics -->
   <div class="stats-grid">
-    <div class="glass-stat-card">
-      <div class="stat-icon-box" style="color: #60a5fa;">👥</div>
+    <!-- Total Users -->
+    <div class="stat-card">
+      <div class="stat-icon-box" style="background: #eff6ff; color: #2563eb;">👥</div>
       <div class="stat-info">
         <h5>إجمالي المستخدمين</h5>
         <p>{{ users_count }}</p>
       </div>
     </div>
-    <div class="glass-stat-card">
-      <div class="stat-icon-box" style="color: #34d399;">👔</div>
+
+    <!-- Active Employees -->
+    <div class="stat-card">
+      <div class="stat-icon-box" style="background: #ecfdf5; color: #10b981;">👔</div>
       <div class="stat-info">
         <h5>الموظفين النشطين</h5>
         <p>{{ employees_count }}</p>
       </div>
     </div>
-    <div class="glass-stat-card">
-      <div class="stat-icon-box" style="color: #ef4444;">📂</div>
+
+    <!-- Archived -->
+    <div class="stat-card">
+      <div class="stat-icon-box" style="background: #fef2f2; color: #ef4444;">📂</div>
       <div class="stat-info">
-        <h5>الأرشيف (غير نشط)</h5>
+        <h5>الأرشيف</h5>
         <p>{{ archived_count }}</p>
       </div>
     </div>
-    <div class="glass-stat-card">
-      <div class="stat-icon-box" style="color: #f472b6;">📝</div>
+
+    <!-- Evaluations -->
+    <div class="stat-card">
+      <div class="stat-icon-box" style="background: #fdf2f8; color: #db2777;">📝</div>
       <div class="stat-info">
         <h5>التقييمات المنجزة</h5>
         <p>{{ evals_count }}</p>
       </div>
     </div>
-    <div class="glass-stat-card">
-      <div class="stat-icon-box" style="color: #fbbf24;">⭐</div>
+
+    <!-- Average Score -->
+    <div class="stat-card">
+      <div class="stat-icon-box" style="background: #fffbeb; color: #d97706;">⭐</div>
       <div class="stat-info">
         <h5>متوسط الأداء العام</h5>
         <p>{{ "%.1f"|format(avg_score) if avg_score is not none else '0.0' }}%</p>
@@ -385,12 +331,12 @@
     </div>
   </div>
 
-  <!-- Charts Section -->
+  <!-- Charts Row -->
   <div class="content-grid">
 
     <!-- Pie Chart -->
     <div class="col-span-4">
-      <div class="glass-panel">
+      <div class="content-panel">
         <div class="panel-header">
           <div class="panel-title">📊 توزيع التقديرات</div>
         </div>
@@ -402,7 +348,7 @@
 
     <!-- Bar Chart -->
     <div class="col-span-8">
-      <div class="glass-panel">
+      <div class="content-panel">
         <div class="panel-header">
           <div class="panel-title">📈 أنواع التقييمات</div>
         </div>
@@ -414,17 +360,17 @@
 
   </div>
 
-  <!-- Tables Section -->
+  <!-- Tables Row -->
   <div class="content-grid">
 
     <!-- Top Performers -->
     <div class="col-span-6">
-      <div class="glass-panel">
+      <div class="content-panel">
         <div class="panel-header">
           <div class="panel-title">🌟 الأفضل أداءً (آخر 30 يوم)</div>
         </div>
-        <div style="overflow-x: auto;">
-          <table class="custom-table">
+        <div class="table-responsive">
+          <table class="modern-table">
             <thead>
               <tr>
                 <th>الموظف</th>
@@ -438,15 +384,16 @@
                 <td>
                   <div style="display: flex; align-items: center;">
                     <span class="user-avatar">{{ performer.EmployeeName[:1] }}</span>
-                    <span style="margin-right: 10px; font-weight: bold;">{{ performer.EmployeeName }}</span>
+                    <span style="font-weight: 600;">{{ performer.EmployeeName }}</span>
                   </div>
                 </td>
-                <td style="color: #34d399; font-weight: bold;">{{ "%.1f"|format(performer.OverallScore) }}%</td>
-                <td><span class="status-badge badge-success">{{ performer.OverallRating }}</span></td>
+                <td style="color: #16a34a; font-weight: bold;">{{ "%.1f"|format(performer.OverallScore) }}%</td>
+                <td><span class="badge badge-success">{{ performer.OverallRating }}</span></td>
               </tr>
               {% else %}
               <tr>
-                <td colspan="3" style="text-align: center; color: var(--text-secondary);">لا توجد بيانات متاحة</td>
+                <td colspan="3" style="text-align: center; color: var(--text-muted); padding: 20px;">لا توجد بيانات
+                  متاحة حالياً</td>
               </tr>
               {% endfor %}
             </tbody>
@@ -457,12 +404,12 @@
 
     <!-- Recent Evaluations -->
     <div class="col-span-6">
-      <div class="glass-panel">
+      <div class="content-panel">
         <div class="panel-header">
           <div class="panel-title">🕒 آخر النشاطات</div>
         </div>
-        <div style="overflow-x: auto;">
-          <table class="custom-table">
+        <div class="table-responsive">
+          <table class="modern-table">
             <thead>
               <tr>
                 <th>الموظف</th>
@@ -475,13 +422,14 @@
               {% for eval in recent_evaluations %}
               <tr>
                 <td style="font-weight: 600;">{{ eval.EmployeeName }}</td>
-                <td style="color: var(--text-secondary);">{{ eval.EvaluatorName }}</td>
-                <td><span class="status-badge badge-info">{{ eval.EvaluationType }}</span></td>
-                <td style="color: #60a5fa; font-weight: bold;">{{ "%.1f"|format(eval.OverallScore) }}%</td>
+                <td style="color: var(--text-muted);">{{ eval.EvaluatorName }}</td>
+                <td><span class="badge badge-info">{{ eval.EvaluationType }}</span></td>
+                <td style="color: #2563eb; font-weight: bold;">{{ "%.1f"|format(eval.OverallScore) }}%</td>
               </tr>
               {% else %}
               <tr>
-                <td colspan="4" style="text-align: center; color: var(--text-secondary);">لا توجد نشاطات حديثة</td>
+                <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 20px;">لا توجد تقييمات
+                  حديثة</td>
               </tr>
               {% endfor %}
             </tbody>
@@ -493,11 +441,12 @@
   </div>
 
   {% if is_admin %}
+  <!-- Admin Widget -->
   <div class="content-grid">
     <div class="col-span-12">
-      <div class="glass-panel" style="background: rgba(124, 58, 237, 0.1); border-color: rgba(139, 92, 246, 0.3);">
+      <div class="content-panel" style="border-top: 4px solid #7c3aed;">
         <div class="panel-header">
-          <div class="panel-title">🛡️ لوحة نشاط المدراء</div>
+          <div class="panel-title" style="color: #7c3aed;">🛡️ لوحة متابعة نشاط المدراء</div>
         </div>
         <div id="managers-content">
           {% include 'partials/managers_table.html' %}
@@ -510,27 +459,15 @@
 </div>
 
 <script>
-  // AJAX Pagination function
   function loadManagersPage(page) {
     const container = document.getElementById('managers-content');
     if (!container) return;
-
-    // Add loading opacity
     container.style.opacity = '0.5';
-
     fetch(`{{ url_for('dashboard_managers_partial') }}?page=${page}`)
       .then(response => response.text())
       .then(html => {
-        // Replace the content
         container.innerHTML = html;
-
-        // Animate fade in
-        const newContainer = document.getElementById('managers-content');
-        if (newContainer) {
-          newContainer.style.opacity = '0';
-          newContainer.style.transition = 'opacity 0.3s';
-          requestAnimationFrame(() => newContainer.style.opacity = '1');
-        }
+        container.style.opacity = '1';
       })
       .catch(err => {
         console.error('Error loading managers:', err);
@@ -540,72 +477,63 @@
 
   document.addEventListener('DOMContentLoaded', function () {
     try {
-      const chartData = JSON.parse('{{ chart_data|safe }}');
+      // Parse data safely
+      const chartDataStr = '{{ chart_data|safe }}';
+      if (!chartDataStr || chartDataStr === '{}') return;
 
-      if (typeof Chart === 'undefined') {
-        console.error('Chart.js is not loaded! Please download chart.min.js to static/js/');
-        return;
-      }
+      const chartData = JSON.parse(chartDataStr);
 
-      // Modern Dark Mode Chart Defaults
+      if (typeof Chart === 'undefined') return;
+
+      // Light Theme Defaults
       Chart.defaults.font.family = "'Cairo', sans-serif";
-      Chart.defaults.color = '#94a3b8';
-      Chart.defaults.scale.grid.color = 'rgba(255, 255, 255, 0.05)';
-      Chart.defaults.plugins.tooltip.backgroundColor = 'rgba(15, 23, 42, 0.9)';
-      Chart.defaults.plugins.tooltip.padding = 12;
-      Chart.defaults.plugins.tooltip.cornerRadius = 12;
+      Chart.defaults.color = '#374151'; // Gray 700
+      Chart.defaults.scale.grid.color = '#e2e8f0'; // Gray 200
+      Chart.defaults.plugins.tooltip.backgroundColor = 'rgba(255, 255, 255, 0.95)';
+      Chart.defaults.plugins.tooltip.titleColor = '#111827';
+      Chart.defaults.plugins.tooltip.bodyColor = '#374151';
+      Chart.defaults.plugins.tooltip.borderColor = '#e5e7eb';
+      Chart.defaults.plugins.tooltip.borderWidth = 1;
 
-      // 1. Ratings Chart (Pie)
-      if (chartData.rating_labels && document.getElementById('ratingsChart')) {
+      // 1. Ratings Chart
+      if (document.getElementById('ratingsChart')) {
         new Chart(document.getElementById('ratingsChart'), {
-          type: 'doughnut', /* Modern Doughnut instead of Pie */
+          type: 'doughnut',
           data: {
             labels: chartData.rating_labels,
             datasets: [{
               data: chartData.rating_data,
-              backgroundColor: [
-                '#10b981', // Emerald
-                '#3b82f6', // Blue
-                '#f59e0b', // Amber
-                '#f43f5e', // Rose
-                '#8b5cf6'  // Violet
-              ],
-              borderColor: 'rgba(15, 23, 42, 0.8)',
-              borderWidth: 4,
-              hoverOffset: 4
+              backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#f43f5e', '#8b5cf6'],
+              borderWidth: 0
             }]
           },
           options: {
             responsive: true,
             maintainAspectRatio: false,
-            cutout: '60%',
+            cutout: '65%',
             plugins: {
-              legend: {
-                position: 'bottom',
-                labels: { padding: 20, usePointStyle: true, boxWidth: 10 }
-              }
+              legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8, padding: 20 } }
             }
           }
         });
       }
 
-      // 2. Types Chart (Bar)
-      if (chartData.type_labels && document.getElementById('typesChart')) {
-        const gradient = document.getElementById('typesChart').getContext('2d').createLinearGradient(0, 0, 0, 400);
-        gradient.addColorStop(0, '#00d2ff');
-        gradient.addColorStop(1, 'rgba(0, 210, 255, 0.1)');
+      // 2. Types Chart
+      if (document.getElementById('typesChart')) {
+        const ctx = document.getElementById('typesChart').getContext('2d');
+        const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+        gradient.addColorStop(0, '#3b82f6');
+        gradient.addColorStop(1, '#93c5fd');
 
-        new Chart(document.getElementById('typesChart'), {
+        new Chart(ctx, {
           type: 'bar',
           data: {
             labels: chartData.type_labels,
             datasets: [{
-              label: 'عدد التقييمات',
+              label: 'العدد',
               data: chartData.type_data,
               backgroundColor: gradient,
-              borderColor: '#00d2ff',
-              borderWidth: 1,
-              borderRadius: 8,
+              borderRadius: 4,
               barThickness: 30
             }]
           },
@@ -613,19 +541,14 @@
             responsive: true,
             maintainAspectRatio: false,
             scales: {
-              y: {
-                beginAtZero: true,
-                grid: { borderDash: [5, 5] }
-              },
-              x: {
-                grid: { display: false }
-              }
+              y: { beginAtZero: true, border: { display: false } },
+              x: { grid: { display: false } }
             },
             plugins: { legend: { display: false } }
           }
         });
       }
-    } catch (e) { console.error('Dashboard Script Error:', e); }
+    } catch (e) { console.error('Dashboard charts error:', e); }
   });
 </script>
 {% endblock %}

@@ -12,12 +12,12 @@ def migrate():
         if cursor.fetchone()[0] == 0:
             print("Creating EvaluationTypeCriteria table...")
             cursor.execute("""
-                CREATE TABLE [Optima].[dbo].[EvaluationTypeCriteria] (
+                CREATE TABLE [AURAHR].[dbo].[EvaluationTypeCriteria] (
                     LinkID INT IDENTITY(1,1) PRIMARY KEY,
                     EvaluationTypeID INT NOT NULL,
                     CriteriaID INT NOT NULL,
-                    CONSTRAINT FK_TypeCriteria_Type FOREIGN KEY (EvaluationTypeID) REFERENCES [Optima].[dbo].[EvaluationTypes](EvaluationTypeID),
-                    CONSTRAINT FK_TypeCriteria_Crit FOREIGN KEY (CriteriaID) REFERENCES [Optima].[dbo].[EvaluationCriteria](CriteriaID) ON DELETE CASCADE
+                    CONSTRAINT FK_TypeCriteria_Type FOREIGN KEY (EvaluationTypeID) REFERENCES [AURAHR].[dbo].[EvaluationTypes](EvaluationTypeID),
+                    CONSTRAINT FK_TypeCriteria_Crit FOREIGN KEY (CriteriaID) REFERENCES [AURAHR].[dbo].[EvaluationCriteria](CriteriaID) ON DELETE CASCADE
                 )
             """)
             conn.commit()
@@ -34,11 +34,11 @@ def migrate():
         print("Seeding initial links...")
         
         # 1. Get all Criteria
-        cursor.execute("SELECT CriteriaID, employee_class, CriteriaName FROM [Optima].[dbo].[EvaluationCriteria]")
+        cursor.execute("SELECT CriteriaID, employee_class, CriteriaName FROM [AURAHR].[dbo].[EvaluationCriteria]")
         all_criteria = cursor.fetchall()
         
         # 2. Get all Types
-        cursor.execute("SELECT EvaluationTypeID FROM [Optima].[dbo].[EvaluationTypes]")
+        cursor.execute("SELECT EvaluationTypeID FROM [AURAHR].[dbo].[EvaluationTypes]")
         all_types = [r[0] for r in cursor.fetchall()]
         
         count = 0
@@ -54,9 +54,9 @@ def migrate():
             
             for type_id in all_types:
                 # Check link
-                cursor.execute("SELECT COUNT(*) FROM [Optima].[dbo].[EvaluationTypeCriteria] WHERE EvaluationTypeID=? AND CriteriaID=?", (type_id, crit_id))
+                cursor.execute("SELECT COUNT(*) FROM [AURAHR].[dbo].[EvaluationTypeCriteria] WHERE EvaluationTypeID=? AND CriteriaID=?", (type_id, crit_id))
                 if cursor.fetchone()[0] == 0:
-                    cursor.execute("INSERT INTO [Optima].[dbo].[EvaluationTypeCriteria] (EvaluationTypeID, CriteriaID) VALUES (?, ?)", (type_id, crit_id))
+                    cursor.execute("INSERT INTO [AURAHR].[dbo].[EvaluationTypeCriteria] (EvaluationTypeID, CriteriaID) VALUES (?, ?)", (type_id, crit_id))
                     count += 1
         
         conn.commit()

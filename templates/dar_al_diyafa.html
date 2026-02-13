@@ -7,7 +7,7 @@
     <title>وثيقة التعارف دار الضيافة</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/dar_al_diyafa.css') }}">
     <!-- Toastify for notifications -->
-    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/toastify.min.css') }}">
     <style>
         .search-container {
             margin-bottom: 20px;
@@ -72,7 +72,7 @@
                     style="display: inline-flex; align-items: center; cursor: pointer; background: white; padding: 5px 10px; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
                     <input type="checkbox" id="toggleCousinSection" checked onchange="toggleCousinContinuation()"
                         style="width: auto; margin-left: 8px;">
-                    إظهار "تابع >> بيانات ابناء الاعمام والعمات"
+                    إظهار(بيانات ابناء الاخوال والخالات)+ "تابع >> بيانات ابناء الاعمام والعمات"
                 </label>
             </div>
         </div>
@@ -233,7 +233,7 @@
         </form>
     </div>
 
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <script src="{{ url_for('static', filename='js/toastify.min.js') }}"></script>
     <script>
         // Helper to convert English digits to Hindi digits
         function toHindiDigits(str) {
@@ -318,12 +318,13 @@
 
         function toggleCousinContinuation() {
             const wrapper = document.getElementById('p_cousin_continuation_wrapper');
+            const mCousinSection = document.getElementById('section-m_cousin');
             const checkbox = document.getElementById('toggleCousinSection');
-            if (checkbox.checked) {
-                wrapper.style.display = 'block';
-            } else {
-                wrapper.style.display = 'none';
-            }
+
+            const displayStyle = checkbox.checked ? 'block' : 'none';
+
+            if (wrapper) wrapper.style.display = displayStyle;
+            if (mCousinSection) mCousinSection.style.display = displayStyle;
         }
 
         function showToast(msg, type = 'info') {

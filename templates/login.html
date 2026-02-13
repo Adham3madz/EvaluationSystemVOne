@@ -1,230 +1,353 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>تسجيل الدخول | نظام إدارة الموارد البشرية</title>
+  <title>تسجيل الدخول | AURA HR</title>
+  <!-- Offline CSS Libraries -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/fontawesome.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/cairo.css') }}">
 
   <style>
-    /* === Base Styling === */
-    body {
-      background-color: #1a1a1a;
-      height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: "Cairo", sans-serif;
-      color: #fff;
+    :root {
+      --primary-color: #1a4fba;
+      /* Official Navy Blue */
+      --primary-hover: #143d91;
+      --accent-color: #f8fafc;
+      --text-dark: #1e293b;
+      --text-muted: #64748b;
+      --border-color: #e2e8f0;
+    }
+
+    body,
+    html {
+      height: 100%;
       margin: 0;
-      padding: 0;
+      font-family: 'Cairo', sans-serif;
+      background-color: #ffffff;
       overflow: hidden;
+      /* Prevent scrolling */
     }
 
-    /* 1. Background Animation Layer */
-    .bg-animation {
-        position: fixed;
-        top: 0; left: 0; width: 100%; height: 100%; z-index: -2;
-        background-image: url("{{ url_for('static', filename='images/dar el diafa.jpg') }}");
-        background-size: cover;
-        background-position: center;
-        animation: zoomEffect 20s infinite alternate;
-    }
-
-    /* 2. Dark Overlay Layer */
-    .bg-overlay {
-        position: fixed;
-        top: 0; left: 0; width: 100%; height: 100%;
-        background-color: rgba(0, 0, 0, 0.65); 
-        z-index: -1;
-    }
-
-    @keyframes zoomEffect {
-        0% { transform: scale(1); }
-        100% { transform: scale(1.15); }
-    }
-
-    /* === Login Card === */
-    .login-card {
-      background: rgba(255, 255, 255, 0.15);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      border-radius: 20px;
-      box-shadow: 0 15px 35px rgba(0,0,0,0.5);
-      padding: 2.5rem;
+    .main-container {
+      display: flex;
+      height: 100vh;
       width: 100%;
-      max-width: 420px;
-      text-align: right;
-      transition: 0.3s ease;
+    }
+
+    /* === 1. Form Section (Right Side) === */
+    .form-section {
+      flex: 0 0 450px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 40px;
+      background-color: #ffffff;
       position: relative;
-      z-index: 10;
-      color: #ffffff;
+      z-index: 2;
+      box-shadow: -5px 0 20px rgba(0, 0, 0, 0.05);
+      /* Shadow towards left */
+    }
+
+    .login-header {
+      text-align: center;
+      margin-bottom: 40px;
     }
 
     .login-logo {
-        display: block; width: 110px; height: auto; margin: 0 auto 15px auto;
-        border-radius: 50%; border: 3px solid rgba(255, 255, 255, 0.3);
-        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+      width: 180px;
+      height: auto;
+      margin-bottom: 20px;
+      object-fit: contain;
     }
 
-    h2 { font-weight: 700; color: #ffffff; text-align: center; margin-bottom: 1.5rem; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
-    .form-label { font-weight: 600; color: #eee; margin-bottom: 6px; }
-    
-    .form-control {
-      background: rgba(255, 255, 255, 0.9); border: none; border-radius: 10px;
-      padding: 10px; font-size: 15px; transition: 0.3s ease; text-align: right; color: #333;
+    .login-header h2 {
+      font-weight: 700;
+      color: var(--text-dark);
+      font-size: 1.75rem;
+      margin-bottom: 10px;
     }
-    .form-control:focus { background: #ffffff; box-shadow: 0 0 10px rgba(255, 255, 255, 0.5); }
+
+    .login-header p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    .form-label {
+      font-weight: 600;
+      color: var(--text-dark);
+      font-size: 0.9rem;
+      margin-bottom: 8px;
+    }
+
+    .form-control {
+      padding: 12px 15px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      background-color: #f8fafc;
+      font-size: 0.95rem;
+      transition: all 0.3s ease;
+    }
+
+    .form-control:focus {
+      background-color: #fff;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(26, 79, 186, 0.1);
+    }
 
     .btn-primary {
-      background-color: #0d6efd; border: none; border-radius: 10px; width: 100%;
-      padding: 0.75rem; font-weight: 700; font-size: 16px; transition: 0.3s ease;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-    }
-    .btn-primary:hover { background-color: #0b5ed7; transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,0,0,0.4); }
-
-    .alert { background: rgba(255, 255, 255, 0.9); border: none; color: #333; border-radius: 10px; text-align: center; }
-    .footer { text-align: center; font-size: 0.85rem; color: rgba(255, 255, 255, 0.7); margin-top: 1.2rem; }
-
-    /* === CREDENTIALS BUTTON === */
-    .credits-btn {
-        position: fixed;
-        bottom: 20px;
-        left: 20px; /* Arabic layout usually puts secondary actions on left */
-        width: 50px;
-        height: 50px;
-        background: rgba(255, 255, 255, 0.1);
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        backdrop-filter: blur(10px);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 24px;
-        cursor: pointer;
-        z-index: 100;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-        text-decoration: none;
-    }
-    .credits-btn:hover {
-        background: rgba(255, 255, 255, 0.25);
-        transform: scale(1.1) rotate(10deg);
-        box-shadow: 0 0 20px rgba(255, 255, 255, 0.4);
+      background-color: var(--primary-color);
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 1rem;
+      letter-spacing: 0.5px;
+      margin-top: 10px;
+      transition: all 0.3s;
     }
 
-    /* === CREDENTIALS MODAL === */
-    .glass-modal {
-        background: rgba(30, 30, 35, 0.85);
-        backdrop-filter: blur(25px);
-        -webkit-backdrop-filter: blur(25px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 20px;
-        color: white;
-        text-align: center;
+    .btn-primary:hover {
+      background-color: var(--primary-hover);
+      transform: translateY(-1px);
     }
-    .glass-modal .modal-header { border-bottom: 1px solid rgba(255, 255, 255, 0.1); justify-content: center; }
-    .glass-modal .modal-footer { border-top: none; justify-content: center; }
-    .credits-link {
-        display: flex; align-items: center; gap: 10px;
-        background: rgba(255,255,255,0.05); padding: 12px;
-        border-radius: 12px; margin-bottom: 10px;
-        text-decoration: none; color: white; transition: 0.3s;
-        border: 1px solid transparent;
-    }
-    .credits-link:hover {
-        background: rgba(255,255,255,0.15);
-        border-color: rgba(255,255,255,0.3);
-        transform: translateX(-5px);
-        color: #ffc107;
-    }
-    .credits-icon { width: 30px; text-align: center; font-size: 1.2rem; }
 
-    @media (max-width: 480px) { .login-card { padding: 2rem 1.5rem; } }
+    .copyright {
+      margin-top: auto;
+      text-align: center;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      padding-top: 20px;
+    }
+
+    /* === 2. Image Section (Left Side) === */
+    .image-section {
+      flex: 1;
+      position: relative;
+      background-image: url("{{ url_for('static', filename='images/dar el diafa.jpg') }}");
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+    }
+
+    .overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(135deg, rgba(26, 79, 186, 0.85), rgba(15, 23, 42, 0.9));
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      color: white;
+      text-align: center;
+      padding: 40px;
+    }
+
+    .overlay-content h1 {
+      font-weight: 800;
+      font-size: 2.5rem;
+      margin-bottom: 15px;
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    }
+
+    .overlay-content p {
+      font-size: 1.1rem;
+      opacity: 0.9;
+      max-width: 600px;
+      line-height: 1.6;
+    }
+
+    /* === Credits Styling === */
+    .credits-trigger {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      color: rgba(255, 255, 255, 0.6);
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      z-index: 10;
+    }
+
+    .credits-trigger:hover {
+      color: white;
+      text-decoration: underline;
+    }
+
+    .glass-modal .modal-content {
+      border: none;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    }
+
+    .glass-modal .modal-header {
+      background: var(--primary-color);
+      color: white;
+      border-radius: 16px 16px 0 0;
+    }
+
+    .glass-modal .close-btn-white {
+      filter: invert(1);
+    }
+
+    /* === Responsive === */
+    @media (max-width: 992px) {
+      .form-section {
+        flex: 0 0 50%;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .main-container {
+        flex-direction: column;
+        overflow-y: auto;
+      }
+
+      .form-section {
+        flex: none;
+        width: 100%;
+        padding: 30px 20px;
+        order: 2;
+        min-height: 60vh;
+      }
+
+      .image-section {
+        flex: none;
+        width: 100%;
+        height: 300px;
+        order: 1;
+      }
+
+      .overlay-content h1 {
+        font-size: 1.8rem;
+      }
+
+      .credits-trigger {
+        display: none;
+      }
+
+      /* Hide on mobile or move */
+    }
   </style>
 </head>
+
 <body>
 
-  <div class="bg-animation"></div>
-  <div class="bg-overlay"></div>
+  <div class="main-container">
 
-  <div class="login-card">
-    <img src="{{ url_for('static', filename='images/Sugar RR (1).png') }}" alt="Logo" class="login-logo">
-    <h2>تسجيل الدخول</h2>
+    <!-- RIGHT SIDE: Login Form -->
+    <div class="form-section">
+      <div class="login-header">
+        <img src="{{ url_for('static', filename='images/aura_logo.svg') }}" alt="AURA Logo" class="login-logo">
+        <h2>أهلاً بك مجدداً</h2>
+        <p>يرجى تسجيل الدخول للمتابعة إلى النظام</p>
+      </div>
 
-    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
-        {% for category, message in messages %}
-          <div class="alert alert-{{ 'danger' if category == 'danger' else category }}">
-            {{ message }}
-          </div>
-        {% endfor %}
+      {% for category, message in messages %}
+      <div class="alert alert-{{ 'danger' if category == 'danger' else category }} text-center mb-4"
+        style="border-radius: 8px; font-size: 0.9rem;">
+        {{ message }}
+      </div>
+      {% endfor %}
       {% endif %}
-    {% endwith %}
+      {% endwith %}
 
-    <form method="POST" action="/">
-      <div class="mb-3">
-        <label for="username" class="form-label">اسم المستخدم</label>
-        <input type="text" class="form-control" id="username" name="username" placeholder="أدخل اسم المستخدم" required>
-      </div>
-
-      <div class="mb-4">
-        <label for="password" class="form-label">كلمة المرور</label>
-        <input type="password" class="form-control" id="password" name="password" placeholder="أدخل كلمة المرور" required>
-      </div>
-
-      <button type="submit" class="btn btn-primary">تسجيل الدخول</button>
-    </form>
-
-    <div class="footer mt-4">© 2025 نظام إدارة الموارد البشرية</div>
-  </div>
-
-  <div class="credits-btn" data-bs-toggle="modal" data-bs-target="#creditsModal" title="Developed by">
-      👨‍💻
-  </div>
-
-  <div class="modal fade" id="creditsModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content glass-modal">
-            <div class="modal-header">
-                <h5 class="modal-title fw-bold">🚀 Developed By</h5>
-            </div>
-            <div class="modal-body p-4">
-                <div class="mb-3">
-                    <img src="https://ui-avatars.com/api/?name=Adham+Emad&background=0D8ABC&color=fff&size=100&rounded=true" alt="Adham" class="rounded-circle shadow mb-3">
-                    <h4 class="fw-bold">Adham Emad</h4>
-                    <p class="text-white-50 small">Full Stack Developer</p>
-                </div>
-
-                <div class="d-flex flex-column gap-2 text-start">
-                    <a href="tel:+201091116712" class="credits-link">
-                        <span class="credits-icon">📞</span>
-                        <span dir="ltr">0109 111 6712</span>
-                    </a>
-                    <a href="mailto:adhamius2@gmail.com" class="credits-link">
-                        <span class="credits-icon">📧</span>
-                        <span>adhamius2@gmail.com</span>
-                    </a>
-                    <a href="https://www.linkedin.com/in/adham-emad-elrefaie-685766243/" target="_blank" class="credits-link">
-                        <span class="credits-icon">👔</span>
-                        <span>LinkedIn Profile</span>
-                    </a>
-                    <a href="https://github.com/Adham3madz" target="_blank" class="credits-link">
-                        <span class="credits-icon">🐙</span>
-                        <span>GitHub Profile</span>
-                    </a>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-sm btn-light rounded-pill px-4" data-bs-dismiss="modal">Close</button>
-            </div>
+      <form method="POST" action="/">
+        <div class="mb-3">
+          <label for="username" class="form-label">اسم المستخدم</label>
+          <div class="input-group">
+            <span class="input-group-text bg-light">👤</span>
+            <input type="text" class="form-control" id="username" name="username" placeholder="مثال: admin" required>
+          </div>
         </div>
+
+        <div class="mb-4">
+          <label for="password" class="form-label">كلمة المرور</label>
+          <div class="input-group">
+            <span class="input-group-text bg-light">🔒</span>
+            <input type="password" class="form-control" id="password" name="password" placeholder="••••••••" required>
+          </div>
+        </div>
+
+        <div class="d-grid">
+          <button type="submit" class="btn btn-primary">
+            تسجيل الدخول 👈
+          </button>
+        </div>
+      </form>
+
+      <div class="copyright">
+        &copy; 2026 جميع الحقوق محفوظة لنظام إدارة الموارد البشرية
+      </div>
+    </div>
+
+    <!-- LEFT SIDE: Image & Branding -->
+    <div class="image-section">
+      <div class="overlay">
+        <div class="overlay-content">
+          <h1>AURA HR</h1>
+          <p>نظام متكامل لإدارة شؤون الموظفين، التقييمات، والتدريب بكفاءة واحترافية.</p>
+        </div>
+      </div>
+
+      <!-- Credits Trigger (Hidden in Mobile) -->
+      <div class="credits-trigger" data-bs-toggle="modal" data-bs-target="#creditsModal">
+        💻 Developed by Adham Emad
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Improved Credits Modal -->
+  <div class="modal fade glass-modal" id="creditsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold">معلومات المطور</h5>
+          <button type="button" class="btn-close close-btn-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body text-center p-4">
+          <img src="https://ui-avatars.com/api/?name=Adham+Emad&background=1a4fba&color=fff&size=100&rounded=true"
+            alt="Adham" class="rounded-circle shadow-sm mb-3">
+          <h4 class="fw-bold text-dark">Adham Emad</h4>
+          <p class="text-muted mb-4">Full Stack Developer</p>
+
+          <div class="d-flex flex-column gap-2 text-start">
+            <a href="tel:+201091116712" class="btn btn-outline-secondary d-flex align-items-center gap-3">
+              📞 <span dir="ltr">0109 111 6712</span>
+            </a>
+            <a href="mailto:adhamius2@gmail.com" class="btn btn-outline-secondary d-flex align-items-center gap-3">
+              📧 <span>adhamius2@gmail.com</span>
+            </a>
+            <div class="row g-2 mt-1">
+              <div class="col-6">
+                <a href="https://www.linkedin.com/in/adham-emad-elrefaie-685766243/" target="_blank"
+                  class="btn btn-primary w-100">
+                  🔗 LinkedIn
+                </a>
+              </div>
+              <div class="col-6">
+                <a href="https://github.com/Adham3madz" target="_blank" class="btn btn-dark w-100">
+                  🐙 GitHub
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
   <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
 </body>
+
 </html>

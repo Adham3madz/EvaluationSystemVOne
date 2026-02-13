@@ -22,7 +22,7 @@ def organize_15_days():
     print("--- Isolating 15-Day Criteria ---")
     
     # Get ID for '15 يوم'
-    cursor.execute("SELECT EvaluationTypeID FROM [Optima].[dbo].[EvaluationTypes] WHERE DisplayName LIKE '%15%'")
+    cursor.execute("SELECT EvaluationTypeID FROM [AURAHR].[dbo].[EvaluationTypes] WHERE DisplayName LIKE '%15%'")
     row = cursor.fetchone()
     if not row:
         print("Error: Could not find '15 يوم' type.")
@@ -32,16 +32,16 @@ def organize_15_days():
 
     for name in criteria_15_days:
         # Find Criteria ID
-        cursor.execute("SELECT CriteriaID FROM [Optima].[dbo].[EvaluationCriteria] WHERE CriteriaName = ?", (name,))
+        cursor.execute("SELECT CriteriaID FROM [AURAHR].[dbo].[EvaluationCriteria] WHERE CriteriaName = ?", (name,))
         c_row = cursor.fetchone()
         if c_row:
             cid = c_row.CriteriaID
             
             # Remove ALL current links
-            cursor.execute("DELETE FROM [Optima].[dbo].[EvaluationTypeCriteria] WHERE CriteriaID = ?", (cid,))
+            cursor.execute("DELETE FROM [AURAHR].[dbo].[EvaluationTypeCriteria] WHERE CriteriaID = ?", (cid,))
             
             # Add ONLY 15-day link
-            cursor.execute("INSERT INTO [Optima].[dbo].[EvaluationTypeCriteria] (EvaluationTypeID, CriteriaID) VALUES (?, ?)", (type_15_id, cid))
+            cursor.execute("INSERT INTO [AURAHR].[dbo].[EvaluationTypeCriteria] (EvaluationTypeID, CriteriaID) VALUES (?, ?)", (type_15_id, cid))
             print(f"Updated '{name}' -> Only 15 Days")
         else:
             print(f"Warning: '{name}' not found.")

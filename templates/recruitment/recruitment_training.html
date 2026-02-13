@@ -190,9 +190,22 @@
                         </div>
                     </div>
 
-                    <div class="d-flex justify-content-between mt-2 small text-muted">
-                        <span>البدء: {{ t.start_date }}</span>
-                        <span class="fw-bold text-danger">النهاية: {{ t.end_date }}</span>
+                    <div class="mt-2 small text-muted">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span>📅 {{ t.start_date }} ➝ {{ t.end_date }}</span>
+                            <button class="btn btn-link py-0 text-primary"
+                                onclick="openEditTrainingModal('{{ t.id }}', '{{ t.name }}', '{{ t.start_date }}', '{{ t.end_date }}', '{{ t.start_time or '' }}', '{{ t.end_time or '' }}')">
+                                ✏️ تعديل
+                            </button>
+                        </div>
+
+                        {% if t.start_time or t.end_time %}
+                        <div
+                            class="d-flex justify-content-between align-content-center bg-white bg-opacity-50 p-1 rounded border">
+                            <span>🕒 {{ t.start_time }}</span>
+                            <span class="text-danger fw-bold">⌛ {{ t.end_time }}</span>
+                        </div>
+                        {% endif %}
                     </div>
 
                     <hr class="opacity-25">
@@ -230,6 +243,7 @@
     </div>
 </div>
 
+
 <div class="modal fade" id="trainerModal" tabindex="-1">
     <div class="modal-dialog">
         <form class="modal-content" method="POST" action="{{ url_for('assign_trainer') }}">
@@ -246,6 +260,47 @@
                 </div>
             </div>
             <div class="modal-footer"><button type="submit" class="btn btn-primary">حفظ</button></div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Training Info Modal -->
+<div class="modal fade" id="editTrainingModal" tabindex="-1">
+    <div class="modal-dialog">
+        <form class="modal-content" method="POST" action="{{ url_for('update_candidate_training_info') }}">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title">📅 تعديل بيانات التدريب</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" name="candidate_id" id="editTrainId">
+                <p class="text-center">تعديل التواريخ والأوقات للمرشح: <strong id="editTrainName"></strong></p>
+
+                <div class="row g-2 mb-3">
+                    <div class="col-6">
+                        <label class="fw-bold small">تاريخ البدء</label>
+                        <input type="date" name="start_date" id="editStartDate" class="form-control">
+                    </div>
+                    <div class="col-6">
+                        <label class="fw-bold small">تاريخ الانتهاء</label>
+                        <input type="date" name="end_date" id="editEndDate" class="form-control">
+                    </div>
+                </div>
+
+                <div class="row g-2 mb-3">
+                    <div class="col-6">
+                        <label class="fw-bold small">وقت الحضور</label>
+                        <input type="time" name="start_time" id="editStartTime" class="form-control">
+                    </div>
+                    <div class="col-6">
+                        <label class="fw-bold small">وقت الانصراف</label>
+                        <input type="time" name="end_time" id="editEndTime" class="form-control">
+                    </div>
+                </div>
+
+            </div>
+            <div class="modal-footer"><button type="submit" class="btn btn-info text-white">💾 حفظ التغييرات</button>
+            </div>
         </form>
     </div>
 </div>
@@ -363,6 +418,16 @@
         document.getElementById('moveCandidateName').innerText = name;
         document.getElementById('moveNewStage').value = stage;
         new bootstrap.Modal(document.getElementById('moveModal')).show();
+    }
+
+    function openEditTrainingModal(id, name, startDate, endDate, startTime, endTime) {
+        document.getElementById('editTrainId').value = id;
+        document.getElementById('editTrainName').innerText = name;
+        document.getElementById('editStartDate').value = startDate;
+        document.getElementById('editEndDate').value = endDate;
+        document.getElementById('editStartTime').value = startTime;
+        document.getElementById('editEndTime').value = endTime;
+        new bootstrap.Modal(document.getElementById('editTrainingModal')).show();
     }
 </script>
 {% endblock %}

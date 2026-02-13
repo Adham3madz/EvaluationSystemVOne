@@ -3,368 +3,426 @@
 
 {% block content %}
 <style>
-    /* === Professional Formal UI Theme === */
+    /* === Premium Modern UI Theme === */
     :root {
-        --primary-bg: #f4f6f9;
-        --sidebar-bg: #ffffff;
-        --card-bg: #ffffff;
-        --header-bg: #2c3e50;
-        /* Dark Blue/Gray for authority */
-        --text-main: #2c3e50;
-        --text-muted: #6c757d;
-        --border-color: #dee2e6;
+        --glass-bg: rgba(255, 255, 255, 0.75);
+        --glass-border: rgba(255, 255, 255, 0.4);
+        --primary-accent: #0f172a;
+        --text-main: #1e293b;
+        --text-muted: #64748b;
 
-        /* Specific Column Colors - Muted/Pastel for formality */
-        --col-new-bg: #e3f2fd;
-        --col-new-border: #90caf9;
-        --col-hr-bg: #e0f2f1;
-        --col-hr-border: #80cbc4;
-        --col-tech-bg: #fff3e0;
-        --col-tech-border: #ffcc80;
-        --col-test-bg: #f3e5f5;
-        --col-test-border: #ce93d8;
-        --col-offer-bg: #e8f5e9;
-        --col-offer-border: #a5d6a7;
-        --col-wait-bg: #fff8e1;
-        --col-wait-border: #ffe082;
-        --col-train-bg: #e8eaf6;
-        --col-train-border: #9fa8da;
-        --col-hired-bg: #dcedc8;
-        --col-hired-border: #aed581;
+        /* Premium Stage Colors */
+        --col-new: #3b82f6;
+        /* Blue */
+        --col-hr: #06b6d4;
+        /* Cyan */
+        --col-tech: #8b5cf6;
+        /* Violet */
+        --col-test: #f59e0b;
+        /* Amber */
+        --col-offer: #ec4899;
+        /* Pink */
+        --col-wait: #64748b;
+        /* Slate */
+        --col-train: #10b981;
+        /* Emerald */
+        --col-hired: #059669;
+        /* Dark Green */
+        --col-rejected: #ef4444;
+        /* Red */
+        --col-resigned: #475569;
+        /* Slate Gray */
     }
 
-    body {
-        background-color: var(--primary-bg);
-        color: var(--text-main);
-        font-family: "Cairo", sans-serif;
-    }
-
-    /* === Header Section === */
-    .job-header {
-        background: #fff;
-        border-bottom: 1px solid var(--border-color);
-        padding: 20px 30px;
+    /* Glass Panels */
+    .glass-header {
+        background: var(--glass-bg);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid var(--glass-border);
+        border-radius: 16px;
+        padding: 24px;
+        margin-bottom: 25px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
         display: flex;
-        align-items: center;
         justify-content: space-between;
-        margin-bottom: 20px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+        align-items: center;
     }
 
-    .job-info h2 {
-        font-size: 1.5rem;
-        font-weight: 700;
-        margin: 0;
-        color: var(--header-bg);
-    }
-
-    .job-info p {
-        margin: 5px 0 0;
-        color: var(--text-muted);
-        font-size: 0.95rem;
-    }
-
-    .action-bar {
-        display: flex;
-        gap: 10px;
-    }
-
-    .btn-formal {
-        border-radius: 6px;
-        padding: 8px 16px;
-        font-weight: 600;
+    .job-title-pill {
+        display: inline-flex;
+        align-items: center;
+        background: rgba(15, 23, 42, 0.05);
+        padding: 6px 16px;
+        border-radius: 50px;
         font-size: 0.9rem;
-        transition: all 0.2s;
+        color: var(--text-muted);
+        margin-top: 8px;
     }
 
-    .btn-primary-formal {
-        background-color: var(--header-bg);
-        border: 1px solid var(--header-bg);
-        color: #fff;
-    }
-
-    .btn-primary-formal:hover {
-        background-color: #34495e;
-        border-color: #34495e;
-    }
-
-    .btn-outline-formal {
-        background-color: #fff;
-        border: 1px solid #ced4da;
-        color: var(--text-main);
-    }
-
-    .btn-outline-formal:hover {
-        background-color: #f8f9fa;
-        border-color: #bdc3c7;
-    }
-
-    /* === Kanban Board === */
-    .kanban-container {
+    /* Kanban Layout */
+    .kanban-board {
         display: flex;
-        gap: 15px;
+        gap: 20px;
         overflow-x: auto;
-        padding: 0 20px 20px;
-        height: calc(100vh - 140px);
+        padding-bottom: 25px;
+        height: calc(100vh - 220px);
         align-items: flex-start;
     }
 
     .kanban-column {
-        min-width: 280px;
-        max-width: 280px;
-        background: #f8f9fa;
-        border-radius: 8px;
-        border: 1px solid var(--border-color);
+        min-width: 320px;
+        max-width: 320px;
+        background: rgba(248, 250, 252, 0.6);
+        border-radius: 20px;
+        border: 1px solid rgba(0, 0, 0, 0.03);
         display: flex;
         flex-direction: column;
         max-height: 100%;
+        transition: all 0.3s ease;
     }
 
-    .kanban-header {
-        padding: 12px 15px;
-        font-weight: 700;
-        font-size: 0.95rem;
-        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-        border-radius: 8px 8px 0 0;
+    .column-header {
+        padding: 18px 20px;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        color: #495057;
+        font-weight: 800;
+        font-size: 1rem;
+        border-radius: 20px 20px 0 0;
+        border-bottom: 2px solid rgba(255, 255, 255, 0.5);
     }
 
+    .column-count {
+        background: rgba(255, 255, 255, 0.8);
+        padding: 2px 10px;
+        border-radius: 10px;
+        font-size: 0.85rem;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    }
+
+    /* Candidate Cards */
     .kanban-body {
-        padding: 10px;
+        padding: 12px;
         overflow-y: auto;
         flex-grow: 1;
-        min-height: 100px;
+        min-height: 150px;
     }
 
-    /* Scrollbar Styling */
-    .kanban-container::-webkit-scrollbar,
-    .kanban-body::-webkit-scrollbar {
-        width: 6px;
-        height: 8px;
-    }
-
-    .kanban-container::-webkit-scrollbar-thumb,
-    .kanban-body::-webkit-scrollbar-thumb {
-        background: #ced4da;
-        border-radius: 3px;
-    }
-
-    /* === Cards === */
     .candidate-card {
-        background: #fff;
-        border: 1px solid #e9ecef;
-        border-radius: 6px;
-        padding: 12px;
-        margin-bottom: 10px;
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-        cursor: pointer;
-        transition: transform 0.15s, box-shadow 0.15s;
-        border-right: 3px solid transparent;
-        /* Status Indicator */
+        background: #ffffff;
+        border-radius: 14px;
+        padding: 16px;
+        margin-bottom: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        cursor: grab;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        border: 1px solid transparent;
+        position: relative;
     }
 
     .candidate-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+        transform: translateY(-4px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
+        border-color: rgba(0, 0, 0, 0.05);
     }
 
-    .card-title {
-        font-weight: 700;
-        font-size: 1rem;
-        margin-bottom: 4px;
-        color: #212529;
+    .candidate-card:active {
+        cursor: grabbing;
     }
 
-    .card-meta {
-        font-size: 0.8rem;
-        color: #868e96;
+    .card-id-tag {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        background: #f1f5f9;
+        padding: 2px 8px;
+        border-radius: 6px;
         margin-bottom: 8px;
+        display: inline-block;
+    }
+
+    .candidate-name {
+        font-weight: 700;
+        font-size: 1.05rem;
+        color: var(--text-main);
+        margin-bottom: 6px;
+    }
+
+    .card-meta-line {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.82rem;
+        color: var(--text-muted);
+        margin-top: 4px;
+    }
+
+    .card-footer {
+        margin-top: 15px;
+        padding-top: 12px;
+        border-top: 1px solid #f1f5f9;
         display: flex;
         justify-content: space-between;
+        align-items: center;
     }
 
-    .card-actions {
-        border-top: 1px solid #f1f3f5;
-        padding-top: 8px;
+    .action-btns {
         display: flex;
-        justify-content: flex-end;
-        gap: 5px;
+        gap: 6px;
     }
 
-    .btn-icon {
-        padding: 4px 8px;
-        font-size: 1rem;
+    .btn-action {
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
         cursor: pointer;
-        border: 1px solid #dee2e6;
-        border-radius: 4px;
-        background: #f8f9fa;
         transition: all 0.2s;
-        margin-left: 5px;
+        font-size: 0.9rem;
     }
 
-    .btn-icon:hover {
-        background: #e9ecef;
-        border-color: #ced4da;
-        transform: scale(1.05);
+    .btn-action:hover {
+        background: var(--primary-accent);
+        color: white;
+        transform: scale(1.1);
     }
 
-    /* Column Specific Styles */
-    .col-New .kanban-header {
-        background-color: var(--col-new-bg);
-        border-top: 3px solid var(--col-new-border);
+    /* Column Specific Branding */
+    .col-New {
+        border-top: 5px solid var(--col-new);
     }
 
-    .col-HR_Interview .kanban-header {
-        background-color: var(--col-hr-bg);
-        border-top: 3px solid var(--col-hr-border);
+    .col-HR_Interview {
+        border-top: 5px solid var(--col-hr);
     }
 
-    .col-Tech_Interview .kanban-header {
-        background-color: var(--col-tech-bg);
-        border-top: 3px solid var(--col-tech-border);
+    .col-Tech_Interview {
+        border-top: 5px solid var(--col-tech);
     }
 
-    .col-Test .kanban-header {
-        background-color: var(--col-test-bg);
-        border-top: 3px solid var(--col-test-border);
+    .col-Test {
+        border-top: 5px solid var(--col-test);
     }
 
-    .col-Offer .kanban-header {
-        background-color: var(--col-offer-bg);
-        border-top: 3px solid var(--col-offer-border);
+    .col-Offer {
+        border-top: 5px solid var(--col-offer);
     }
 
-    .col-Waiting .kanban-header {
-        background-color: var(--col-wait-bg);
-        border-top: 3px solid var(--col-wait-border);
+    .col-Waiting {
+        border-top: 5px solid var(--col-wait);
     }
 
-    .col-Training .kanban-header {
-        background-color: var(--col-train-bg);
-        border-top: 3px solid var(--col-train-border);
+    .col-Training {
+        border-top: 5px solid var(--col-train);
     }
 
-    .col-Hired .kanban-header {
-        background-color: var(--col-hired-bg);
-        border-top: 3px solid var(--col-hired-border);
+    .col-Hired {
+        border-top: 5px solid var(--col-hired);
     }
 
-    .col-Rejected .kanban-header {
-        background-color: #ffebee;
-        border-top: 3px solid #ef5350;
+    .col-Rejected {
+        border-top: 5px solid var(--col-rejected);
     }
 
-    .col-Resigned .kanban-header {
-        background-color: #eceff1;
-        border-top: 3px solid #78909c;
+    .col-Resigned {
+        border-top: 5px solid var(--col-resigned);
     }
 
+    /* Drag states */
     .dragging {
-        opacity: 0.5;
-        border: 2px dashed #3498db;
+        opacity: 0.4;
+        transform: scale(0.95);
+        border: 2px dashed var(--col-new);
     }
 
     .drag-over {
-        background-color: #e9ecef;
+        background: rgba(0, 0, 0, 0.05) !important;
+        outline: 2px dashed rgba(0, 0, 0, 0.1);
     }
 
-    /* Modal Styling for Formality */
-    .modal-header {
-        background-color: #f8f9fa;
-        border-bottom: 1px solid #dee2e6;
+    /* Forms & Search */
+    .search-container {
+        position: relative;
+        min-width: 300px;
     }
 
-    .modal-title {
-        color: #343a40;
-        font-weight: 700;
-    }
-
-    .form-label {
-        color: #495057;
-        font-weight: 600;
+    .search-input {
+        width: 100%;
+        padding: 10px 40px 10px 15px;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+        background: #ffffff;
         font-size: 0.9rem;
+        transition: all 0.3s;
+    }
+
+    .search-input:focus {
+        border-color: var(--col-new);
+        box-shadow: 0 0 0 3px rgba(59, 131, 246, 0.1);
+        outline: none;
+    }
+
+    .search-icon {
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        pointer-events: none;
+    }
+
+    /* Modern Scrollbars */
+    .kanban-board::-webkit-scrollbar,
+    .kanban-body::-webkit-scrollbar {
+        height: 8px;
+        width: 6px;
+    }
+
+    .kanban-board::-webkit-scrollbar-thumb,
+    .kanban-body::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 10px;
+    }
+
+    /* Premium Buttons */
+    .btn-premium {
+        background: var(--primary-accent);
+        color: white;
+        border: none;
+        padding: 10px 24px;
+        border-radius: 12px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s;
+    }
+
+    .btn-premium:hover {
+        background: #1e293b;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        color: white;
+    }
+
+    .btn-secondary-premium {
+        background: white;
+        color: var(--text-main);
+        border: 1px solid #e2e8f0;
+        padding: 10px 24px;
+        border-radius: 12px;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+
+    .btn-secondary-premium:hover {
+        background: #f8fafc;
+        transform: translateY(-2px);
     }
 </style>
 
-<div class="job-header">
-    <div class="job-info">
-        <h2>{{ job.JobTitle }}</h2>
-        <p>
+<div class="glass-header">
+    <div class="job-info-panel">
+        <h2 class="m-0 fw-bold" style="color: var(--primary-accent);">
+            <span style="font-size: 1.5rem;">📁</span> {{ job.JobTitle }}
+        </h2>
+        <div class="job-title-pill">
             <span class="me-3">🏢 {{ job.DEPTNAME_DISPLAY or 'عام' }}</span>
-            <span>👤 {{ job.HiringManager }}</span>
-        </p>
+            <span>👤 مدير: {{ job.HiringManager }}</span>
+        </div>
     </div>
-    <div class="action-bar">
-        <input type="text" id="candidateSearch" class="form-control" style="width: 250px;" placeholder="بحث سريع...">
-        <button class="btn btn-primary-formal" data-bs-toggle="modal" data-bs-target="#addCandidateModal">
-            <i class="fas fa-plus"></i> إضافة مرشح
+
+    <div class="d-flex gap-3 align-items-center">
+        <div class="search-container">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="candidateSearch" class="search-input" placeholder="بحث عن اسم أو هاتف...">
+        </div>
+
+        <button class="btn-premium" data-bs-toggle="modal" data-bs-target="#addCandidateModal">
+            ✨ إضافة مرشح
         </button>
-        <a href="{{ url_for('recruitment_jobs') }}" class="btn btn-outline-formal">
-            <i class="fas fa-arrow-right"></i> عودة
+
+        <a href="{{ url_for('recruitment_jobs') }}" class="btn-secondary-premium text-decoration-none">
+            ⬅️ عودة
         </a>
     </div>
 </div>
 
-<div class="kanban-container">
+<div class="kanban-board">
     {% for stage in stages %}
     {% set stage_candidates = candidates_by_stage[stage] %}
 
-    {# Display Names #}
+    {# Display Names & Emojis #}
     {% set display_name = stage %}
-    {% if stage == 'New' %}{% set display_name = 'طلبات جديدة' %}
-    {% elif stage == 'HR_Interview' %}{% set display_name = 'مقابلة HR' %}
-    {% elif stage == 'Tech_Interview' %}{% set display_name = 'مقابلة فنية' %}
-    {% elif stage == 'Test' %}{% set display_name = 'اختبار' %}
-    {% elif stage == 'Offer' %}{% set display_name = 'عرض عمل' %}
-    {% elif stage == 'Waiting' %}{% set display_name = 'قائمة الانتظار' %}
-    {% elif stage == 'Training' %}{% set display_name = 'تدريب' %}
-    {% elif stage == 'Hired' %}{% set display_name = 'تم التعيين' %}
-    {% elif stage == 'Rejected' %}{% set display_name = 'مرفوض' %}
-    {% elif stage == 'Resigned' %}{% set display_name = 'منسحب' %}
+    {% set stage_emoji = '📦' %}
+
+    {% if stage == 'New' %}{% set display_name = 'طلبات جديدة' %}{% set stage_emoji = '🆕' %}
+    {% elif stage == 'HR_Interview' %}{% set display_name = 'مقابلة HR' %}{% set stage_emoji = '👥' %}
+    {% elif stage == 'Tech_Interview' %}{% set display_name = 'مقابلة فنية' %}{% set stage_emoji = '⚙️' %}
+    {% elif stage == 'Test' %}{% set display_name = 'اختبار' %}{% set stage_emoji = '🧪' %}
+    {% elif stage == 'Offer' %}{% set display_name = 'عرض عمل' %}{% set stage_emoji = '📄' %}
+    {% elif stage == 'Waiting' %}{% set display_name = 'قائمة الانتظار' %}{% set stage_emoji = '⏳' %}
+    {% elif stage == 'Training' %}{% set display_name = 'تدريب' %}{% set stage_emoji = '🎓' %}
+    {% elif stage == 'Hired' %}{% set display_name = 'تم التعيين' %}{% set stage_emoji = '✅' %}
+    {% elif stage == 'Rejected' %}{% set display_name = 'مرفوض' %}{% set stage_emoji = '❌' %}
+    {% elif stage == 'Resigned' %}{% set display_name = 'منسحب' %}{% set stage_emoji = '🏃' %}
     {% endif %}
 
-    <div class="kanban-column col-{{ stage }}" ondragover="allowDrop(event)" ondrop="drop(event, '{{ stage }}')"
-        ondragenter="this.querySelector('.kanban-body').classList.add('drag-over')"
-        ondragleave="this.querySelector('.kanban-body').classList.remove('drag-over')">
-
-        <div class="kanban-header">
-            <span>{{ display_name }}</span>
-            <span class="badge bg-secondary rounded-pill">{{ stage_candidates|length }}</span>
+    <div class="kanban-column col-{{ stage }}" ondragover="allowDrop(event)" ondrop="drop(event, '{{ stage }}')">
+        <div class="column-header">
+            <span>{{ stage_emoji }} {{ display_name }}</span>
+            <span class="column-count">{{ stage_candidates|length }}</span>
         </div>
 
-        <div class="kanban-body">
+        <div class="kanban-body" ondragenter="this.classList.add('drag-over')"
+            ondragleave="this.classList.remove('drag-over')">
             {% for c in stage_candidates %}
             <div class="candidate-card" draggable="true"
                 ondragstart="drag(event, '{{ c.CandidateID }}', '{{ c.FullName }}')" id="card-{{ c.CandidateID }}"
                 data-name="{{ c.FullName }}" data-phone="{{ c.Phone }}">
 
-                <div class="card-meta">
-                    <span>{{ c.ApplicationDate.strftime('%Y-%m-%d') }}</span>
-                    <span class="badge bg-light text-dark border">{{ c.Source }}</span>
+                <div class="d-flex justify-content-between align-items-start">
+                    <span class="card-id-tag">ID: #{{ c.CandidateID }}</span>
+                    <span class="badge"
+                        style="background: rgba(0,0,0,0.05); color: var(--text-muted); font-size: 0.7rem;">{{ c.Source
+                        }}</span>
                 </div>
 
-                <div class="card-title">{{ c.FullName }}</div>
+                <div class="candidate-name">{{ c.FullName }}</div>
+
+                <div class="card-meta-line">
+                    <span>📅</span> {{ c.ApplicationDate.strftime('%Y-%m-%d') }}
+                </div>
+
+                <div class="card-meta-line">
+                    <span>📞</span> {{ c.Phone }}
+                </div>
 
                 {% if c.LastNote %}
-                <div class="text-muted small fst-italic text-truncate mb-2" title="{{ c.LastNote }}">
-                    📝 {{ c.LastNote }}
+                <div class="mt-2 p-2 rounded"
+                    style="background: #fdf2f8; border-right: 3px solid #f9a8d4; font-size: 0.75rem;">
+                    <span class="text-muted">آخر ملاحظة:</span>
+                    <div class="text-truncate text-dark fst-italic">{{ c.LastNote }}</div>
                 </div>
                 {% endif %}
 
-                <div class="card-actions">
-                    <button
-                        onclick="openEditModal('{{ c.CandidateID }}', '{{ c.FullName }}', '{{ c.Phone }}', '{{ c.Email or '' }}', '{{ c.NationalID or '' }}', '{{ c.Source }}', '{{ c.ApplicationDate.strftime('%Y-%m-%d') if c.ApplicationDate else '' }}')"
-                        class="btn-icon" title="تعديل">✏️</button>
+                <div class="card-footer">
+                    <span class="text-muted" style="font-size: 0.7rem;">تحكم ⚙️</span>
+                    <div class="action-btns">
+                        <button
+                            onclick="openEditModal('{{ c.CandidateID }}', '{{ c.FullName }}', '{{ c.Phone }}', '{{ c.Email or '' }}', '{{ c.NationalID or '' }}', '{{ c.Source }}', '{{ c.ApplicationDate.strftime('%Y-%m-%d') if c.ApplicationDate else '' }}')"
+                            class="btn-action" title="تعديل">✏️</button>
 
-                    <button
-                        onclick="openDocModal('{{ c.CandidateID }}', '{{ c.FullName }}', {{ c.DocBirthCert|default(0)|int }}, {{ c.DocDegree|default(0)|int }}, {{ c.DocMilitary|default(0)|int }}, {{ c.DocCriminalRecord|default(0)|int }}, {{ c.DocPersonalPhoto|default(0)|int }}, {{ c.DocIDCard|default(0)|int }}, {{ c.DocInfoSheet|default(0)|int }})"
-                        class="btn-icon" title="المستندات">📂</button>
+                        <button
+                            onclick="openDocModal('{{ c.CandidateID }}', '{{ c.FullName }}', {{ c.DocBirthCert|default(0)|int }}, {{ c.DocDegree|default(0)|int }}, {{ c.DocMilitary|default(0)|int }}, {{ c.DocCriminalRecord|default(0)|int }}, {{ c.DocPersonalPhoto|default(0)|int }}, {{ c.DocIDCard|default(0)|int }}, {{ c.DocInfoSheet|default(0)|int }})"
+                            class="btn-action" title="المستندات">📂</button>
 
-                    <button onclick="openTransferModal('{{ c.CandidateID }}', '{{ c.FullName }}')" class="btn-icon"
-                        title="نقل وظيفة">🔄</button>
+                        <button onclick="openTransferModal('{{ c.CandidateID }}', '{{ c.FullName }}')"
+                            class="btn-action" title="نقل وظيفة">🔄</button>
+                    </div>
                 </div>
             </div>
             {% endfor %}
@@ -373,54 +431,59 @@
     {% endfor %}
 </div>
 
-<!-- ================= MODALS ================= -->
+<!-- ================= MODALS [Premium Styled] ================= -->
 
 <!-- 1. ADD CANDIDATE MODAL -->
 <div class="modal fade" id="addCandidateModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <form class="modal-content shadow-sm border-0" method="POST"
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <form class="modal-content border-0 shadow-lg" style="border-radius: 24px;" method="POST"
             action="{{ url_for('add_candidate_to_job', job_id=job.JobID) }}">
-            <div class="modal-header">
-                <h5 class="modal-title">📄 تسجيل مرشح جديد</h5>
+            <div class="modal-header border-0 p-4">
+                <h5 class="modal-title fw-bold">📄 تسجيل مرشح جديد</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body">
-                <div class="mb-3">
-                    <label class="form-label">تاريخ التقديم</label>
-                    <input type="date" name="application_date" id="appDateInput" class="form-control" required>
-                </div>
-                <div class="row g-3">
+            <div class="modal-body p-4">
+                <div class="row g-4">
                     <div class="col-md-6">
-                        <label class="form-label">الاسم الكامل</label>
-                        <input type="text" name="name" class="form-control" required>
+                        <label class="form-label fw-bold">تاريخ التقديم</label>
+                        <input type="date" name="application_date" id="appDateInput"
+                            class="form-control form-control-lg rounded-3" required>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label">رقم الهاتف</label>
-                        <input type="text" name="phone" class="form-control" required>
+                        <label class="form-label fw-bold">مصدر الترشيح</label>
+                        <select name="source" class="form-select form-select-lg rounded-3">
+                            <option value="LinkedIn">LinkedIn</option>
+                            <option value="Referral">ترشيح داخلي</option>
+                            <option value="Facebook">فيسبوك</option>
+                            <option value="Website">الموقع الإلكتروني</option>
+                            <option value="Other">أخرى</option>
+                        </select>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label">الرقم القومي</label>
-                        <input type="text" name="national_id" class="form-control">
+                        <label class="form-label fw-bold">الاسم الكامل</label>
+                        <input type="text" name="name" class="form-control form-control-lg rounded-3"
+                            placeholder="أدخل الاسم الرباعي..." required>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label">البريد الإلكتروني</label>
-                        <input type="email" name="email" class="form-control">
+                        <label class="form-label fw-bold">رقم الهاتف</label>
+                        <input type="text" name="phone" class="form-control form-control-lg rounded-3"
+                            placeholder="01xxxxxxxxx" required>
                     </div>
-                </div>
-                <div class="mt-3">
-                    <label class="form-label">مصدر الترشيح</label>
-                    <select name="source" class="form-select">
-                        <option value="LinkedIn">LinkedIn</option>
-                        <option value="Referral">ترشيح داخلي</option>
-                        <option value="Facebook">فيسبوك</option>
-                        <option value="Website">الموقع الإلكتروني</option>
-                        <option value="Other">أخرى</option>
-                    </select>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">البريد الإلكتروني</label>
+                        <input type="email" name="email" class="form-control form-control-lg rounded-3"
+                            placeholder="name@example.com">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">الرقم القومي</label>
+                        <input type="text" name="national_id" class="form-control form-control-lg rounded-3"
+                            placeholder="14 رقم">
+                    </div>
                 </div>
             </div>
-            <div class="modal-footer bg-light">
-                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">إلغاء</button>
-                <button type="submit" class="btn btn-primary-formal btn-sm px-4">حفظ البيانات</button>
+            <div class="modal-footer border-0 p-4">
+                <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">إلغاء</button>
+                <button type="submit" class="btn-premium px-5">✅ حفظ المرشح</button>
             </div>
         </form>
     </div>
@@ -429,45 +492,52 @@
 <!-- 2. MOVE / EVALUATE MODAL -->
 <div class="modal fade" id="moveModal" tabindex="-1" data-bs-backdrop="static">
     <div class="modal-dialog modal-dialog-centered">
-        <form class="modal-content shadow-sm border-0" method="POST" action="{{ url_for('move_candidate_with_eval') }}">
-            <div class="modal-header">
-                <h5 class="modal-title">نقل حالة المرشح</h5>
+        <form class="modal-content border-0 shadow-lg" style="border-radius: 24px;" method="POST"
+            action="{{ url_for('move_candidate_with_eval') }}">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold">🔄 نقل حالة المرشح</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body text-center">
+            <div class="modal-body p-4 text-center">
                 <input type="hidden" name="candidate_id" id="modal_candidate_id">
                 <input type="hidden" name="new_stage" id="modal_new_stage">
 
-                <h4 id="modal_candidate_name" class="mb-3 text-dark font-weight-bold"></h4>
-                <div class="d-flex justify-content-center align-items-center gap-2 mb-4">
-                    <span class="text-muted">نقل إلى:</span>
-                    <span id="modal_stage_display" class="badge bg-dark px-3 py-2"></span>
+                <div class="mb-4">
+                    <div id="modal_candidate_name" class="fs-4 fw-bold text-dark"></div>
+                    <div class="mt-2">
+                        <span class="text-muted">سيتم نقله إلى:</span>
+                        <span id="modal_stage_display" class="badge bg-primary px-3 py-2 ms-2"></span>
+                    </div>
                 </div>
 
-                <div class="text-start bg-light p-3 rounded border mb-3">
-                    <label class="form-label d-flex justify-content-between">
-                        <span>التقييم للمرحلة السابقة</span>
-                        <span class="fw-bold text-primary" id="scoreVal">5/10</span>
-                    </label>
+                <div class="text-start bg-light p-3 rounded-4 border mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <label class="form-label fw-bold m-0">التقييم للمرحلة السابقة</label>
+                        <span class="badge bg-white text-primary border px-3 py-2 fs-6" id="scoreVal">5 / 10</span>
+                    </div>
                     <input type="range" name="score" class="form-range" min="1" max="10" value="5"
-                        oninput="document.getElementById('scoreVal').innerText = this.value + '/10'">
+                        oninput="document.getElementById('scoreVal').innerText = this.value + ' / 10'">
+                    <div class="d-flex justify-content-between text-muted" style="font-size: 0.7rem;">
+                        <span>ضعيف</span>
+                        <span>ممتاز</span>
+                    </div>
                 </div>
 
-                <!-- Training Date Input -->
-                <div id="trainingDateDiv" class="mb-3 text-start" style="display: none;">
-                    <label class="form-label fw-bold">تاريخ بدء التدريب</label>
-                    <input type="date" name="training_start_date" id="trainingDateInput" class="form-control">
+                <div id="trainingDateDiv" class="mb-4 text-start" style="display: none;">
+                    <label class="form-label fw-bold">📅 تاريخ بدء التدريب</label>
+                    <input type="date" name="training_start_date" id="trainingDateInput"
+                        class="form-control form-control-lg rounded-3">
                 </div>
 
                 <div class="text-start">
-                    <label class="form-label">ملاحظات / سبب القرار</label>
-                    <textarea name="note" class="form-control" rows="3" placeholder="أضف ملاحظاتك هنا..."
-                        required></textarea>
+                    <label class="form-label fw-bold">📝 ملاحظات / سبب القرار</label>
+                    <textarea name="note" class="form-control rounded-3" rows="3"
+                        placeholder="اكتب تقيمك المختصر هنا..." required></textarea>
                 </div>
             </div>
-            <div class="modal-footer bg-light">
-                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">إلغاء</button>
-                <button type="submit" class="btn btn-success btn-sm px-4">تأكيد النقل والحفظ</button>
+            <div class="modal-footer border-0 p-4">
+                <button type="submit" class="btn-premium w-100 py-3 justify-content-center">🚀 تأكيد النقل
+                    والحفظ</button>
             </div>
         </form>
     </div>
@@ -476,27 +546,32 @@
 <!-- 3. DOCS MODAL -->
 <div class="modal fade" id="docModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
-        <form class="modal-content shadow-sm border-0" method="POST" action="{{ url_for('update_candidate_docs') }}">
-            <div class="modal-header">
-                <h5 class="modal-title">مستندات المرشح</h5>
+        <form class="modal-content border-0 shadow-lg" style="border-radius: 24px;" method="POST"
+            action="{{ url_for('update_candidate_docs') }}">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold">📂 مستندات المرشح</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body">
+            <div class="modal-body p-4">
                 <input type="hidden" name="candidate_id" id="doc_candidate_id">
-                <h6 id="doc_candidate_name" class="text-center mb-4 text-muted"></h6>
-                <div class="vstack gap-2 px-2">
-                    {% for doc_id, label in [('birth', 'شهادة ميلاد'), ('degree', 'شهادة مؤهل'), ('military', 'شهادة
-                    جيش'), ('criminal', 'صحيفة الحالة الجنائية'), ('photo', 'صور شخصية'), ('id', 'صورة البطاقة'),
-                    ('sheet', 'نموذج البيانات (Info Sheet)')] %}
-                    <div class="form-check form-switch d-flex justify-content-between border-bottom pb-2">
-                        <label class="form-check-label" for="check_{{ doc_id }}">{{ label }}</label>
-                        <input class="form-check-input" type="checkbox" name="doc_{{ doc_id }}" id="check_{{ doc_id }}">
+                <h6 id="doc_candidate_name" class="text-center mb-4 fw-bold text-muted border-bottom pb-2"></h6>
+                <div class="vstack gap-3">
+                    {% for doc_id, label in [('birth', 'شهادة ميلاد 👶'), ('degree', 'شهادة مؤهل 🎓'), ('military',
+                    'شهادة جيش 🎖️'), ('criminal', 'صحيفة الحالة الجنائية 👮'), ('photo', 'صور شخصية 📷'), ('id', 'صورة
+                    البطاقة 🆔'), ('sheet', 'نموذج البيانات 📄')] %}
+                    <div class="d-flex justify-content-between align-items-center p-2 rounded-3 hover-bg-light"
+                        style="background: #f8fafc;">
+                        <label class="form-check-label m-0 fw-600" for="check_{{ doc_id }}">{{ label }}</label>
+                        <div class="form-check form-switch m-0">
+                            <input class="form-check-input" type="checkbox" name="doc_{{ doc_id }}"
+                                id="check_{{ doc_id }}" style="width: 40px; height: 20px;">
+                        </div>
                     </div>
                     {% endfor %}
                 </div>
             </div>
-            <div class="modal-footer bg-light">
-                <button type="submit" class="btn btn-primary-formal btn-sm px-4">حفظ التغييرات</button>
+            <div class="modal-footer border-0 p-4">
+                <button type="submit" class="btn-premium w-100 py-2 justify-content-center">💾 حفظ التحديثات</button>
             </div>
         </form>
     </div>
@@ -504,49 +579,51 @@
 
 <!-- 4. EDIT CANDIDATE MODAL -->
 <div class="modal fade" id="editCandidateModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <form class="modal-content shadow-sm border-0" method="POST" action="{{ url_for('edit_candidate') }}">
-            <div class="modal-header">
-                <h5 class="modal-title">تعديل بيانات المرشح</h5>
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <form class="modal-content border-0 shadow-lg" style="border-radius: 24px;" method="POST"
+            action="{{ url_for('edit_candidate') }}">
+            <div class="modal-header border-0 p-4">
+                <h5 class="modal-title fw-bold">✏️ تعديل بيانات المرشح</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-4">
                 <input type="hidden" name="candidate_id" id="edit_id">
-                <div class="mb-3">
-                    <label class="form-label">تاريخ التقديم</label>
-                    <input type="date" name="application_date" id="edit_app_date" class="form-control">
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">الاسم</label>
-                    <input type="text" name="name" id="edit_name" class="form-control">
-                </div>
-                <div class="row">
-                    <div class="col-6 mb-3">
-                        <label class="form-label">الهاتف</label>
-                        <input type="text" name="phone" id="edit_phone" class="form-control">
+                <div class="row g-3">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">تاريخ التقديم</label>
+                        <input type="date" name="application_date" id="edit_app_date" class="form-control rounded-3">
                     </div>
-                    <div class="col-6 mb-3">
-                        <label class="form-label">البريد</label>
-                        <input type="email" name="email" id="edit_email" class="form-control">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">المصدر</label>
+                        <select name="source" id="edit_source" class="form-select rounded-3">
+                            <option value="Other">Other</option>
+                            <option value="LinkedIn">LinkedIn</option>
+                            <option value="Referral">Referral</option>
+                            <option value="Facebook">Facebook</option>
+                            <option value="Website">Website</option>
+                        </select>
                     </div>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">الرقم القومي</label>
-                    <input type="text" name="national_id" id="edit_nid" class="form-control">
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">المصدر</label>
-                    <select name="source" id="edit_source" class="form-select">
-                        <option value="Other">Other</option>
-                        <option value="LinkedIn">LinkedIn</option>
-                        <option value="Referral">Referral</option>
-                        <option value="Facebook">Facebook</option>
-                        <option value="Website">Website</option>
-                    </select>
+                    <div class="col-12 mb-3">
+                        <label class="form-label fw-bold">الاسم الكامل</label>
+                        <input type="text" name="name" id="edit_name" class="form-control rounded-3">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">الهاتف</label>
+                        <input type="text" name="phone" id="edit_phone" class="form-control rounded-3">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">البريد الإلكتروني</label>
+                        <input type="email" name="email" id="edit_email" class="form-control rounded-3">
+                    </div>
+                    <div class="col-12 mb-3">
+                        <label class="form-label fw-bold">الرقم القومي</label>
+                        <input type="text" name="national_id" id="edit_nid" class="form-control rounded-3">
+                    </div>
                 </div>
             </div>
-            <div class="modal-footer bg-light">
-                <button type="submit" class="btn btn-warning btn-sm">تحديث البيانات</button>
+            <div class="modal-footer border-0 p-4">
+                <button type="submit" class="btn-premium w-100 py-2 justify-content-center"
+                    style="background: #f59e0b;">🔄 تحديث البيانات</button>
             </div>
         </form>
     </div>
@@ -555,32 +632,39 @@
 <!-- 5. TRANSFER MODAL -->
 <div class="modal fade" id="transferModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
-        <form class="modal-content shadow-sm border-0" method="POST"
+        <form class="modal-content border-0 shadow-lg" style="border-radius: 24px;" method="POST"
             action="{{ url_for('transfer_candidate_to_job') }}">
-            <div class="modal-header">
-                <h5 class="modal-title">نقل إلى وظيفة أخرى</h5>
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold">🔄 نقل لوظيفة أخرى</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-4 text-center">
                 <input type="hidden" name="candidate_id" id="transfer_candidate_id">
-                <h6 class="text-muted mb-4">اختر الوظيفة الجديدة للمرشح <span class="text-dark fw-bold"
-                        id="transfer_candidate_name"></span></h6>
-                <select name="new_job_id" class="form-select form-select-lg" required>
-                    <option value="" disabled selected>-- اختر الوظيفة --</option>
-                    {% for j in other_jobs %}
-                    <option value="{{ j.JobID }}">{{ j.JobTitle }}</option>
-                    {% endfor %}
-                </select>
+                <div class="mb-4">
+                    <span style="font-size: 3rem;">🏢</span>
+                    <h6 class="text-muted mt-3">نقل المرشح: <span class="text-dark fw-bold"
+                            id="transfer_candidate_name"></span></h6>
+                </div>
+                <div class="text-start">
+                    <label class="form-label fw-bold">اختر الوظيفة الجديدة:</label>
+                    <select name="new_job_id" class="form-select form-select-lg rounded-3" required>
+                        <option value="" disabled selected>-- اختر الوظيفة من القائمة --</option>
+                        {% for j in other_jobs %}
+                        <option value="{{ j.JobID }}">{{ j.JobTitle }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
             </div>
-            <div class="modal-footer bg-light">
-                <button type="submit" class="btn btn-primary-formal btn-sm px-4">تأكيد النقل</button>
+            <div class="modal-footer border-0 p-4">
+                <button type="submit" class="btn-premium w-100 py-3 justify-content-center">🚀 تأكيد النقل
+                    الفوري</button>
             </div>
         </form>
     </div>
 </div>
 
 <script>
-    // === Scripts for Logic & Drag/Drop ===
+    // === Scripts for Logic & Drag/Drop [STABLE & PRESERVED] ===
 
     document.addEventListener('DOMContentLoaded', function () {
         const dateInput = document.getElementById('appDateInput');
@@ -604,7 +688,10 @@
         document.querySelectorAll('.kanban-body').forEach(el => el.classList.remove('drag-over'));
         document.querySelectorAll('.dragging').forEach(el => el.classList.remove('dragging'));
 
-        const data = JSON.parse(ev.dataTransfer.getData("text/plain"));
+        const dataContent = ev.dataTransfer.getData("text/plain");
+        if (!dataContent) return;
+
+        const data = JSON.parse(dataContent);
         openMoveModal(data.id, data.name, newStage);
     }
 
@@ -616,15 +703,16 @@
 
         let label = stage;
         const map = {
-            'New': 'طلبات جديدة',
-            'HR_Interview': 'HR Interview',
-            'Tech_Interview': 'Technical Interview',
-            'Test': 'Test',
-            'Training': 'تدريب',
-            'Offer': 'عرض عمل',
-            'Hired': 'تم التعيين',
-            'Waiting': 'قائمة الانتظار',
-            'Rejected': 'مرفوض'
+            'New': 'طلبات جديدة 🆕',
+            'HR_Interview': 'مقابلة HR 👥',
+            'Tech_Interview': 'مقابلة فنية ⚙️',
+            'Test': 'اختبار 🧪',
+            'Training': 'تدريب 🎓',
+            'Offer': 'عرض عمل 📄',
+            'Hired': 'تم التعيين ✅',
+            'Waiting': 'قائمة الانتظار ⏳',
+            'Rejected': 'مرفوض ❌',
+            'Resigned': 'منسحب 🏃'
         };
         if (map[stage]) label = map[stage];
 

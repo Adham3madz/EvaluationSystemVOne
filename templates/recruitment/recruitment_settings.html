@@ -3,85 +3,122 @@
 
 {% block content %}
 <style>
-    /* === Global Glass Theme === */
-    body {
-        background: linear-gradient(135deg, #1e1e24, #2a2a35);
-        /* Dark background */
-        color: white;
-    }
+    /* === Global Light Glass Theme === */
 
     /* Glass Panel Container */
     .glass-panel {
-        background: rgba(255, 255, 255, 0.05);
-        backdrop-filter: blur(15px);
-        -webkit-backdrop-filter: blur(15px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 16px;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.6);
+        border-radius: 24px;
+        box-shadow: 0 8px 32px rgba(148, 163, 184, 0.15);
         overflow: hidden;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .glass-panel:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 40px rgba(148, 163, 184, 0.25);
     }
 
     /* Glass Header inside panels */
     .glass-header {
-        background: rgba(255, 255, 255, 0.1);
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        padding: 15px 20px;
+        background: rgba(248, 250, 252, 0.8);
+        border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+        padding: 20px 25px;
     }
 
     /* Glass Inputs */
     .form-control-glass {
-        background: rgba(255, 255, 255, 0.1);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        color: white !important;
-        border-radius: 10px;
+        background: #ffffff !important;
+        border: 1px solid #e2e8f0 !important;
+        color: #1e293b !important;
+        border-radius: 12px;
+        padding: 10px 15px;
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
     }
 
     .form-control-glass::placeholder {
-        color: rgba(255, 255, 255, 0.5);
+        color: #94a3b8;
     }
 
     .form-control-glass:focus {
-        background: rgba(255, 255, 255, 0.2);
-        box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
-        color: white;
-        outline: none;
-        border-color: rgba(255, 255, 255, 0.5);
+        background: #ffffff !important;
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+        /* Blue focus ring */
+        border-color: #3b82f6 !important;
+    }
+
+    /* Select Options */
+    .form-control-glass option {
+        background-color: #ffffff;
+        color: #1e293b;
     }
 
     /* Glass Table */
     .table-glass {
-        color: white;
+        color: #334155 !important;
         margin-bottom: 0;
+        --bs-table-color: #334155;
+        --bs-table-hover-color: #0f172a;
     }
 
     .table-glass th {
-        background: rgba(255, 255, 255, 0.1);
-        color: #ffc107;
-        /* Gold color for headers */
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        font-weight: bold;
+        background: #f8fafc;
+        color: #475569 !important;
+        font-weight: 700;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        border-bottom: 2px solid #e2e8f0;
+        padding: 15px;
+        letter-spacing: 0.5px;
     }
 
     .table-glass td {
         background: transparent;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        color: white;
+        border-bottom: 1px solid #f1f5f9;
+        color: #334155 !important;
+        padding: 15px;
+        vertical-align: middle;
     }
 
     .table-glass tr:hover td {
-        background: rgba(255, 255, 255, 0.05);
+        background: rgba(241, 245, 249, 0.8);
+        color: #0f172a !important;
     }
 
-    /* Buttons */
+    /* Action Buttons */
     .btn-glass-back {
-        background: rgba(255, 255, 255, 0.1);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        color: white;
+        background: white;
+        border: 1px solid #cbd5e1;
+        color: #475569;
+        transition: all 0.2s ease;
     }
 
     .btn-glass-back:hover {
-        background: rgba(255, 255, 255, 0.2);
-        color: white;
+        background: #f1f5f9;
+        color: #1e293b;
+        border-color: #94a3b8;
+        transform: translateY(-2px);
+    }
+
+    /* Custom Scrollbar */
+    div::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    div::-webkit-scrollbar-track {
+        background: #f1f5f9;
+    }
+
+    div::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 4px;
+    }
+
+    div::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
     }
 </style>
 
@@ -91,8 +128,8 @@
 
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
-                <h2 class="fw-bold text-white mb-1">⚙️ إعدادات التوظيف</h2>
-                <p class="text-white-50">إدارة قائمة أسباب الاستقالة والرفض.</p>
+                <h2 class="fw-bold text-dark mb-1">⚙️ إعدادات التوظيف</h2>
+                <p class="text-secondary">إدارة قائمة أسباب الاستقالة والرفض.</p>
             </div>
             <a href="{{ url_for('recruitment_jobs') }}" class="btn btn-glass-back shadow-sm rounded-pill px-4">
                 ⬅️ العودة للوظائف
@@ -164,10 +201,10 @@
                     <div class="p-4 border-bottom border-secondary">
                         <form method="POST" class="row g-2">
                             <div class="col-md-4">
-                                <select name="type_id" class="form-select form-control-glass text-white" required>
+                                <select name="type_id" class="form-select form-control-glass text-dark" required>
                                     <option value="" selected disabled>-- اختر النوع --</option>
                                     {% for type in types %}
-                                    <option value="{{ type.TypeID }}" class="text-dark">{{ type.TypeText }}</option>
+                                    <option value="{{ type.TypeID }}">{{ type.TypeText }}</option>
                                     {% endfor %}
                                 </select>
                             </div>
